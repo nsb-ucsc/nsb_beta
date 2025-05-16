@@ -19,11 +19,20 @@ class NSBAppClient:
         # Close the connection.
         self.conn.close()
 
+# Function used for testing.
+async def test():
+    async def dispatch_app_client():
+        app = NSBAppClient("127.0.0.1", 65432)
+        await asyncio.sleep(random.randint(1,4))
+        app.connect()
+        await asyncio.sleep(random.randint(1,4))
+        app.send()
+        await asyncio.sleep(random.randint(1,4))
+        del app
+    await asyncio.gather(dispatch_app_client(),
+                         dispatch_app_client())
+    
 if __name__ == "__main__":
-    app = NSBAppClient("127.0.0.1", 65432)
-    input("Press Enter to connect...")
-    app.connect()
-    input("Press Enter to send...")
-    app.send()
-    input("Press Enter to end.")
-    del app
+    import asyncio
+    import random
+    asyncio.run(test())
