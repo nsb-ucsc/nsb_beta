@@ -20,15 +20,15 @@ class NSBDaemon {
 public:
     NSBDaemon(int s_port);
     ~NSBDaemon();
-
     void start();
-    void start_server(int port);
     void stop();
     bool is_running() const;
 
 private:
     bool running;
     int server_port;
+    void start_server(int port);
+    int handle_message(int fd);
 };
 
 #endif // NSB_DAEMON_H

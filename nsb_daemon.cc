@@ -110,6 +110,10 @@ void NSBDaemon::start_server(int port) {
     std::cout << "Server stopped." << std::endl;
 }
 
+int NSBDaemon::handle_message(int fd) {
+
+}
+
 void NSBDaemon::stop() {
     if (running) {
         running = false;
