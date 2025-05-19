@@ -1,0 +1,57 @@
+syntax = "proto2";
+
+package nsb;
+
+message nsbm {
+    message Manifest {
+        enum Operation {
+            PING = 1;
+            INIT = 2;
+            EXIT = 8;
+        }
+        required Operation op = 1;
+        
+        enum Originator {
+            DAEMON = 0;
+            APP_CLIENT = 1;
+            SIM_CLIENT = 2;
+        }
+        required Originator og = 2;
+    
+        enum OpCode {
+            SUCCESS = 0;
+            FAILURE = 1;
+            CLIENT_REQUEST = 2;
+            DAEMON_RESPONSE = 3;
+            IMPLICIT_TARGET = 4;
+            EXPLICIT_TARGET = 5;
+            MESSAGE = 6;
+            NO_MESSAGE = 7;
+        }
+        optional OpCode code = 3;
+    }
+    required Manifest manifest = 1;
+
+    message Metadata {
+        enum Type {
+            INT = 0;
+            STR = 1;
+        }
+        required Type addr_type = 1;
+
+        oneof src {
+            string src_id = 2;
+            fixed32 src_addr = 3;
+        }
+
+        oneof dest {
+            string dest_id = 4;
+            fixed32 dest_addr = 5;
+        }
+
+        optional int32 payload_size = 6;
+    }
+    optional Metadata metadata = 2;
+
+    optional bytes payload = 7;
+}
