@@ -2,51 +2,54 @@ edition = "2023";
 
 package nsb;
 
+message nsbm {
+    message Manifest {
+        enum Operation {
+            PING = 0;
+            INIT = 1;
+            EXIT = 7;
+        }
+        Operation op = 1;
+        
+        enum Originator {
+            DAEMON = 0;
+            APP_CLIENT = 1;
+            SIM_CLIENT = 2;
+        }
+        Originator og = 2;
 
-message Manifest {
-    enum Operation {
-        PING = 0;
-        INIT = 1;
-        EXIT = 7;
+        enum OpCode {
+            SUCCESS = 0;
+            FAILURE = 1;
+            CLIENT_REQUEST = 2;
+            DAEMON_RESPONSE = 3;
+            IMPLICIT_TARGET = 4;
+            EXPLICIT_TARGET = 5;
+            MESSAGE = 6;
+            NO_MESSAGE = 7;
+        }
+        OpCode code = 3;
     }
-    Operation op = 1;
-    
-    enum Originator {
-        DAEMON = 0;
-        APP_CLIENT = 1;
-        SIM_CLIENT = 2;
-    }
-    Originator og = 2;
+    Manifest manifest = 1;
 
-    enum OpCode {
-        SUCCESS = 0;
-        FAILURE = 1;
-        CLIENT_REQUEST = 2;
-        DAEMON_RESPONSE = 3;
-        IMPLICIT_TARGET = 4;
-        EXPLICIT_TARGET = 5;
-        MESSAGE = 6;
-        NO_MESSAGE = 7;
-    }
-    OpCode code = 3;
-}
+    message Metadata {
+        enum Type {
+            INT = 0;
+            STR = 1;
+        }
+        Type addr_type = 1;
 
-message Metadata {
-    enum Type {
-        INT = 0;
-        STR = 1;
-    }
-    Type addr_type = 1;
+        oneof src {
+            string src_id = 2;
+            fixed32 src_addr = 3;
+        }
 
-    oneof src {
-        string src_id = 2;
-        fixed32 src_addr = 3;
-    }
+        oneof dest {
+            string dest_id = 4;
+            fixed32 dest_addr = 5;
+        }
 
-    oneof dest {
-        string dest_id = 4;
-        fixed32 dest_addr = 5;
+        int32 payload_size = 6;
     }
-
-    int32 payload_size = 6;
+    Metadata metadata = 2;
 }

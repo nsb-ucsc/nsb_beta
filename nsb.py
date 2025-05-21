@@ -19,6 +19,8 @@ class NSBAppClient:
         # Set connection information.
         self.server_addr = server_address
         self.server_port = server_port
+        # Connect.
+        self.__connect()
 
     def __connect(self):
         self.conn.connect((self.server_addr, self.server_port))
@@ -28,13 +30,9 @@ class NSBAppClient:
         self.conn.close()
 
     def __send_message(self, message):
-        # Connect to the server and send message.
-        self.__connect()
         self.conn.sendall(message)
-        self.__close()
 
     def __get_response(self, timeout):
-        self.conn.connect((self.server_addr, self.server_port))
         data = b''
         while True:
             data_arrived, _, _ = select.select([self.conn], [], [], timeout)
@@ -48,7 +46,6 @@ class NSBAppClient:
                 except socket.error as e:
                     self.conn.close()
                     raise
-        self.conn.close()
         return data
 
     def ping(self):
@@ -56,10 +53,10 @@ class NSBAppClient:
         Pings the server.
         """
         # Create and populate a new message.
-        nsb_msg = nsb_pb2.Manifest()
-        nsb_msg.op = nsb_pb2.Manifest.Operation.PING
-        nsb_msg.og = nsb_pb2.Manifest.Originator.APP_CLIENT
-        nsb_msg.code = nsb_pb2.Manifest.OpCode.SUCCESS
+        nsb_msg = nsb_pb2.nsbm()
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.PING
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message and get response.
         self.__send_message(nsb_msg.SerializeToString())
         response = self.__get_response(DAEMON_RESPONSE_TIMEOUT)
@@ -79,6 +76,9 @@ class NSBAppClient:
                     return False
         else:
             return False
+        
+    def close(self):
+        self.__close()
 
     def test_send1(self, message):
         self.__send_message(message)
@@ -121,8 +121,12 @@ async def test():
 def test_persistent():
     app = NSBAppClient("127.0.0.1", 65432)
     app.test_send2(persistent=True)
+
+def test_ping():
+    app = NSBAppClient("127.0.0.1", 65432)
+    app.ping()
     
 if __name__ == "__main__":
     import asyncio
     import random
-    test_persistent()
+    test_ping()

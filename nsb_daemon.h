@@ -29,7 +29,7 @@ private:
     bool running;
     int server_port;
     void start_server(int port);
-    // int handle_message(int fd, int fd, nsb::nsbm nsb_msg);
+    int handle_message(std::vector<char> message);
 };
 
 #endif // NSB_DAEMON_H

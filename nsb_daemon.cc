@@ -110,6 +110,7 @@ void NSBDaemon::start_server(int port) {
                 }
                 if (message_exists) {
                     printf("Received message from (FD:%d): %s\n", fd, message.data());
+                    handle_message(message);
                     ++it;
                 }
                 else {
@@ -147,9 +148,13 @@ void NSBDaemon::start_server(int port) {
     std::cout << "Server stopped." << std::endl;
 }
 
-// int NSBDaemon::handle_message(int fd, nsb::nsbm nsb_msg) {
-
-// }
+int NSBDaemon::handle_message(std::vector<char> message) {
+    nsb::nsbm nsb_message;
+    nsb_message.ParseFromArray(message.data(), message.size());
+    nsb::nsbm::Manifest manifest = nsb_message.manifest();
+    printf("OP %d RECEIVED\n", manifest.op());
+    return 0;
+}
 
 void NSBDaemon::stop() {
     if (running) {
