@@ -9,7 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "nsb.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
         },
         {
             "name": "Debug NSB Daemon",
@@ -36,8 +36,8 @@
     "compounds": [
         {
             "name": "Run Daemon & App Client",
-            "configurations": ["Debug NSB Daemon", "Debug Python Client"],
-            "stopAll": true,
+            "configurations": ["Debug Python Client", "Debug NSB Daemon"],
+            "stopAll": true
         }
     ]
 }

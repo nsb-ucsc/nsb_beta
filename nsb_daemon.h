@@ -34,6 +34,7 @@ public:
     // }
 
 private:
+    int MAX_BUFFER_SIZE = 4096;
     bool running;
     int server_port;
     void start_server(int port);

@@ -88,60 +88,59 @@ void NSBDaemon::start_server(int port) {
         }
 
         timeval timeout{};
-        timeout.tv_sec = 1; // 1-second timeout
+        timeout.tv_sec = 0; // Non-blocking.
         timeout.tv_usec = 0;
 
         int activity = select(max_fd + 1, &read_fds, nullptr, nullptr, &timeout);
         if (activity < 0 && errno != EINTR) {
             perror("Select error.");
             break;
-        }
-
-        // Monitor existing connections.
-        for (auto it=client_fds.begin(); it!=client_fds.end();) {
-            int fd = *it;
-            if (FD_ISSET(fd, &read_fds)) {
-                bool message_exists = false;
-                int chunk_size = 2;
-                char buffer[chunk_size];
-                std::vector<char> message;
-                // Read buffer until there's nothing left.
-                int bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
-                while(bytes_read > 0) {
-                    message_exists = true;
-                    printf("Picked up %d bytes from (FD:%d)\n", bytes_read, fd);
-                    message.insert(message.end(), buffer, buffer+chunk_size-1);
-                    bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+        } else if (activity > 0) {
+            // Monitor existing connections.
+            for (auto it=client_fds.begin(); it!=client_fds.end();) {
+                int fd = *it;
+                if (FD_ISSET(fd, &read_fds)) {
+                    bool message_exists = false;
+                    char buffer[MAX_BUFFER_SIZE];
+                    std::vector<char> message;
+                    // Read buffer until there's nothing left.
+                    int bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                    while(bytes_read > 0) {
+                        message_exists = true;
+                        printf("Picked up %d bytes from (FD:%d)\n", bytes_read, fd);
+                        message.insert(message.end(), buffer, buffer+bytes_read);
+                        bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                    }
+                    if (message_exists) {
+                        printf("Received message from (FD:%d): %s\n", fd, message.data());
+                        handle_message(fd, message);
+                        ++it;
+                    }
+                    else {
+                        printf("Disconnected from (FD:%d)\n", fd);
+                        shutdown(fd, SHUT_WR);
+                        close(fd);
+                        client_fds.erase(it);
+                    }
                 }
-                if (message_exists) {
-                    printf("Received message from (FD:%d): %s\n", fd, message.data());
-                    handle_message(fd, message);
-                    ++it;
-                }
-                else {
-                    printf("Disconnected from (FD:%d)\n", fd);
-                    shutdown(fd, SHUT_WR);
-                    close(fd);
-                    client_fds.erase(it);
-                }
+                else {++it;}
             }
-            else {++it;}
-        }
 
-        // Handle new connections.
-        if (FD_ISSET(server_fd, &read_fds)) {
-            sockaddr_in client_addr{};
-            socklen_t client_len = sizeof(client_addr);
-            int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
-            if (client_fd == -1) {
-                perror("Accept failed.");
-                continue;
+            // Handle new connections.
+            if (FD_ISSET(server_fd, &read_fds)) {
+                sockaddr_in client_addr{};
+                socklen_t client_len = sizeof(client_addr);
+                int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+                if (client_fd == -1) {
+                    perror("Accept failed.");
+                    continue;
+                }
+                char addr_string[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(client_addr.sin_addr), addr_string, INET_ADDRSTRLEN);
+                printf("New connection accepted: %s\n", addr_string);
+                // Add to the connection pool.
+                client_fds.push_back(client_fd);
             }
-            char addr_string[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &(client_addr.sin_addr), addr_string, INET_ADDRSTRLEN);
-            printf("New connection accepted: %s\n", addr_string);
-            // Add to the connection pool.
-            client_fds.push_back(client_fd);
         }
     }
     // When running stops, close connections and close server.
@@ -162,27 +161,35 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     // Prepare response.
     nsb::nsbm nsb_response;
     nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+    bool response_required = false;
     switch (manifest.op()) {
         case nsb::nsbm::Manifest::PING:
             printf("\t...it's a PING!\n");
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
             r_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+            response_required = true;
+            break;
+        case nsb::nsbm::Manifest::EXIT:
+            printf("\tLooks like we're done here.\n");
+            stop();
             break;
         default:
             printf("\tUnknown operation.");
-            // Create a negative ping response.
-            nsb::nsbm nsb_response;
-            nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+            // Create a negative PING response.
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
             r_manifest->set_code(nsb::nsbm::Manifest::FAILURE);
+            response_required = true;
     }
-    std::size_t size = nsb_response.ByteSizeLong();
-    void* r_buffer = malloc(size);
-    nsb_response.SerializeToArray(r_buffer, size);
-    printf("\tBack at ya! %s\n", r_buffer);
-    send(fd, r_buffer, size, 0);
+    // Send response if required.
+    if (response_required) {
+        std::size_t size = nsb_response.ByteSizeLong();
+        void* r_buffer = malloc(size);
+        nsb_response.SerializeToArray(r_buffer, size);
+        printf("\tBack at ya! (%dB) %s\n", size, r_buffer);
+        send(fd, r_buffer, size, 0);
+    }
 }
 
 void NSBDaemon::stop() {

@@ -4,17 +4,28 @@ import time
 import nsb_pb2
 import asyncio
 
+# Set up logging.
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
+                    datefmt='%H:%M:%S',
+                    handlers=[
+                        logging.StreamHandler(),
+                    ])
+
 SERVER_CONNECTION_TIMEOUT = 10
 DAEMON_RESPONSE_TIMEOUT = 5
 RESPONSE_BUFFER_SIZE = 4096
 
-### NSB Application Client ###
+### NSB Client Base Class ###
 
-class NSBAppClient:
+class NSBClient:
     def __init__(self, server_address, server_port):
         # Set connection information.
         self.server_addr = server_address
         self.server_port = server_port
+        # Create logger.
+        self.logger = logging.getLogger("NSBClient")
         # Connect.
         self.__connect()
 
@@ -27,15 +38,19 @@ class NSBAppClient:
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
     def __connect(self, timeout=SERVER_CONNECTION_TIMEOUT):
+        self.logger.info(f"Connecting to daemon@{self.server_addr}:{self.server_port}...")
         target_time = time.time() + timeout
         while time.time() < target_time:
             try:
+                self.logger.debug("\tAttempting...")
                 self.__configure()
                 self.conn.connect((self.server_addr, self.server_port))
-                break
+                self.logger.info("\tConnected!")
+                return
             except socket.error as e:
-                print(f"Socket error: {e}")
+                # print(f"Socket error: {e}")
                 time.sleep(1)
+        raise TimeoutError(f"Connection to server timed out after {timeout} seconds.")
 
     def __close(self):
         self.conn.shutdown(socket.SHUT_WR)
@@ -44,14 +59,14 @@ class NSBAppClient:
     def __send_message(self, message):
         self.conn.sendall(message)
 
-    def __get_response(self, timeout):
+    def __get_response(self, timeout=DAEMON_RESPONSE_TIMEOUT):
         self.conn.setblocking(False)
         # Set target time.
         target_time = time.time() + timeout
         data = b''
         message_exists = False
         while True and time.time() < target_time:
-            data_arrived, _, _ = select.select([self.conn], [], [], timeout)
+            data_arrived, _, _ = select.select([self.conn], [], [], 0)
             if data_arrived:
                 try:
                     chunk = self.conn.recv(RESPONSE_BUFFER_SIZE)
@@ -70,76 +85,66 @@ class NSBAppClient:
                     return data
         self.conn.setblocking(True)
         return None
+    
+    def __del__(self):
+        self.__close()
+
+### NSB Application Client ###
+
+class NSBAppClient(NSBClient):
+    def __init__(self, server_address, server_port):
+        super().__init__(server_address, server_port)
+        # Create distinct logger.
+        self.logger = logging.getLogger("NSBAppClient")
 
     def ping(self):
         """
         Pings the server.
         """
-        # Create and populate a new message.
+        # Create and populate a new PING message.
         nsb_msg = nsb_pb2.nsbm()
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.PING
         nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message and get response.
-        self.__send_message(nsb_msg.SerializeToString())
-        response = self.__get_response(DAEMON_RESPONSE_TIMEOUT)
+        self._NSBClient__send_message(nsb_msg.SerializeToString())
+        self.logger.info("PING: Pinged server.")
+        response = self._NSBClient__get_response()
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
             if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.PING:
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.SUCCESS:
-                    print("PING: Server has pinged back!")
+                    self.logger.info("PING: Server has pinged back!")
                     return True
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.FAILURE:
-                    print("PING: Server has some issue, but is reachable.")
+                    self.logger.info("PING: Server has some issue, but is reachable.")
                     return False
                 else:
-                    print("PING: Unexpected behavior at server.")
+                    self.logger.info("PING: Unexpected behavior at server.")
                     return False
         else:
             return False
+    
+    def exit(self):
+        # Create and populate a new message.
+        nsb_msg = nsb_pb2.nsbm()
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.EXIT
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        # Send the message.
+        self._NSBClient__send_message(nsb_msg.SerializeToString())
+        self.logger.info("EXIT: Sent command to server.")
+        # End self.
+        del self
         
-    def close(self):
-        self.__close()
 
-    def test_send1(self, message):
-        self.__send_message(message)
-
-    def test_send2(self, persistent=False):
-        if persistent:
-            self.__connect()
-        while True:
-            message = input(">> ")
-            if message == "exit":
-                break
-            else:
-                if persistent:
-                    self.conn.sendall(message.encode())
-                else:
-                    self.__send_message(message.encode())
-        if persistent:
-            self.__close()
-
-# Functions used for testing.
-async def dispatch_app_client(role="ping"):
-    app = NSBAppClient("127.0.0.1", 65432)
-    input("Press Enter to continue...")
-    app.test_send(b"hello")
-    input("Press Enter to continue...")
-    app.test_send(b"yurrt")
-    input("Press Enter to continue...")
-    app.test_send(b"skrrraa")
-    input("Press Enter to continue...")
-    del app
+### TEST FUNCTIONS ###
 
 def dispatch_app_ping():
     app = NSBAppClient("127.0.0.1", 65432)
     return app.ping()
-
-async def test():
-    await asyncio.gather(dispatch_app_client(),
-                         dispatch_app_client())
     
 def test_persistent():
     app = NSBAppClient("127.0.0.1", 65432)
@@ -148,7 +153,10 @@ def test_persistent():
 def test_ping():
     app = NSBAppClient("127.0.0.1", 65432)
     app.ping()
-    
+    app.exit()
+
+### MAIN FUNCTION (FOR TESTING) ###
+
 if __name__ == "__main__":
     import asyncio
     import random
