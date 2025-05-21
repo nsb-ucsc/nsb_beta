@@ -53,15 +53,12 @@ struct TableStruct_nsb_2eproto {
 extern const ::google::protobuf::internal::DescriptorTable
     descriptor_table_nsb_2eproto;
 namespace nsb {
-class nsbm;
-struct nsbmDefaultTypeInternal;
-extern nsbmDefaultTypeInternal _nsbm_default_instance_;
-class nsbm_Manifest;
-struct nsbm_ManifestDefaultTypeInternal;
-extern nsbm_ManifestDefaultTypeInternal _nsbm_Manifest_default_instance_;
-class nsbm_Metadata;
-struct nsbm_MetadataDefaultTypeInternal;
-extern nsbm_MetadataDefaultTypeInternal _nsbm_Metadata_default_instance_;
+class Manifest;
+struct ManifestDefaultTypeInternal;
+extern ManifestDefaultTypeInternal _Manifest_default_instance_;
+class Metadata;
+struct MetadataDefaultTypeInternal;
+extern MetadataDefaultTypeInternal _Metadata_default_instance_;
 }  // namespace nsb
 namespace google {
 namespace protobuf {
@@ -69,129 +66,145 @@ namespace protobuf {
 }  // namespace google
 
 namespace nsb {
-enum nsbm_Manifest_Operation : int {
-  nsbm_Manifest_Operation_PING = 1,
-  nsbm_Manifest_Operation_INIT = 2,
-  nsbm_Manifest_Operation_EXIT = 8,
+enum Manifest_Operation : int {
+  Manifest_Operation_PING = 0,
+  Manifest_Operation_INIT = 1,
+  Manifest_Operation_EXIT = 7,
+  Manifest_Operation_Manifest_Operation_INT_MIN_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::min(),
+  Manifest_Operation_Manifest_Operation_INT_MAX_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::max(),
 };
 
-bool nsbm_Manifest_Operation_IsValid(int value);
-extern const uint32_t nsbm_Manifest_Operation_internal_data_[];
-constexpr nsbm_Manifest_Operation nsbm_Manifest_Operation_Operation_MIN = static_cast<nsbm_Manifest_Operation>(1);
-constexpr nsbm_Manifest_Operation nsbm_Manifest_Operation_Operation_MAX = static_cast<nsbm_Manifest_Operation>(8);
-constexpr int nsbm_Manifest_Operation_Operation_ARRAYSIZE = 8 + 1;
+bool Manifest_Operation_IsValid(int value);
+extern const uint32_t Manifest_Operation_internal_data_[];
+constexpr Manifest_Operation Manifest_Operation_Operation_MIN = static_cast<Manifest_Operation>(0);
+constexpr Manifest_Operation Manifest_Operation_Operation_MAX = static_cast<Manifest_Operation>(7);
+constexpr int Manifest_Operation_Operation_ARRAYSIZE = 7 + 1;
 const ::google::protobuf::EnumDescriptor*
-nsbm_Manifest_Operation_descriptor();
+Manifest_Operation_descriptor();
 template <typename T>
-const std::string& nsbm_Manifest_Operation_Name(T value) {
-  static_assert(std::is_same<T, nsbm_Manifest_Operation>::value ||
+const std::string& Manifest_Operation_Name(T value) {
+  static_assert(std::is_same<T, Manifest_Operation>::value ||
                     std::is_integral<T>::value,
                 "Incorrect type passed to Operation_Name().");
-  return nsbm_Manifest_Operation_Name(static_cast<nsbm_Manifest_Operation>(value));
+  return Manifest_Operation_Name(static_cast<Manifest_Operation>(value));
 }
 template <>
-inline const std::string& nsbm_Manifest_Operation_Name(nsbm_Manifest_Operation value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<nsbm_Manifest_Operation_descriptor,
-                                                 1, 8>(
-      static_cast<int>(value));
-}
-inline bool nsbm_Manifest_Operation_Parse(absl::string_view name, nsbm_Manifest_Operation* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<nsbm_Manifest_Operation>(
-      nsbm_Manifest_Operation_descriptor(), name, value);
-}
-enum nsbm_Manifest_Originator : int {
-  nsbm_Manifest_Originator_DAEMON = 0,
-  nsbm_Manifest_Originator_APP_CLIENT = 1,
-  nsbm_Manifest_Originator_SIM_CLIENT = 2,
-};
-
-bool nsbm_Manifest_Originator_IsValid(int value);
-extern const uint32_t nsbm_Manifest_Originator_internal_data_[];
-constexpr nsbm_Manifest_Originator nsbm_Manifest_Originator_Originator_MIN = static_cast<nsbm_Manifest_Originator>(0);
-constexpr nsbm_Manifest_Originator nsbm_Manifest_Originator_Originator_MAX = static_cast<nsbm_Manifest_Originator>(2);
-constexpr int nsbm_Manifest_Originator_Originator_ARRAYSIZE = 2 + 1;
-const ::google::protobuf::EnumDescriptor*
-nsbm_Manifest_Originator_descriptor();
-template <typename T>
-const std::string& nsbm_Manifest_Originator_Name(T value) {
-  static_assert(std::is_same<T, nsbm_Manifest_Originator>::value ||
-                    std::is_integral<T>::value,
-                "Incorrect type passed to Originator_Name().");
-  return nsbm_Manifest_Originator_Name(static_cast<nsbm_Manifest_Originator>(value));
-}
-template <>
-inline const std::string& nsbm_Manifest_Originator_Name(nsbm_Manifest_Originator value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<nsbm_Manifest_Originator_descriptor,
-                                                 0, 2>(
-      static_cast<int>(value));
-}
-inline bool nsbm_Manifest_Originator_Parse(absl::string_view name, nsbm_Manifest_Originator* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<nsbm_Manifest_Originator>(
-      nsbm_Manifest_Originator_descriptor(), name, value);
-}
-enum nsbm_Manifest_OpCode : int {
-  nsbm_Manifest_OpCode_SUCCESS = 0,
-  nsbm_Manifest_OpCode_FAILURE = 1,
-  nsbm_Manifest_OpCode_CLIENT_REQUEST = 2,
-  nsbm_Manifest_OpCode_DAEMON_RESPONSE = 3,
-  nsbm_Manifest_OpCode_IMPLICIT_TARGET = 4,
-  nsbm_Manifest_OpCode_EXPLICIT_TARGET = 5,
-  nsbm_Manifest_OpCode_MESSAGE = 6,
-  nsbm_Manifest_OpCode_NO_MESSAGE = 7,
-};
-
-bool nsbm_Manifest_OpCode_IsValid(int value);
-extern const uint32_t nsbm_Manifest_OpCode_internal_data_[];
-constexpr nsbm_Manifest_OpCode nsbm_Manifest_OpCode_OpCode_MIN = static_cast<nsbm_Manifest_OpCode>(0);
-constexpr nsbm_Manifest_OpCode nsbm_Manifest_OpCode_OpCode_MAX = static_cast<nsbm_Manifest_OpCode>(7);
-constexpr int nsbm_Manifest_OpCode_OpCode_ARRAYSIZE = 7 + 1;
-const ::google::protobuf::EnumDescriptor*
-nsbm_Manifest_OpCode_descriptor();
-template <typename T>
-const std::string& nsbm_Manifest_OpCode_Name(T value) {
-  static_assert(std::is_same<T, nsbm_Manifest_OpCode>::value ||
-                    std::is_integral<T>::value,
-                "Incorrect type passed to OpCode_Name().");
-  return nsbm_Manifest_OpCode_Name(static_cast<nsbm_Manifest_OpCode>(value));
-}
-template <>
-inline const std::string& nsbm_Manifest_OpCode_Name(nsbm_Manifest_OpCode value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<nsbm_Manifest_OpCode_descriptor,
+inline const std::string& Manifest_Operation_Name(Manifest_Operation value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<Manifest_Operation_descriptor,
                                                  0, 7>(
       static_cast<int>(value));
 }
-inline bool nsbm_Manifest_OpCode_Parse(absl::string_view name, nsbm_Manifest_OpCode* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<nsbm_Manifest_OpCode>(
-      nsbm_Manifest_OpCode_descriptor(), name, value);
+inline bool Manifest_Operation_Parse(absl::string_view name, Manifest_Operation* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Manifest_Operation>(
+      Manifest_Operation_descriptor(), name, value);
 }
-enum nsbm_Metadata_Type : int {
-  nsbm_Metadata_Type_INT = 0,
-  nsbm_Metadata_Type_STR = 1,
+enum Manifest_Originator : int {
+  Manifest_Originator_DAEMON = 0,
+  Manifest_Originator_APP_CLIENT = 1,
+  Manifest_Originator_SIM_CLIENT = 2,
+  Manifest_Originator_Manifest_Originator_INT_MIN_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::min(),
+  Manifest_Originator_Manifest_Originator_INT_MAX_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::max(),
 };
 
-bool nsbm_Metadata_Type_IsValid(int value);
-extern const uint32_t nsbm_Metadata_Type_internal_data_[];
-constexpr nsbm_Metadata_Type nsbm_Metadata_Type_Type_MIN = static_cast<nsbm_Metadata_Type>(0);
-constexpr nsbm_Metadata_Type nsbm_Metadata_Type_Type_MAX = static_cast<nsbm_Metadata_Type>(1);
-constexpr int nsbm_Metadata_Type_Type_ARRAYSIZE = 1 + 1;
+bool Manifest_Originator_IsValid(int value);
+extern const uint32_t Manifest_Originator_internal_data_[];
+constexpr Manifest_Originator Manifest_Originator_Originator_MIN = static_cast<Manifest_Originator>(0);
+constexpr Manifest_Originator Manifest_Originator_Originator_MAX = static_cast<Manifest_Originator>(2);
+constexpr int Manifest_Originator_Originator_ARRAYSIZE = 2 + 1;
 const ::google::protobuf::EnumDescriptor*
-nsbm_Metadata_Type_descriptor();
+Manifest_Originator_descriptor();
 template <typename T>
-const std::string& nsbm_Metadata_Type_Name(T value) {
-  static_assert(std::is_same<T, nsbm_Metadata_Type>::value ||
+const std::string& Manifest_Originator_Name(T value) {
+  static_assert(std::is_same<T, Manifest_Originator>::value ||
                     std::is_integral<T>::value,
-                "Incorrect type passed to Type_Name().");
-  return nsbm_Metadata_Type_Name(static_cast<nsbm_Metadata_Type>(value));
+                "Incorrect type passed to Originator_Name().");
+  return Manifest_Originator_Name(static_cast<Manifest_Originator>(value));
 }
 template <>
-inline const std::string& nsbm_Metadata_Type_Name(nsbm_Metadata_Type value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<nsbm_Metadata_Type_descriptor,
+inline const std::string& Manifest_Originator_Name(Manifest_Originator value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<Manifest_Originator_descriptor,
+                                                 0, 2>(
+      static_cast<int>(value));
+}
+inline bool Manifest_Originator_Parse(absl::string_view name, Manifest_Originator* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Manifest_Originator>(
+      Manifest_Originator_descriptor(), name, value);
+}
+enum Manifest_OpCode : int {
+  Manifest_OpCode_SUCCESS = 0,
+  Manifest_OpCode_FAILURE = 1,
+  Manifest_OpCode_CLIENT_REQUEST = 2,
+  Manifest_OpCode_DAEMON_RESPONSE = 3,
+  Manifest_OpCode_IMPLICIT_TARGET = 4,
+  Manifest_OpCode_EXPLICIT_TARGET = 5,
+  Manifest_OpCode_MESSAGE = 6,
+  Manifest_OpCode_NO_MESSAGE = 7,
+  Manifest_OpCode_Manifest_OpCode_INT_MIN_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::min(),
+  Manifest_OpCode_Manifest_OpCode_INT_MAX_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::max(),
+};
+
+bool Manifest_OpCode_IsValid(int value);
+extern const uint32_t Manifest_OpCode_internal_data_[];
+constexpr Manifest_OpCode Manifest_OpCode_OpCode_MIN = static_cast<Manifest_OpCode>(0);
+constexpr Manifest_OpCode Manifest_OpCode_OpCode_MAX = static_cast<Manifest_OpCode>(7);
+constexpr int Manifest_OpCode_OpCode_ARRAYSIZE = 7 + 1;
+const ::google::protobuf::EnumDescriptor*
+Manifest_OpCode_descriptor();
+template <typename T>
+const std::string& Manifest_OpCode_Name(T value) {
+  static_assert(std::is_same<T, Manifest_OpCode>::value ||
+                    std::is_integral<T>::value,
+                "Incorrect type passed to OpCode_Name().");
+  return Manifest_OpCode_Name(static_cast<Manifest_OpCode>(value));
+}
+template <>
+inline const std::string& Manifest_OpCode_Name(Manifest_OpCode value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<Manifest_OpCode_descriptor,
+                                                 0, 7>(
+      static_cast<int>(value));
+}
+inline bool Manifest_OpCode_Parse(absl::string_view name, Manifest_OpCode* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Manifest_OpCode>(
+      Manifest_OpCode_descriptor(), name, value);
+}
+enum Metadata_Type : int {
+  Metadata_Type_INT = 0,
+  Metadata_Type_STR = 1,
+  Metadata_Type_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::min(),
+  Metadata_Type_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_ =
+      std::numeric_limits<::int32_t>::max(),
+};
+
+bool Metadata_Type_IsValid(int value);
+extern const uint32_t Metadata_Type_internal_data_[];
+constexpr Metadata_Type Metadata_Type_Type_MIN = static_cast<Metadata_Type>(0);
+constexpr Metadata_Type Metadata_Type_Type_MAX = static_cast<Metadata_Type>(1);
+constexpr int Metadata_Type_Type_ARRAYSIZE = 1 + 1;
+const ::google::protobuf::EnumDescriptor*
+Metadata_Type_descriptor();
+template <typename T>
+const std::string& Metadata_Type_Name(T value) {
+  static_assert(std::is_same<T, Metadata_Type>::value ||
+                    std::is_integral<T>::value,
+                "Incorrect type passed to Type_Name().");
+  return Metadata_Type_Name(static_cast<Metadata_Type>(value));
+}
+template <>
+inline const std::string& Metadata_Type_Name(Metadata_Type value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<Metadata_Type_descriptor,
                                                  0, 1>(
       static_cast<int>(value));
 }
-inline bool nsbm_Metadata_Type_Parse(absl::string_view name, nsbm_Metadata_Type* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<nsbm_Metadata_Type>(
-      nsbm_Metadata_Type_descriptor(), name, value);
+inline bool Metadata_Type_Parse(absl::string_view name, Metadata_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Metadata_Type>(
+      Metadata_Type_descriptor(), name, value);
 }
 
 // ===================================================================
@@ -199,31 +212,31 @@ inline bool nsbm_Metadata_Type_Parse(absl::string_view name, nsbm_Metadata_Type*
 
 // -------------------------------------------------------------------
 
-class nsbm_Metadata final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:nsb.nsbm.Metadata) */ {
+class Metadata final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:nsb.Metadata) */ {
  public:
-  inline nsbm_Metadata() : nsbm_Metadata(nullptr) {}
-  ~nsbm_Metadata() PROTOBUF_FINAL;
+  inline Metadata() : Metadata(nullptr) {}
+  ~Metadata() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(nsbm_Metadata* msg, std::destroying_delete_t) {
+  void operator delete(Metadata* msg, std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(nsbm_Metadata));
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(Metadata));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR nsbm_Metadata(
+  explicit PROTOBUF_CONSTEXPR Metadata(
       ::google::protobuf::internal::ConstantInitialized);
 
-  inline nsbm_Metadata(const nsbm_Metadata& from) : nsbm_Metadata(nullptr, from) {}
-  inline nsbm_Metadata(nsbm_Metadata&& from) noexcept
-      : nsbm_Metadata(nullptr, std::move(from)) {}
-  inline nsbm_Metadata& operator=(const nsbm_Metadata& from) {
+  inline Metadata(const Metadata& from) : Metadata(nullptr, from) {}
+  inline Metadata(Metadata&& from) noexcept
+      : Metadata(nullptr, std::move(from)) {}
+  inline Metadata& operator=(const Metadata& from) {
     CopyFrom(from);
     return *this;
   }
-  inline nsbm_Metadata& operator=(nsbm_Metadata&& from) noexcept {
+  inline Metadata& operator=(Metadata&& from) noexcept {
     if (this == &from) return *this;
     if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
       InternalSwap(&from);
@@ -251,7 +264,7 @@ class nsbm_Metadata final : public ::google::protobuf::Message
   static const ::google::protobuf::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const nsbm_Metadata& default_instance() {
+  static const Metadata& default_instance() {
     return *internal_default_instance();
   }
   enum SrcCase {
@@ -264,13 +277,13 @@ class nsbm_Metadata final : public ::google::protobuf::Message
     kDestAddr = 5,
     DEST_NOT_SET = 0,
   };
-  static inline const nsbm_Metadata* internal_default_instance() {
-    return reinterpret_cast<const nsbm_Metadata*>(
-        &_nsbm_Metadata_default_instance_);
+  static inline const Metadata* internal_default_instance() {
+    return reinterpret_cast<const Metadata*>(
+        &_Metadata_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 1;
-  friend void swap(nsbm_Metadata& a, nsbm_Metadata& b) { a.Swap(&b); }
-  inline void Swap(nsbm_Metadata* other) {
+  friend void swap(Metadata& a, Metadata& b) { a.Swap(&b); }
+  inline void Swap(Metadata* other) {
     if (other == this) return;
     if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
@@ -278,7 +291,7 @@ class nsbm_Metadata final : public ::google::protobuf::Message
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(nsbm_Metadata* other) {
+  void UnsafeArenaSwap(Metadata* other) {
     if (other == this) return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
@@ -286,13 +299,13 @@ class nsbm_Metadata final : public ::google::protobuf::Message
 
   // implements Message ----------------------------------------------
 
-  nsbm_Metadata* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<nsbm_Metadata>(arena);
+  Metadata* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<Metadata>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const nsbm_Metadata& from);
+  void CopyFrom(const Metadata& from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const nsbm_Metadata& from) { nsbm_Metadata::MergeImpl(*this, from); }
+  void MergeFrom(const Metadata& from) { Metadata::MergeImpl(*this, from); }
 
   private:
   static void MergeImpl(
@@ -301,13 +314,8 @@ class nsbm_Metadata final : public ::google::protobuf::Message
 
   public:
   bool IsInitialized() const {
-    return IsInitializedImpl(*this);
+    return true;
   }
-
-  private:
-  static bool IsInitializedImpl(const MessageLite& msg);
-
-  public:
   ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
   #if defined(PROTOBUF_CUSTOM_VTABLE)
   private:
@@ -334,18 +342,18 @@ class nsbm_Metadata final : public ::google::protobuf::Message
   private:
   void SharedCtor(::google::protobuf::Arena* arena);
   static void SharedDtor(MessageLite& self);
-  void InternalSwap(nsbm_Metadata* other);
+  void InternalSwap(Metadata* other);
  private:
   template <typename T>
   friend ::absl::string_view(
       ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "nsb.nsbm.Metadata"; }
+  static ::absl::string_view FullMessageName() { return "nsb.Metadata"; }
 
  protected:
-  explicit nsbm_Metadata(::google::protobuf::Arena* arena);
-  nsbm_Metadata(::google::protobuf::Arena* arena, const nsbm_Metadata& from);
-  nsbm_Metadata(::google::protobuf::Arena* arena, nsbm_Metadata&& from) noexcept
-      : nsbm_Metadata(arena) {
+  explicit Metadata(::google::protobuf::Arena* arena);
+  Metadata(::google::protobuf::Arena* arena, const Metadata& from);
+  Metadata(::google::protobuf::Arena* arena, Metadata&& from) noexcept
+      : Metadata(arena) {
     *this = ::std::move(from);
   }
   const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
@@ -357,24 +365,24 @@ class nsbm_Metadata final : public ::google::protobuf::Message
  public:
   ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
-  using Type = nsbm_Metadata_Type;
-  static constexpr Type INT = nsbm_Metadata_Type_INT;
-  static constexpr Type STR = nsbm_Metadata_Type_STR;
+  using Type = Metadata_Type;
+  static constexpr Type INT = Metadata_Type_INT;
+  static constexpr Type STR = Metadata_Type_STR;
   static inline bool Type_IsValid(int value) {
-    return nsbm_Metadata_Type_IsValid(value);
+    return Metadata_Type_IsValid(value);
   }
-  static constexpr Type Type_MIN = nsbm_Metadata_Type_Type_MIN;
-  static constexpr Type Type_MAX = nsbm_Metadata_Type_Type_MAX;
-  static constexpr int Type_ARRAYSIZE = nsbm_Metadata_Type_Type_ARRAYSIZE;
+  static constexpr Type Type_MIN = Metadata_Type_Type_MIN;
+  static constexpr Type Type_MAX = Metadata_Type_Type_MAX;
+  static constexpr int Type_ARRAYSIZE = Metadata_Type_Type_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor* Type_descriptor() {
-    return nsbm_Metadata_Type_descriptor();
+    return Metadata_Type_descriptor();
   }
   template <typename T>
   static inline const std::string& Type_Name(T value) {
-    return nsbm_Metadata_Type_Name(value);
+    return Metadata_Type_Name(value);
   }
   static inline bool Type_Parse(absl::string_view name, Type* value) {
-    return nsbm_Metadata_Type_Parse(name, value);
+    return Metadata_Type_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
@@ -386,18 +394,18 @@ class nsbm_Metadata final : public ::google::protobuf::Message
     kDestIdFieldNumber = 4,
     kDestAddrFieldNumber = 5,
   };
-  // required .nsb.nsbm.Metadata.Type addr_type = 1;
+  // .nsb.Metadata.Type addr_type = 1;
   bool has_addr_type() const;
   void clear_addr_type() ;
-  ::nsb::nsbm_Metadata_Type addr_type() const;
-  void set_addr_type(::nsb::nsbm_Metadata_Type value);
+  ::nsb::Metadata_Type addr_type() const;
+  void set_addr_type(::nsb::Metadata_Type value);
 
   private:
-  ::nsb::nsbm_Metadata_Type _internal_addr_type() const;
-  void _internal_set_addr_type(::nsb::nsbm_Metadata_Type value);
+  ::nsb::Metadata_Type _internal_addr_type() const;
+  void _internal_set_addr_type(::nsb::Metadata_Type value);
 
   public:
-  // optional int32 payload_size = 6;
+  // int32 payload_size = 6;
   bool has_payload_size() const;
   void clear_payload_size() ;
   ::int32_t payload_size() const;
@@ -468,7 +476,7 @@ class nsbm_Metadata final : public ::google::protobuf::Message
   SrcCase src_case() const;
   void clear_dest();
   DestCase dest_case() const;
-  // @@protoc_insertion_point(class_scope:nsb.nsbm.Metadata)
+  // @@protoc_insertion_point(class_scope:nsb.Metadata)
  private:
   class _Internal;
   void set_has_src_id();
@@ -481,8 +489,8 @@ class nsbm_Metadata final : public ::google::protobuf::Message
   inline void clear_has_dest();
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      1, 6, 1,
-      39, 2>
+      1, 6, 0,
+      34, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -498,7 +506,7 @@ class nsbm_Metadata final : public ::google::protobuf::Message
                           ::google::protobuf::Arena* arena);
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
-                          const nsbm_Metadata& from_msg);
+                          const Metadata& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     int addr_type_;
@@ -523,31 +531,31 @@ class nsbm_Metadata final : public ::google::protobuf::Message
 };
 // -------------------------------------------------------------------
 
-class nsbm_Manifest final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:nsb.nsbm.Manifest) */ {
+class Manifest final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:nsb.Manifest) */ {
  public:
-  inline nsbm_Manifest() : nsbm_Manifest(nullptr) {}
-  ~nsbm_Manifest() PROTOBUF_FINAL;
+  inline Manifest() : Manifest(nullptr) {}
+  ~Manifest() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(nsbm_Manifest* msg, std::destroying_delete_t) {
+  void operator delete(Manifest* msg, std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(nsbm_Manifest));
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(Manifest));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR nsbm_Manifest(
+  explicit PROTOBUF_CONSTEXPR Manifest(
       ::google::protobuf::internal::ConstantInitialized);
 
-  inline nsbm_Manifest(const nsbm_Manifest& from) : nsbm_Manifest(nullptr, from) {}
-  inline nsbm_Manifest(nsbm_Manifest&& from) noexcept
-      : nsbm_Manifest(nullptr, std::move(from)) {}
-  inline nsbm_Manifest& operator=(const nsbm_Manifest& from) {
+  inline Manifest(const Manifest& from) : Manifest(nullptr, from) {}
+  inline Manifest(Manifest&& from) noexcept
+      : Manifest(nullptr, std::move(from)) {}
+  inline Manifest& operator=(const Manifest& from) {
     CopyFrom(from);
     return *this;
   }
-  inline nsbm_Manifest& operator=(nsbm_Manifest&& from) noexcept {
+  inline Manifest& operator=(Manifest&& from) noexcept {
     if (this == &from) return *this;
     if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
       InternalSwap(&from);
@@ -575,16 +583,16 @@ class nsbm_Manifest final : public ::google::protobuf::Message
   static const ::google::protobuf::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const nsbm_Manifest& default_instance() {
+  static const Manifest& default_instance() {
     return *internal_default_instance();
   }
-  static inline const nsbm_Manifest* internal_default_instance() {
-    return reinterpret_cast<const nsbm_Manifest*>(
-        &_nsbm_Manifest_default_instance_);
+  static inline const Manifest* internal_default_instance() {
+    return reinterpret_cast<const Manifest*>(
+        &_Manifest_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 0;
-  friend void swap(nsbm_Manifest& a, nsbm_Manifest& b) { a.Swap(&b); }
-  inline void Swap(nsbm_Manifest* other) {
+  friend void swap(Manifest& a, Manifest& b) { a.Swap(&b); }
+  inline void Swap(Manifest* other) {
     if (other == this) return;
     if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
@@ -592,7 +600,7 @@ class nsbm_Manifest final : public ::google::protobuf::Message
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(nsbm_Manifest* other) {
+  void UnsafeArenaSwap(Manifest* other) {
     if (other == this) return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
@@ -600,13 +608,13 @@ class nsbm_Manifest final : public ::google::protobuf::Message
 
   // implements Message ----------------------------------------------
 
-  nsbm_Manifest* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<nsbm_Manifest>(arena);
+  Manifest* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<Manifest>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const nsbm_Manifest& from);
+  void CopyFrom(const Manifest& from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const nsbm_Manifest& from) { nsbm_Manifest::MergeImpl(*this, from); }
+  void MergeFrom(const Manifest& from) { Manifest::MergeImpl(*this, from); }
 
   private:
   static void MergeImpl(
@@ -615,13 +623,8 @@ class nsbm_Manifest final : public ::google::protobuf::Message
 
   public:
   bool IsInitialized() const {
-    return IsInitializedImpl(*this);
+    return true;
   }
-
-  private:
-  static bool IsInitializedImpl(const MessageLite& msg);
-
-  public:
   ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
   #if defined(PROTOBUF_CUSTOM_VTABLE)
   private:
@@ -648,18 +651,18 @@ class nsbm_Manifest final : public ::google::protobuf::Message
   private:
   void SharedCtor(::google::protobuf::Arena* arena);
   static void SharedDtor(MessageLite& self);
-  void InternalSwap(nsbm_Manifest* other);
+  void InternalSwap(Manifest* other);
  private:
   template <typename T>
   friend ::absl::string_view(
       ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "nsb.nsbm.Manifest"; }
+  static ::absl::string_view FullMessageName() { return "nsb.Manifest"; }
 
  protected:
-  explicit nsbm_Manifest(::google::protobuf::Arena* arena);
-  nsbm_Manifest(::google::protobuf::Arena* arena, const nsbm_Manifest& from);
-  nsbm_Manifest(::google::protobuf::Arena* arena, nsbm_Manifest&& from) noexcept
-      : nsbm_Manifest(arena) {
+  explicit Manifest(::google::protobuf::Arena* arena);
+  Manifest(::google::protobuf::Arena* arena, const Manifest& from);
+  Manifest(::google::protobuf::Arena* arena, Manifest&& from) noexcept
+      : Manifest(arena) {
     *this = ::std::move(from);
   }
   const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
@@ -671,117 +674,117 @@ class nsbm_Manifest final : public ::google::protobuf::Message
  public:
   ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
-  using Operation = nsbm_Manifest_Operation;
-  static constexpr Operation PING = nsbm_Manifest_Operation_PING;
-  static constexpr Operation INIT = nsbm_Manifest_Operation_INIT;
-  static constexpr Operation EXIT = nsbm_Manifest_Operation_EXIT;
+  using Operation = Manifest_Operation;
+  static constexpr Operation PING = Manifest_Operation_PING;
+  static constexpr Operation INIT = Manifest_Operation_INIT;
+  static constexpr Operation EXIT = Manifest_Operation_EXIT;
   static inline bool Operation_IsValid(int value) {
-    return nsbm_Manifest_Operation_IsValid(value);
+    return Manifest_Operation_IsValid(value);
   }
-  static constexpr Operation Operation_MIN = nsbm_Manifest_Operation_Operation_MIN;
-  static constexpr Operation Operation_MAX = nsbm_Manifest_Operation_Operation_MAX;
-  static constexpr int Operation_ARRAYSIZE = nsbm_Manifest_Operation_Operation_ARRAYSIZE;
+  static constexpr Operation Operation_MIN = Manifest_Operation_Operation_MIN;
+  static constexpr Operation Operation_MAX = Manifest_Operation_Operation_MAX;
+  static constexpr int Operation_ARRAYSIZE = Manifest_Operation_Operation_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor* Operation_descriptor() {
-    return nsbm_Manifest_Operation_descriptor();
+    return Manifest_Operation_descriptor();
   }
   template <typename T>
   static inline const std::string& Operation_Name(T value) {
-    return nsbm_Manifest_Operation_Name(value);
+    return Manifest_Operation_Name(value);
   }
   static inline bool Operation_Parse(absl::string_view name, Operation* value) {
-    return nsbm_Manifest_Operation_Parse(name, value);
+    return Manifest_Operation_Parse(name, value);
   }
-  using Originator = nsbm_Manifest_Originator;
-  static constexpr Originator DAEMON = nsbm_Manifest_Originator_DAEMON;
-  static constexpr Originator APP_CLIENT = nsbm_Manifest_Originator_APP_CLIENT;
-  static constexpr Originator SIM_CLIENT = nsbm_Manifest_Originator_SIM_CLIENT;
+  using Originator = Manifest_Originator;
+  static constexpr Originator DAEMON = Manifest_Originator_DAEMON;
+  static constexpr Originator APP_CLIENT = Manifest_Originator_APP_CLIENT;
+  static constexpr Originator SIM_CLIENT = Manifest_Originator_SIM_CLIENT;
   static inline bool Originator_IsValid(int value) {
-    return nsbm_Manifest_Originator_IsValid(value);
+    return Manifest_Originator_IsValid(value);
   }
-  static constexpr Originator Originator_MIN = nsbm_Manifest_Originator_Originator_MIN;
-  static constexpr Originator Originator_MAX = nsbm_Manifest_Originator_Originator_MAX;
-  static constexpr int Originator_ARRAYSIZE = nsbm_Manifest_Originator_Originator_ARRAYSIZE;
+  static constexpr Originator Originator_MIN = Manifest_Originator_Originator_MIN;
+  static constexpr Originator Originator_MAX = Manifest_Originator_Originator_MAX;
+  static constexpr int Originator_ARRAYSIZE = Manifest_Originator_Originator_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor* Originator_descriptor() {
-    return nsbm_Manifest_Originator_descriptor();
+    return Manifest_Originator_descriptor();
   }
   template <typename T>
   static inline const std::string& Originator_Name(T value) {
-    return nsbm_Manifest_Originator_Name(value);
+    return Manifest_Originator_Name(value);
   }
   static inline bool Originator_Parse(absl::string_view name, Originator* value) {
-    return nsbm_Manifest_Originator_Parse(name, value);
+    return Manifest_Originator_Parse(name, value);
   }
-  using OpCode = nsbm_Manifest_OpCode;
-  static constexpr OpCode SUCCESS = nsbm_Manifest_OpCode_SUCCESS;
-  static constexpr OpCode FAILURE = nsbm_Manifest_OpCode_FAILURE;
-  static constexpr OpCode CLIENT_REQUEST = nsbm_Manifest_OpCode_CLIENT_REQUEST;
-  static constexpr OpCode DAEMON_RESPONSE = nsbm_Manifest_OpCode_DAEMON_RESPONSE;
-  static constexpr OpCode IMPLICIT_TARGET = nsbm_Manifest_OpCode_IMPLICIT_TARGET;
-  static constexpr OpCode EXPLICIT_TARGET = nsbm_Manifest_OpCode_EXPLICIT_TARGET;
-  static constexpr OpCode MESSAGE = nsbm_Manifest_OpCode_MESSAGE;
-  static constexpr OpCode NO_MESSAGE = nsbm_Manifest_OpCode_NO_MESSAGE;
+  using OpCode = Manifest_OpCode;
+  static constexpr OpCode SUCCESS = Manifest_OpCode_SUCCESS;
+  static constexpr OpCode FAILURE = Manifest_OpCode_FAILURE;
+  static constexpr OpCode CLIENT_REQUEST = Manifest_OpCode_CLIENT_REQUEST;
+  static constexpr OpCode DAEMON_RESPONSE = Manifest_OpCode_DAEMON_RESPONSE;
+  static constexpr OpCode IMPLICIT_TARGET = Manifest_OpCode_IMPLICIT_TARGET;
+  static constexpr OpCode EXPLICIT_TARGET = Manifest_OpCode_EXPLICIT_TARGET;
+  static constexpr OpCode MESSAGE = Manifest_OpCode_MESSAGE;
+  static constexpr OpCode NO_MESSAGE = Manifest_OpCode_NO_MESSAGE;
   static inline bool OpCode_IsValid(int value) {
-    return nsbm_Manifest_OpCode_IsValid(value);
+    return Manifest_OpCode_IsValid(value);
   }
-  static constexpr OpCode OpCode_MIN = nsbm_Manifest_OpCode_OpCode_MIN;
-  static constexpr OpCode OpCode_MAX = nsbm_Manifest_OpCode_OpCode_MAX;
-  static constexpr int OpCode_ARRAYSIZE = nsbm_Manifest_OpCode_OpCode_ARRAYSIZE;
+  static constexpr OpCode OpCode_MIN = Manifest_OpCode_OpCode_MIN;
+  static constexpr OpCode OpCode_MAX = Manifest_OpCode_OpCode_MAX;
+  static constexpr int OpCode_ARRAYSIZE = Manifest_OpCode_OpCode_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor* OpCode_descriptor() {
-    return nsbm_Manifest_OpCode_descriptor();
+    return Manifest_OpCode_descriptor();
   }
   template <typename T>
   static inline const std::string& OpCode_Name(T value) {
-    return nsbm_Manifest_OpCode_Name(value);
+    return Manifest_OpCode_Name(value);
   }
   static inline bool OpCode_Parse(absl::string_view name, OpCode* value) {
-    return nsbm_Manifest_OpCode_Parse(name, value);
+    return Manifest_OpCode_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
   enum : int {
+    kOpFieldNumber = 1,
     kOgFieldNumber = 2,
     kCodeFieldNumber = 3,
-    kOpFieldNumber = 1,
   };
-  // required .nsb.nsbm.Manifest.Originator og = 2;
-  bool has_og() const;
-  void clear_og() ;
-  ::nsb::nsbm_Manifest_Originator og() const;
-  void set_og(::nsb::nsbm_Manifest_Originator value);
-
-  private:
-  ::nsb::nsbm_Manifest_Originator _internal_og() const;
-  void _internal_set_og(::nsb::nsbm_Manifest_Originator value);
-
-  public:
-  // optional .nsb.nsbm.Manifest.OpCode code = 3;
-  bool has_code() const;
-  void clear_code() ;
-  ::nsb::nsbm_Manifest_OpCode code() const;
-  void set_code(::nsb::nsbm_Manifest_OpCode value);
-
-  private:
-  ::nsb::nsbm_Manifest_OpCode _internal_code() const;
-  void _internal_set_code(::nsb::nsbm_Manifest_OpCode value);
-
-  public:
-  // required .nsb.nsbm.Manifest.Operation op = 1;
+  // .nsb.Manifest.Operation op = 1;
   bool has_op() const;
   void clear_op() ;
-  ::nsb::nsbm_Manifest_Operation op() const;
-  void set_op(::nsb::nsbm_Manifest_Operation value);
+  ::nsb::Manifest_Operation op() const;
+  void set_op(::nsb::Manifest_Operation value);
 
   private:
-  ::nsb::nsbm_Manifest_Operation _internal_op() const;
-  void _internal_set_op(::nsb::nsbm_Manifest_Operation value);
+  ::nsb::Manifest_Operation _internal_op() const;
+  void _internal_set_op(::nsb::Manifest_Operation value);
 
   public:
-  // @@protoc_insertion_point(class_scope:nsb.nsbm.Manifest)
+  // .nsb.Manifest.Originator og = 2;
+  bool has_og() const;
+  void clear_og() ;
+  ::nsb::Manifest_Originator og() const;
+  void set_og(::nsb::Manifest_Originator value);
+
+  private:
+  ::nsb::Manifest_Originator _internal_og() const;
+  void _internal_set_og(::nsb::Manifest_Originator value);
+
+  public:
+  // .nsb.Manifest.OpCode code = 3;
+  bool has_code() const;
+  void clear_code() ;
+  ::nsb::Manifest_OpCode code() const;
+  void set_code(::nsb::Manifest_OpCode value);
+
+  private:
+  ::nsb::Manifest_OpCode _internal_code() const;
+  void _internal_set_code(::nsb::Manifest_OpCode value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:nsb.Manifest)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      2, 3, 3,
+      2, 3, 0,
       0, 2>
       _table_;
 
@@ -798,251 +801,12 @@ class nsbm_Manifest final : public ::google::protobuf::Message
                           ::google::protobuf::Arena* arena);
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
-                          const nsbm_Manifest& from_msg);
+                          const Manifest& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
+    int op_;
     int og_;
     int code_;
-    int op_;
-    PROTOBUF_TSAN_DECLARE_MEMBER
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_nsb_2eproto;
-};
-// -------------------------------------------------------------------
-
-class nsbm final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:nsb.nsbm) */ {
- public:
-  inline nsbm() : nsbm(nullptr) {}
-  ~nsbm() PROTOBUF_FINAL;
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(nsbm* msg, std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(nsbm));
-  }
-#endif
-
-  template <typename = void>
-  explicit PROTOBUF_CONSTEXPR nsbm(
-      ::google::protobuf::internal::ConstantInitialized);
-
-  inline nsbm(const nsbm& from) : nsbm(nullptr, from) {}
-  inline nsbm(nsbm&& from) noexcept
-      : nsbm(nullptr, std::move(from)) {}
-  inline nsbm& operator=(const nsbm& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline nsbm& operator=(nsbm&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::google::protobuf::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::google::protobuf::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const nsbm& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const nsbm* internal_default_instance() {
-    return reinterpret_cast<const nsbm*>(
-        &_nsbm_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 2;
-  friend void swap(nsbm& a, nsbm& b) { a.Swap(&b); }
-  inline void Swap(nsbm* other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(nsbm* other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  nsbm* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<nsbm>(arena);
-  }
-  using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const nsbm& from);
-  using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const nsbm& from) { nsbm::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(
-      ::google::protobuf::MessageLite& to_msg,
-      const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return IsInitializedImpl(*this);
-  }
-
-  private:
-  static bool IsInitializedImpl(const MessageLite& msg);
-
-  public:
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* _InternalSerialize(
-      const MessageLite& msg, ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream);
-
-  public:
-  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-    return _InternalSerialize(*this, target, stream);
-  }
-  #else   // PROTOBUF_CUSTOM_VTABLE
-  ::size_t ByteSizeLong() const final;
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
-  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::google::protobuf::Arena* arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(nsbm* other);
- private:
-  template <typename T>
-  friend ::absl::string_view(
-      ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "nsb.nsbm"; }
-
- protected:
-  explicit nsbm(::google::protobuf::Arena* arena);
-  nsbm(::google::protobuf::Arena* arena, const nsbm& from);
-  nsbm(::google::protobuf::Arena* arena, nsbm&& from) noexcept
-      : nsbm(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
-  static void* PlacementNew_(const void*, void* mem,
-                             ::google::protobuf::Arena* arena);
-  static constexpr auto InternalNewImpl_();
-  static const ::google::protobuf::internal::ClassDataFull _class_data_;
-
- public:
-  ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-  using Manifest = nsbm_Manifest;
-  using Metadata = nsbm_Metadata;
-
-  // accessors -------------------------------------------------------
-  enum : int {
-    kPayloadFieldNumber = 7,
-    kManifestFieldNumber = 1,
-    kMetadataFieldNumber = 2,
-  };
-  // optional bytes payload = 7;
-  bool has_payload() const;
-  void clear_payload() ;
-  const std::string& payload() const;
-  template <typename Arg_ = const std::string&, typename... Args_>
-  void set_payload(Arg_&& arg, Args_... args);
-  std::string* mutable_payload();
-  PROTOBUF_NODISCARD std::string* release_payload();
-  void set_allocated_payload(std::string* value);
-
-  private:
-  const std::string& _internal_payload() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_payload(
-      const std::string& value);
-  std::string* _internal_mutable_payload();
-
-  public:
-  // required .nsb.nsbm.Manifest manifest = 1;
-  bool has_manifest() const;
-  void clear_manifest() ;
-  const ::nsb::nsbm_Manifest& manifest() const;
-  PROTOBUF_NODISCARD ::nsb::nsbm_Manifest* release_manifest();
-  ::nsb::nsbm_Manifest* mutable_manifest();
-  void set_allocated_manifest(::nsb::nsbm_Manifest* value);
-  void unsafe_arena_set_allocated_manifest(::nsb::nsbm_Manifest* value);
-  ::nsb::nsbm_Manifest* unsafe_arena_release_manifest();
-
-  private:
-  const ::nsb::nsbm_Manifest& _internal_manifest() const;
-  ::nsb::nsbm_Manifest* _internal_mutable_manifest();
-
-  public:
-  // optional .nsb.nsbm.Metadata metadata = 2;
-  bool has_metadata() const;
-  void clear_metadata() ;
-  const ::nsb::nsbm_Metadata& metadata() const;
-  PROTOBUF_NODISCARD ::nsb::nsbm_Metadata* release_metadata();
-  ::nsb::nsbm_Metadata* mutable_metadata();
-  void set_allocated_metadata(::nsb::nsbm_Metadata* value);
-  void unsafe_arena_set_allocated_metadata(::nsb::nsbm_Metadata* value);
-  ::nsb::nsbm_Metadata* unsafe_arena_release_metadata();
-
-  private:
-  const ::nsb::nsbm_Metadata& _internal_metadata() const;
-  ::nsb::nsbm_Metadata* _internal_mutable_metadata();
-
-  public:
-  // @@protoc_insertion_point(class_scope:nsb.nsbm)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<
-      2, 3, 2,
-      0, 2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  struct Impl_ {
-    inline explicit constexpr Impl_(
-        ::google::protobuf::internal::ConstantInitialized) noexcept;
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena);
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena, const Impl_& from,
-                          const nsbm& from_msg);
-    ::google::protobuf::internal::HasBits<1> _has_bits_;
-    ::google::protobuf::internal::CachedSize _cached_size_;
-    ::google::protobuf::internal::ArenaStringPtr payload_;
-    ::nsb::nsbm_Manifest* manifest_;
-    ::nsb::nsbm_Metadata* metadata_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1063,149 +827,145 @@ class nsbm final : public ::google::protobuf::Message
 #endif  // __GNUC__
 // -------------------------------------------------------------------
 
-// nsbm_Manifest
+// Manifest
 
-// required .nsb.nsbm.Manifest.Operation op = 1;
-inline bool nsbm_Manifest::has_op() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
-  return value;
-}
-inline void nsbm_Manifest::clear_op() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.op_ = 1;
-  _impl_._has_bits_[0] &= ~0x00000004u;
-}
-inline ::nsb::nsbm_Manifest_Operation nsbm_Manifest::op() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Manifest.op)
-  return _internal_op();
-}
-inline void nsbm_Manifest::set_op(::nsb::nsbm_Manifest_Operation value) {
-  _internal_set_op(value);
-  _impl_._has_bits_[0] |= 0x00000004u;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Manifest.op)
-}
-inline ::nsb::nsbm_Manifest_Operation nsbm_Manifest::_internal_op() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return static_cast<::nsb::nsbm_Manifest_Operation>(_impl_.op_);
-}
-inline void nsbm_Manifest::_internal_set_op(::nsb::nsbm_Manifest_Operation value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  assert(::nsb::nsbm_Manifest_Operation_IsValid(value));
-  _impl_.op_ = value;
-}
-
-// required .nsb.nsbm.Manifest.Originator og = 2;
-inline bool nsbm_Manifest::has_og() const {
+// .nsb.Manifest.Operation op = 1;
+inline bool Manifest::has_op() const {
   bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
   return value;
 }
-inline void nsbm_Manifest::clear_og() {
+inline void Manifest::clear_op() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.og_ = 0;
+  _impl_.op_ = 0;
   _impl_._has_bits_[0] &= ~0x00000001u;
 }
-inline ::nsb::nsbm_Manifest_Originator nsbm_Manifest::og() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Manifest.og)
-  return _internal_og();
+inline ::nsb::Manifest_Operation Manifest::op() const {
+  // @@protoc_insertion_point(field_get:nsb.Manifest.op)
+  return _internal_op();
 }
-inline void nsbm_Manifest::set_og(::nsb::nsbm_Manifest_Originator value) {
-  _internal_set_og(value);
+inline void Manifest::set_op(::nsb::Manifest_Operation value) {
+  _internal_set_op(value);
   _impl_._has_bits_[0] |= 0x00000001u;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Manifest.og)
+  // @@protoc_insertion_point(field_set:nsb.Manifest.op)
 }
-inline ::nsb::nsbm_Manifest_Originator nsbm_Manifest::_internal_og() const {
+inline ::nsb::Manifest_Operation Manifest::_internal_op() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return static_cast<::nsb::nsbm_Manifest_Originator>(_impl_.og_);
+  return static_cast<::nsb::Manifest_Operation>(_impl_.op_);
 }
-inline void nsbm_Manifest::_internal_set_og(::nsb::nsbm_Manifest_Originator value) {
+inline void Manifest::_internal_set_op(::nsb::Manifest_Operation value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  assert(::nsb::nsbm_Manifest_Originator_IsValid(value));
-  _impl_.og_ = value;
+  _impl_.op_ = value;
 }
 
-// optional .nsb.nsbm.Manifest.OpCode code = 3;
-inline bool nsbm_Manifest::has_code() const {
+// .nsb.Manifest.Originator og = 2;
+inline bool Manifest::has_og() const {
   bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
   return value;
 }
-inline void nsbm_Manifest::clear_code() {
+inline void Manifest::clear_og() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.code_ = 0;
+  _impl_.og_ = 0;
   _impl_._has_bits_[0] &= ~0x00000002u;
 }
-inline ::nsb::nsbm_Manifest_OpCode nsbm_Manifest::code() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Manifest.code)
+inline ::nsb::Manifest_Originator Manifest::og() const {
+  // @@protoc_insertion_point(field_get:nsb.Manifest.og)
+  return _internal_og();
+}
+inline void Manifest::set_og(::nsb::Manifest_Originator value) {
+  _internal_set_og(value);
+  _impl_._has_bits_[0] |= 0x00000002u;
+  // @@protoc_insertion_point(field_set:nsb.Manifest.og)
+}
+inline ::nsb::Manifest_Originator Manifest::_internal_og() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return static_cast<::nsb::Manifest_Originator>(_impl_.og_);
+}
+inline void Manifest::_internal_set_og(::nsb::Manifest_Originator value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.og_ = value;
+}
+
+// .nsb.Manifest.OpCode code = 3;
+inline bool Manifest::has_code() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
+  return value;
+}
+inline void Manifest::clear_code() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.code_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000004u;
+}
+inline ::nsb::Manifest_OpCode Manifest::code() const {
+  // @@protoc_insertion_point(field_get:nsb.Manifest.code)
   return _internal_code();
 }
-inline void nsbm_Manifest::set_code(::nsb::nsbm_Manifest_OpCode value) {
+inline void Manifest::set_code(::nsb::Manifest_OpCode value) {
   _internal_set_code(value);
-  _impl_._has_bits_[0] |= 0x00000002u;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Manifest.code)
+  _impl_._has_bits_[0] |= 0x00000004u;
+  // @@protoc_insertion_point(field_set:nsb.Manifest.code)
 }
-inline ::nsb::nsbm_Manifest_OpCode nsbm_Manifest::_internal_code() const {
+inline ::nsb::Manifest_OpCode Manifest::_internal_code() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return static_cast<::nsb::nsbm_Manifest_OpCode>(_impl_.code_);
+  return static_cast<::nsb::Manifest_OpCode>(_impl_.code_);
 }
-inline void nsbm_Manifest::_internal_set_code(::nsb::nsbm_Manifest_OpCode value) {
+inline void Manifest::_internal_set_code(::nsb::Manifest_OpCode value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  assert(::nsb::nsbm_Manifest_OpCode_IsValid(value));
   _impl_.code_ = value;
 }
 
 // -------------------------------------------------------------------
 
-// nsbm_Metadata
+// Metadata
 
-// required .nsb.nsbm.Metadata.Type addr_type = 1;
-inline bool nsbm_Metadata::has_addr_type() const {
+// .nsb.Metadata.Type addr_type = 1;
+inline bool Metadata::has_addr_type() const {
   bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
   return value;
 }
-inline void nsbm_Metadata::clear_addr_type() {
+inline void Metadata::clear_addr_type() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.addr_type_ = 0;
   _impl_._has_bits_[0] &= ~0x00000001u;
 }
-inline ::nsb::nsbm_Metadata_Type nsbm_Metadata::addr_type() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.addr_type)
+inline ::nsb::Metadata_Type Metadata::addr_type() const {
+  // @@protoc_insertion_point(field_get:nsb.Metadata.addr_type)
   return _internal_addr_type();
 }
-inline void nsbm_Metadata::set_addr_type(::nsb::nsbm_Metadata_Type value) {
+inline void Metadata::set_addr_type(::nsb::Metadata_Type value) {
   _internal_set_addr_type(value);
   _impl_._has_bits_[0] |= 0x00000001u;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.addr_type)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.addr_type)
 }
-inline ::nsb::nsbm_Metadata_Type nsbm_Metadata::_internal_addr_type() const {
+inline ::nsb::Metadata_Type Metadata::_internal_addr_type() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return static_cast<::nsb::nsbm_Metadata_Type>(_impl_.addr_type_);
+  return static_cast<::nsb::Metadata_Type>(_impl_.addr_type_);
 }
-inline void nsbm_Metadata::_internal_set_addr_type(::nsb::nsbm_Metadata_Type value) {
+inline void Metadata::_internal_set_addr_type(::nsb::Metadata_Type value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  assert(::nsb::nsbm_Metadata_Type_IsValid(value));
   _impl_.addr_type_ = value;
 }
 
 // string src_id = 2;
-inline bool nsbm_Metadata::has_src_id() const {
+inline bool Metadata::has_src_id() const {
   return src_case() == kSrcId;
 }
-inline void nsbm_Metadata::set_has_src_id() {
+inline void Metadata::set_has_src_id() {
   _impl_._oneof_case_[0] = kSrcId;
 }
-inline void nsbm_Metadata::clear_src_id() {
+inline void Metadata::clear_src_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (src_case() == kSrcId) {
     _impl_.src_.src_id_.Destroy();
     clear_has_src();
   }
 }
-inline const std::string& nsbm_Metadata::src_id() const
+inline const std::string& Metadata::src_id() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.src_id)
+  // @@protoc_insertion_point(field_get:nsb.Metadata.src_id)
   return _internal_src_id();
 }
 template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void nsbm_Metadata::set_src_id(Arg_&& arg,
+inline PROTOBUF_ALWAYS_INLINE void Metadata::set_src_id(Arg_&& arg,
                                                      Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (src_case() != kSrcId) {
@@ -1215,21 +975,21 @@ inline PROTOBUF_ALWAYS_INLINE void nsbm_Metadata::set_src_id(Arg_&& arg,
     _impl_.src_.src_id_.InitDefault();
   }
   _impl_.src_.src_id_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.src_id)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.src_id)
 }
-inline std::string* nsbm_Metadata::mutable_src_id() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline std::string* Metadata::mutable_src_id() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   std::string* _s = _internal_mutable_src_id();
-  // @@protoc_insertion_point(field_mutable:nsb.nsbm.Metadata.src_id)
+  // @@protoc_insertion_point(field_mutable:nsb.Metadata.src_id)
   return _s;
 }
-inline const std::string& nsbm_Metadata::_internal_src_id() const {
+inline const std::string& Metadata::_internal_src_id() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   if (src_case() != kSrcId) {
     return ::google::protobuf::internal::GetEmptyStringAlreadyInited();
   }
   return _impl_.src_.src_id_.Get();
 }
-inline void nsbm_Metadata::_internal_set_src_id(const std::string& value) {
+inline void Metadata::_internal_set_src_id(const std::string& value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (src_case() != kSrcId) {
     clear_src();
@@ -1239,7 +999,7 @@ inline void nsbm_Metadata::_internal_set_src_id(const std::string& value) {
   }
   _impl_.src_.src_id_.Set(value, GetArena());
 }
-inline std::string* nsbm_Metadata::_internal_mutable_src_id() {
+inline std::string* Metadata::_internal_mutable_src_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (src_case() != kSrcId) {
     clear_src();
@@ -1249,16 +1009,16 @@ inline std::string* nsbm_Metadata::_internal_mutable_src_id() {
   }
   return _impl_.src_.src_id_.Mutable( GetArena());
 }
-inline std::string* nsbm_Metadata::release_src_id() {
+inline std::string* Metadata::release_src_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:nsb.nsbm.Metadata.src_id)
+  // @@protoc_insertion_point(field_release:nsb.Metadata.src_id)
   if (src_case() != kSrcId) {
     return nullptr;
   }
   clear_has_src();
   return _impl_.src_.src_id_.Release();
 }
-inline void nsbm_Metadata::set_allocated_src_id(std::string* value) {
+inline void Metadata::set_allocated_src_id(std::string* value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (has_src()) {
     clear_src();
@@ -1267,36 +1027,36 @@ inline void nsbm_Metadata::set_allocated_src_id(std::string* value) {
     set_has_src_id();
     _impl_.src_.src_id_.InitAllocated(value, GetArena());
   }
-  // @@protoc_insertion_point(field_set_allocated:nsb.nsbm.Metadata.src_id)
+  // @@protoc_insertion_point(field_set_allocated:nsb.Metadata.src_id)
 }
 
 // fixed32 src_addr = 3;
-inline bool nsbm_Metadata::has_src_addr() const {
+inline bool Metadata::has_src_addr() const {
   return src_case() == kSrcAddr;
 }
-inline void nsbm_Metadata::set_has_src_addr() {
+inline void Metadata::set_has_src_addr() {
   _impl_._oneof_case_[0] = kSrcAddr;
 }
-inline void nsbm_Metadata::clear_src_addr() {
+inline void Metadata::clear_src_addr() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (src_case() == kSrcAddr) {
     _impl_.src_.src_addr_ = 0u;
     clear_has_src();
   }
 }
-inline ::uint32_t nsbm_Metadata::src_addr() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.src_addr)
+inline ::uint32_t Metadata::src_addr() const {
+  // @@protoc_insertion_point(field_get:nsb.Metadata.src_addr)
   return _internal_src_addr();
 }
-inline void nsbm_Metadata::set_src_addr(::uint32_t value) {
+inline void Metadata::set_src_addr(::uint32_t value) {
   if (src_case() != kSrcAddr) {
     clear_src();
     set_has_src_addr();
   }
   _impl_.src_.src_addr_ = value;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.src_addr)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.src_addr)
 }
-inline ::uint32_t nsbm_Metadata::_internal_src_addr() const {
+inline ::uint32_t Metadata::_internal_src_addr() const {
   if (src_case() == kSrcAddr) {
     return _impl_.src_.src_addr_;
   }
@@ -1304,26 +1064,26 @@ inline ::uint32_t nsbm_Metadata::_internal_src_addr() const {
 }
 
 // string dest_id = 4;
-inline bool nsbm_Metadata::has_dest_id() const {
+inline bool Metadata::has_dest_id() const {
   return dest_case() == kDestId;
 }
-inline void nsbm_Metadata::set_has_dest_id() {
+inline void Metadata::set_has_dest_id() {
   _impl_._oneof_case_[1] = kDestId;
 }
-inline void nsbm_Metadata::clear_dest_id() {
+inline void Metadata::clear_dest_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (dest_case() == kDestId) {
     _impl_.dest_.dest_id_.Destroy();
     clear_has_dest();
   }
 }
-inline const std::string& nsbm_Metadata::dest_id() const
+inline const std::string& Metadata::dest_id() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.dest_id)
+  // @@protoc_insertion_point(field_get:nsb.Metadata.dest_id)
   return _internal_dest_id();
 }
 template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void nsbm_Metadata::set_dest_id(Arg_&& arg,
+inline PROTOBUF_ALWAYS_INLINE void Metadata::set_dest_id(Arg_&& arg,
                                                      Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (dest_case() != kDestId) {
@@ -1333,21 +1093,21 @@ inline PROTOBUF_ALWAYS_INLINE void nsbm_Metadata::set_dest_id(Arg_&& arg,
     _impl_.dest_.dest_id_.InitDefault();
   }
   _impl_.dest_.dest_id_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.dest_id)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.dest_id)
 }
-inline std::string* nsbm_Metadata::mutable_dest_id() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline std::string* Metadata::mutable_dest_id() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   std::string* _s = _internal_mutable_dest_id();
-  // @@protoc_insertion_point(field_mutable:nsb.nsbm.Metadata.dest_id)
+  // @@protoc_insertion_point(field_mutable:nsb.Metadata.dest_id)
   return _s;
 }
-inline const std::string& nsbm_Metadata::_internal_dest_id() const {
+inline const std::string& Metadata::_internal_dest_id() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   if (dest_case() != kDestId) {
     return ::google::protobuf::internal::GetEmptyStringAlreadyInited();
   }
   return _impl_.dest_.dest_id_.Get();
 }
-inline void nsbm_Metadata::_internal_set_dest_id(const std::string& value) {
+inline void Metadata::_internal_set_dest_id(const std::string& value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (dest_case() != kDestId) {
     clear_dest();
@@ -1357,7 +1117,7 @@ inline void nsbm_Metadata::_internal_set_dest_id(const std::string& value) {
   }
   _impl_.dest_.dest_id_.Set(value, GetArena());
 }
-inline std::string* nsbm_Metadata::_internal_mutable_dest_id() {
+inline std::string* Metadata::_internal_mutable_dest_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (dest_case() != kDestId) {
     clear_dest();
@@ -1367,16 +1127,16 @@ inline std::string* nsbm_Metadata::_internal_mutable_dest_id() {
   }
   return _impl_.dest_.dest_id_.Mutable( GetArena());
 }
-inline std::string* nsbm_Metadata::release_dest_id() {
+inline std::string* Metadata::release_dest_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:nsb.nsbm.Metadata.dest_id)
+  // @@protoc_insertion_point(field_release:nsb.Metadata.dest_id)
   if (dest_case() != kDestId) {
     return nullptr;
   }
   clear_has_dest();
   return _impl_.dest_.dest_id_.Release();
 }
-inline void nsbm_Metadata::set_allocated_dest_id(std::string* value) {
+inline void Metadata::set_allocated_dest_id(std::string* value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (has_dest()) {
     clear_dest();
@@ -1385,353 +1145,88 @@ inline void nsbm_Metadata::set_allocated_dest_id(std::string* value) {
     set_has_dest_id();
     _impl_.dest_.dest_id_.InitAllocated(value, GetArena());
   }
-  // @@protoc_insertion_point(field_set_allocated:nsb.nsbm.Metadata.dest_id)
+  // @@protoc_insertion_point(field_set_allocated:nsb.Metadata.dest_id)
 }
 
 // fixed32 dest_addr = 5;
-inline bool nsbm_Metadata::has_dest_addr() const {
+inline bool Metadata::has_dest_addr() const {
   return dest_case() == kDestAddr;
 }
-inline void nsbm_Metadata::set_has_dest_addr() {
+inline void Metadata::set_has_dest_addr() {
   _impl_._oneof_case_[1] = kDestAddr;
 }
-inline void nsbm_Metadata::clear_dest_addr() {
+inline void Metadata::clear_dest_addr() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (dest_case() == kDestAddr) {
     _impl_.dest_.dest_addr_ = 0u;
     clear_has_dest();
   }
 }
-inline ::uint32_t nsbm_Metadata::dest_addr() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.dest_addr)
+inline ::uint32_t Metadata::dest_addr() const {
+  // @@protoc_insertion_point(field_get:nsb.Metadata.dest_addr)
   return _internal_dest_addr();
 }
-inline void nsbm_Metadata::set_dest_addr(::uint32_t value) {
+inline void Metadata::set_dest_addr(::uint32_t value) {
   if (dest_case() != kDestAddr) {
     clear_dest();
     set_has_dest_addr();
   }
   _impl_.dest_.dest_addr_ = value;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.dest_addr)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.dest_addr)
 }
-inline ::uint32_t nsbm_Metadata::_internal_dest_addr() const {
+inline ::uint32_t Metadata::_internal_dest_addr() const {
   if (dest_case() == kDestAddr) {
     return _impl_.dest_.dest_addr_;
   }
   return 0u;
 }
 
-// optional int32 payload_size = 6;
-inline bool nsbm_Metadata::has_payload_size() const {
+// int32 payload_size = 6;
+inline bool Metadata::has_payload_size() const {
   bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
   return value;
 }
-inline void nsbm_Metadata::clear_payload_size() {
+inline void Metadata::clear_payload_size() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.payload_size_ = 0;
   _impl_._has_bits_[0] &= ~0x00000002u;
 }
-inline ::int32_t nsbm_Metadata::payload_size() const {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.Metadata.payload_size)
+inline ::int32_t Metadata::payload_size() const {
+  // @@protoc_insertion_point(field_get:nsb.Metadata.payload_size)
   return _internal_payload_size();
 }
-inline void nsbm_Metadata::set_payload_size(::int32_t value) {
+inline void Metadata::set_payload_size(::int32_t value) {
   _internal_set_payload_size(value);
   _impl_._has_bits_[0] |= 0x00000002u;
-  // @@protoc_insertion_point(field_set:nsb.nsbm.Metadata.payload_size)
+  // @@protoc_insertion_point(field_set:nsb.Metadata.payload_size)
 }
-inline ::int32_t nsbm_Metadata::_internal_payload_size() const {
+inline ::int32_t Metadata::_internal_payload_size() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.payload_size_;
 }
-inline void nsbm_Metadata::_internal_set_payload_size(::int32_t value) {
+inline void Metadata::_internal_set_payload_size(::int32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.payload_size_ = value;
 }
 
-inline bool nsbm_Metadata::has_src() const {
+inline bool Metadata::has_src() const {
   return src_case() != SRC_NOT_SET;
 }
-inline void nsbm_Metadata::clear_has_src() {
+inline void Metadata::clear_has_src() {
   _impl_._oneof_case_[0] = SRC_NOT_SET;
 }
-inline bool nsbm_Metadata::has_dest() const {
+inline bool Metadata::has_dest() const {
   return dest_case() != DEST_NOT_SET;
 }
-inline void nsbm_Metadata::clear_has_dest() {
+inline void Metadata::clear_has_dest() {
   _impl_._oneof_case_[1] = DEST_NOT_SET;
 }
-inline nsbm_Metadata::SrcCase nsbm_Metadata::src_case() const {
-  return nsbm_Metadata::SrcCase(_impl_._oneof_case_[0]);
+inline Metadata::SrcCase Metadata::src_case() const {
+  return Metadata::SrcCase(_impl_._oneof_case_[0]);
 }
-inline nsbm_Metadata::DestCase nsbm_Metadata::dest_case() const {
-  return nsbm_Metadata::DestCase(_impl_._oneof_case_[1]);
+inline Metadata::DestCase Metadata::dest_case() const {
+  return Metadata::DestCase(_impl_._oneof_case_[1]);
 }
-// -------------------------------------------------------------------
-
-// nsbm
-
-// required .nsb.nsbm.Manifest manifest = 1;
-inline bool nsbm::has_manifest() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.manifest_ != nullptr);
-  return value;
-}
-inline void nsbm::clear_manifest() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.manifest_ != nullptr) _impl_.manifest_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000002u;
-}
-inline const ::nsb::nsbm_Manifest& nsbm::_internal_manifest() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::nsb::nsbm_Manifest* p = _impl_.manifest_;
-  return p != nullptr ? *p : reinterpret_cast<const ::nsb::nsbm_Manifest&>(::nsb::_nsbm_Manifest_default_instance_);
-}
-inline const ::nsb::nsbm_Manifest& nsbm::manifest() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.manifest)
-  return _internal_manifest();
-}
-inline void nsbm::unsafe_arena_set_allocated_manifest(::nsb::nsbm_Manifest* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.manifest_);
-  }
-  _impl_.manifest_ = reinterpret_cast<::nsb::nsbm_Manifest*>(value);
-  if (value != nullptr) {
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:nsb.nsbm.manifest)
-}
-inline ::nsb::nsbm_Manifest* nsbm::release_manifest() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::nsb::nsbm_Manifest* released = _impl_.manifest_;
-  _impl_.manifest_ = nullptr;
-  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
-    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    if (GetArena() == nullptr) {
-      delete old;
-    }
-  } else {
-    if (GetArena() != nullptr) {
-      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    }
-  }
-  return released;
-}
-inline ::nsb::nsbm_Manifest* nsbm::unsafe_arena_release_manifest() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:nsb.nsbm.manifest)
-
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::nsb::nsbm_Manifest* temp = _impl_.manifest_;
-  _impl_.manifest_ = nullptr;
-  return temp;
-}
-inline ::nsb::nsbm_Manifest* nsbm::_internal_mutable_manifest() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.manifest_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::nsb::nsbm_Manifest>(GetArena());
-    _impl_.manifest_ = reinterpret_cast<::nsb::nsbm_Manifest*>(p);
-  }
-  return _impl_.manifest_;
-}
-inline ::nsb::nsbm_Manifest* nsbm::mutable_manifest() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  _impl_._has_bits_[0] |= 0x00000002u;
-  ::nsb::nsbm_Manifest* _msg = _internal_mutable_manifest();
-  // @@protoc_insertion_point(field_mutable:nsb.nsbm.manifest)
-  return _msg;
-}
-inline void nsbm::set_allocated_manifest(::nsb::nsbm_Manifest* value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (message_arena == nullptr) {
-    delete (_impl_.manifest_);
-  }
-
-  if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
-    if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
-    }
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-
-  _impl_.manifest_ = reinterpret_cast<::nsb::nsbm_Manifest*>(value);
-  // @@protoc_insertion_point(field_set_allocated:nsb.nsbm.manifest)
-}
-
-// optional .nsb.nsbm.Metadata metadata = 2;
-inline bool nsbm::has_metadata() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.metadata_ != nullptr);
-  return value;
-}
-inline void nsbm::clear_metadata() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.metadata_ != nullptr) _impl_.metadata_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000004u;
-}
-inline const ::nsb::nsbm_Metadata& nsbm::_internal_metadata() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::nsb::nsbm_Metadata* p = _impl_.metadata_;
-  return p != nullptr ? *p : reinterpret_cast<const ::nsb::nsbm_Metadata&>(::nsb::_nsbm_Metadata_default_instance_);
-}
-inline const ::nsb::nsbm_Metadata& nsbm::metadata() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.metadata)
-  return _internal_metadata();
-}
-inline void nsbm::unsafe_arena_set_allocated_metadata(::nsb::nsbm_Metadata* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.metadata_);
-  }
-  _impl_.metadata_ = reinterpret_cast<::nsb::nsbm_Metadata*>(value);
-  if (value != nullptr) {
-    _impl_._has_bits_[0] |= 0x00000004u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:nsb.nsbm.metadata)
-}
-inline ::nsb::nsbm_Metadata* nsbm::release_metadata() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-
-  _impl_._has_bits_[0] &= ~0x00000004u;
-  ::nsb::nsbm_Metadata* released = _impl_.metadata_;
-  _impl_.metadata_ = nullptr;
-  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
-    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    if (GetArena() == nullptr) {
-      delete old;
-    }
-  } else {
-    if (GetArena() != nullptr) {
-      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    }
-  }
-  return released;
-}
-inline ::nsb::nsbm_Metadata* nsbm::unsafe_arena_release_metadata() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:nsb.nsbm.metadata)
-
-  _impl_._has_bits_[0] &= ~0x00000004u;
-  ::nsb::nsbm_Metadata* temp = _impl_.metadata_;
-  _impl_.metadata_ = nullptr;
-  return temp;
-}
-inline ::nsb::nsbm_Metadata* nsbm::_internal_mutable_metadata() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.metadata_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::nsb::nsbm_Metadata>(GetArena());
-    _impl_.metadata_ = reinterpret_cast<::nsb::nsbm_Metadata*>(p);
-  }
-  return _impl_.metadata_;
-}
-inline ::nsb::nsbm_Metadata* nsbm::mutable_metadata() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  _impl_._has_bits_[0] |= 0x00000004u;
-  ::nsb::nsbm_Metadata* _msg = _internal_mutable_metadata();
-  // @@protoc_insertion_point(field_mutable:nsb.nsbm.metadata)
-  return _msg;
-}
-inline void nsbm::set_allocated_metadata(::nsb::nsbm_Metadata* value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (message_arena == nullptr) {
-    delete (_impl_.metadata_);
-  }
-
-  if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
-    if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
-    }
-    _impl_._has_bits_[0] |= 0x00000004u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
-  }
-
-  _impl_.metadata_ = reinterpret_cast<::nsb::nsbm_Metadata*>(value);
-  // @@protoc_insertion_point(field_set_allocated:nsb.nsbm.metadata)
-}
-
-// optional bytes payload = 7;
-inline bool nsbm::has_payload() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
-  return value;
-}
-inline void nsbm::clear_payload() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.payload_.ClearToEmpty();
-  _impl_._has_bits_[0] &= ~0x00000001u;
-}
-inline const std::string& nsbm::payload() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:nsb.nsbm.payload)
-  return _internal_payload();
-}
-template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void nsbm::set_payload(Arg_&& arg,
-                                                     Args_... args) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_._has_bits_[0] |= 0x00000001u;
-  _impl_.payload_.SetBytes(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:nsb.nsbm.payload)
-}
-inline std::string* nsbm::mutable_payload() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  std::string* _s = _internal_mutable_payload();
-  // @@protoc_insertion_point(field_mutable:nsb.nsbm.payload)
-  return _s;
-}
-inline const std::string& nsbm::_internal_payload() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.payload_.Get();
-}
-inline void nsbm::_internal_set_payload(const std::string& value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_._has_bits_[0] |= 0x00000001u;
-  _impl_.payload_.Set(value, GetArena());
-}
-inline std::string* nsbm::_internal_mutable_payload() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_._has_bits_[0] |= 0x00000001u;
-  return _impl_.payload_.Mutable( GetArena());
-}
-inline std::string* nsbm::release_payload() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:nsb.nsbm.payload)
-  if ((_impl_._has_bits_[0] & 0x00000001u) == 0) {
-    return nullptr;
-  }
-  _impl_._has_bits_[0] &= ~0x00000001u;
-  auto* released = _impl_.payload_.Release();
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
-    _impl_.payload_.Set("", GetArena());
-  }
-  return released;
-}
-inline void nsbm::set_allocated_payload(std::string* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (value != nullptr) {
-    _impl_._has_bits_[0] |= 0x00000001u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000001u;
-  }
-  _impl_.payload_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.payload_.IsDefault()) {
-    _impl_.payload_.Set("", GetArena());
-  }
-  // @@protoc_insertion_point(field_set_allocated:nsb.nsbm.payload)
-}
-
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif  // __GNUC__
@@ -1744,28 +1239,28 @@ namespace google {
 namespace protobuf {
 
 template <>
-struct is_proto_enum<::nsb::nsbm_Manifest_Operation> : std::true_type {};
+struct is_proto_enum<::nsb::Manifest_Operation> : std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor<::nsb::nsbm_Manifest_Operation>() {
-  return ::nsb::nsbm_Manifest_Operation_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor<::nsb::Manifest_Operation>() {
+  return ::nsb::Manifest_Operation_descriptor();
 }
 template <>
-struct is_proto_enum<::nsb::nsbm_Manifest_Originator> : std::true_type {};
+struct is_proto_enum<::nsb::Manifest_Originator> : std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor<::nsb::nsbm_Manifest_Originator>() {
-  return ::nsb::nsbm_Manifest_Originator_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor<::nsb::Manifest_Originator>() {
+  return ::nsb::Manifest_Originator_descriptor();
 }
 template <>
-struct is_proto_enum<::nsb::nsbm_Manifest_OpCode> : std::true_type {};
+struct is_proto_enum<::nsb::Manifest_OpCode> : std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor<::nsb::nsbm_Manifest_OpCode>() {
-  return ::nsb::nsbm_Manifest_OpCode_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor<::nsb::Manifest_OpCode>() {
+  return ::nsb::Manifest_OpCode_descriptor();
 }
 template <>
-struct is_proto_enum<::nsb::nsbm_Metadata_Type> : std::true_type {};
+struct is_proto_enum<::nsb::Metadata_Type> : std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor<::nsb::nsbm_Metadata_Type>() {
-  return ::nsb::nsbm_Metadata_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor<::nsb::Metadata_Type>() {
+  return ::nsb::Metadata_Type_descriptor();
 }
 
 }  // namespace protobuf

@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include <map>
 #include <fcntl.h>
 
 class NSBDaemon {
@@ -28,7 +29,7 @@ private:
     bool running;
     int server_port;
     void start_server(int port);
-    int handle_message(int fd);
+    // int handle_message(int fd, int fd, nsb::nsbm nsb_msg);
 };
 
 #endif // NSB_DAEMON_H

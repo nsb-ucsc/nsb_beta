@@ -1,6 +1,7 @@
 // nsb_daemon.cc
 
 #include "nsb_daemon.h"
+#include "nsb.pb.h"
 
 NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {}
 
@@ -8,6 +9,7 @@ NSBDaemon::~NSBDaemon() {
     if (running) {
         stop();
     }
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 void NSBDaemon::start() {
@@ -25,6 +27,26 @@ void NSBDaemon::start_server(int port) {
         perror("Socket creation failed.");
         return;
     }
+    // Set to accept multiple connections.
+    const int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("Set socket options failed.");
+        close(server_fd);
+        return;
+    }
+    // Set non-blocking.
+    int flags = fcntl(server_fd, F_GETFL, 0);
+    if (flags == -1) {
+        perror("Get socket flags failed.");
+        close(server_fd);
+        return;
+    }
+    if (fcntl(server_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        perror("Set socket flags failed.");
+        close(server_fd);
+        return;
+    }
+    // Create address.
     sockaddr_in server_addr{};
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -46,7 +68,9 @@ void NSBDaemon::start_server(int port) {
 
     // Run server.
     fd_set read_fds;
+    // Initialize clients.
     std::vector<int> client_fds;
+    std::map<int, std::string> client_buffers;
     while (running) {
         FD_ZERO(&read_fds);
         FD_SET(server_fd, &read_fds);
@@ -68,6 +92,36 @@ void NSBDaemon::start_server(int port) {
             break;
         }
 
+        // Monitor existing connections.
+        for (auto it=client_fds.begin(); it!=client_fds.end();) {
+            int fd = *it;
+            if (FD_ISSET(fd, &read_fds)) {
+                bool message_exists = false;
+                int chunk_size = 2;
+                char buffer[chunk_size];
+                std::vector<char> message;
+                // Read buffer until there's nothing left.
+                int bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                while(bytes_read > 0) {
+                    message_exists = true;
+                    printf("Picked up %d bytes from (FD:%d)\n", bytes_read, fd);
+                    message.insert(message.end(), buffer, buffer+chunk_size-1);
+                    bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                }
+                if (message_exists) {
+                    printf("Received message from (FD:%d): %s\n", fd, message.data());
+                    ++it;
+                }
+                else {
+                    printf("Disconnected from (FD:%d)\n", fd);
+                    shutdown(fd, SHUT_WR);
+                    close(fd);
+                    client_fds.erase(it);
+                }
+            }
+            else {++it;}
+        }
+
         // Handle new connections.
         if (FD_ISSET(server_fd, &read_fds)) {
             sockaddr_in client_addr{};
@@ -83,23 +137,6 @@ void NSBDaemon::start_server(int port) {
             // Add to the connection pool.
             client_fds.push_back(client_fd);
         }
-
-        // Monitor existing connections.
-        for (auto it=client_fds.begin(); it!=client_fds.end();) {
-            int fd = *it;
-            if (FD_ISSET(fd, &read_fds)) {
-                char buffer[1024] = {0};
-                int bytes_read = read(fd, buffer, sizeof(buffer)-1);
-                if (bytes_read <= 0) {
-                    printf("Client (FD:%d) has disconnected.\n", fd);
-                    close(fd);
-                    it = client_fds.erase(it);
-                } else {
-                    printf("Received from client (FD:%d): %s\n", fd, buffer);
-                    ++it;
-                }
-            } else {++it;}
-        }
     }
     // When running stops, close connections and close server.
     for (int client_fd : client_fds) {
@@ -110,9 +147,9 @@ void NSBDaemon::start_server(int port) {
     std::cout << "Server stopped." << std::endl;
 }
 
-int NSBDaemon::handle_message(int fd) {
+// int NSBDaemon::handle_message(int fd, nsb::nsbm nsb_msg) {
 
-}
+// }
 
 void NSBDaemon::stop() {
     if (running) {
@@ -126,6 +163,7 @@ bool NSBDaemon::is_running() const {
 }
 
 int main() {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     std::cout << "Starting daemon...\n";
     NSBDaemon daemon = NSBDaemon(65432);
     daemon.start();

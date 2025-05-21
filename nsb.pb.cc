@@ -26,17 +26,17 @@ namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
 namespace nsb {
 
-inline constexpr nsbm_Metadata::Impl_::Impl_(
+inline constexpr Metadata::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
-        addr_type_{static_cast< ::nsb::nsbm_Metadata_Type >(0)},
+        addr_type_{static_cast< ::nsb::Metadata_Type >(0)},
         payload_size_{0},
         src_{},
         dest_{},
         _oneof_case_{} {}
 
 template <typename>
-PROTOBUF_CONSTEXPR nsbm_Metadata::nsbm_Metadata(::_pbi::ConstantInitialized)
+PROTOBUF_CONSTEXPR Metadata::Metadata(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
@@ -44,26 +44,26 @@ PROTOBUF_CONSTEXPR nsbm_Metadata::nsbm_Metadata(::_pbi::ConstantInitialized)
 #endif  // PROTOBUF_CUSTOM_VTABLE
       _impl_(::_pbi::ConstantInitialized()) {
 }
-struct nsbm_MetadataDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR nsbm_MetadataDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~nsbm_MetadataDefaultTypeInternal() {}
+struct MetadataDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR MetadataDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~MetadataDefaultTypeInternal() {}
   union {
-    nsbm_Metadata _instance;
+    Metadata _instance;
   };
 };
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 nsbm_MetadataDefaultTypeInternal _nsbm_Metadata_default_instance_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MetadataDefaultTypeInternal _Metadata_default_instance_;
 
-inline constexpr nsbm_Manifest::Impl_::Impl_(
+inline constexpr Manifest::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
-        og_{static_cast< ::nsb::nsbm_Manifest_Originator >(0)},
-        code_{static_cast< ::nsb::nsbm_Manifest_OpCode >(0)},
-        op_{static_cast< ::nsb::nsbm_Manifest_Operation >(1)} {}
+        op_{static_cast< ::nsb::Manifest_Operation >(0)},
+        og_{static_cast< ::nsb::Manifest_Originator >(0)},
+        code_{static_cast< ::nsb::Manifest_OpCode >(0)} {}
 
 template <typename>
-PROTOBUF_CONSTEXPR nsbm_Manifest::nsbm_Manifest(::_pbi::ConstantInitialized)
+PROTOBUF_CONSTEXPR Manifest::Manifest(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
@@ -71,45 +71,16 @@ PROTOBUF_CONSTEXPR nsbm_Manifest::nsbm_Manifest(::_pbi::ConstantInitialized)
 #endif  // PROTOBUF_CUSTOM_VTABLE
       _impl_(::_pbi::ConstantInitialized()) {
 }
-struct nsbm_ManifestDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR nsbm_ManifestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~nsbm_ManifestDefaultTypeInternal() {}
+struct ManifestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ManifestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ManifestDefaultTypeInternal() {}
   union {
-    nsbm_Manifest _instance;
+    Manifest _instance;
   };
 };
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 nsbm_ManifestDefaultTypeInternal _nsbm_Manifest_default_instance_;
-
-inline constexpr nsbm::Impl_::Impl_(
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        payload_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
-        manifest_{nullptr},
-        metadata_{nullptr} {}
-
-template <typename>
-PROTOBUF_CONSTEXPR nsbm::nsbm(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(::_pbi::ConstantInitialized()) {
-}
-struct nsbmDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR nsbmDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~nsbmDefaultTypeInternal() {}
-  union {
-    nsbm _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 nsbmDefaultTypeInternal _nsbm_default_instance_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ManifestDefaultTypeInternal _Manifest_default_instance_;
 }  // namespace nsb
 static const ::_pb::EnumDescriptor* file_level_enum_descriptors_nsb_2eproto[4];
 static constexpr const ::_pb::ServiceDescriptor**
@@ -117,101 +88,82 @@ static constexpr const ::_pb::ServiceDescriptor**
 const ::uint32_t
     TableStruct_nsb_2eproto::offsets[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
         protodesc_cold) = {
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Manifest, _impl_._has_bits_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Manifest, _internal_metadata_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Manifest, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Manifest, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
         ~0u,  // no _weak_field_map_
         ~0u,  // no _inlined_string_donated_
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Manifest, _impl_.op_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Manifest, _impl_.og_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Manifest, _impl_.code_),
-        2,
+        PROTOBUF_FIELD_OFFSET(::nsb::Manifest, _impl_.op_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Manifest, _impl_.og_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Manifest, _impl_.code_),
         0,
         1,
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_._has_bits_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _internal_metadata_),
+        2,
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _internal_metadata_),
         ~0u,  // no _extensions_
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_._oneof_case_[0]),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_._oneof_case_[0]),
         ~0u,  // no _weak_field_map_
         ~0u,  // no _inlined_string_donated_
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_.addr_type_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_.addr_type_),
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_.payload_size_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_.src_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_.dest_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_.payload_size_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_.src_),
+        PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_.dest_),
         0,
         ~0u,
         ~0u,
         ~0u,
         ~0u,
         1,
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_._has_bits_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.manifest_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.metadata_),
-        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.payload_),
-        1,
-        2,
-        0,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-        {0, 11, -1, sizeof(::nsb::nsbm_Manifest)},
-        {14, 30, -1, sizeof(::nsb::nsbm_Metadata)},
-        {36, 47, -1, sizeof(::nsb::nsbm)},
+        {0, 11, -1, sizeof(::nsb::Manifest)},
+        {14, 30, -1, sizeof(::nsb::Metadata)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
-    &::nsb::_nsbm_Manifest_default_instance_._instance,
-    &::nsb::_nsbm_Metadata_default_instance_._instance,
-    &::nsb::_nsbm_default_instance_._instance,
+    &::nsb::_Manifest_default_instance_._instance,
+    &::nsb::_Metadata_default_instance_._instance,
 };
 const char descriptor_table_protodef_nsb_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\tnsb.proto\022\003nsb\"\256\005\n\004nsbm\022$\n\010manifest\030\001 "
-    "\002(\0132\022.nsb.nsbm.Manifest\022$\n\010metadata\030\002 \001("
-    "\0132\022.nsb.nsbm.Metadata\022\017\n\007payload\030\007 \001(\014\032\202"
-    "\003\n\010Manifest\022(\n\002op\030\001 \002(\0162\034.nsb.nsbm.Manif"
-    "est.Operation\022)\n\002og\030\002 \002(\0162\035.nsb.nsbm.Man"
-    "ifest.Originator\022\'\n\004code\030\003 \001(\0162\031.nsb.nsb"
-    "m.Manifest.OpCode\")\n\tOperation\022\010\n\004PING\020\001"
-    "\022\010\n\004INIT\020\002\022\010\n\004EXIT\020\010\"8\n\nOriginator\022\n\n\006DA"
-    "EMON\020\000\022\016\n\nAPP_CLIENT\020\001\022\016\n\nSIM_CLIENT\020\002\"\222"
-    "\001\n\006OpCode\022\013\n\007SUCCESS\020\000\022\013\n\007FAILURE\020\001\022\022\n\016C"
-    "LIENT_REQUEST\020\002\022\023\n\017DAEMON_RESPONSE\020\003\022\023\n\017"
-    "IMPLICIT_TARGET\020\004\022\023\n\017EXPLICIT_TARGET\020\005\022\013"
-    "\n\007MESSAGE\020\006\022\016\n\nNO_MESSAGE\020\007\032\303\001\n\010Metadata"
-    "\022*\n\taddr_type\030\001 \002(\0162\027.nsb.nsbm.Metadata."
-    "Type\022\020\n\006src_id\030\002 \001(\tH\000\022\022\n\010src_addr\030\003 \001(\007"
-    "H\000\022\021\n\007dest_id\030\004 \001(\tH\001\022\023\n\tdest_addr\030\005 \001(\007"
-    "H\001\022\024\n\014payload_size\030\006 \001(\005\"\030\n\004Type\022\007\n\003INT\020"
-    "\000\022\007\n\003STR\020\001B\005\n\003srcB\006\n\004dest"
+    "\n\tnsb.proto\022\003nsb\"\363\002\n\010Manifest\022#\n\002op\030\001 \001("
+    "\0162\027.nsb.Manifest.Operation\022$\n\002og\030\002 \001(\0162\030"
+    ".nsb.Manifest.Originator\022\"\n\004code\030\003 \001(\0162\024"
+    ".nsb.Manifest.OpCode\")\n\tOperation\022\010\n\004PIN"
+    "G\020\000\022\010\n\004INIT\020\001\022\010\n\004EXIT\020\007\"8\n\nOriginator\022\n\n"
+    "\006DAEMON\020\000\022\016\n\nAPP_CLIENT\020\001\022\016\n\nSIM_CLIENT\020"
+    "\002\"\222\001\n\006OpCode\022\013\n\007SUCCESS\020\000\022\013\n\007FAILURE\020\001\022\022"
+    "\n\016CLIENT_REQUEST\020\002\022\023\n\017DAEMON_RESPONSE\020\003\022"
+    "\023\n\017IMPLICIT_TARGET\020\004\022\023\n\017EXPLICIT_TARGET\020"
+    "\005\022\013\n\007MESSAGE\020\006\022\016\n\nNO_MESSAGE\020\007\"\276\001\n\010Metad"
+    "ata\022%\n\taddr_type\030\001 \001(\0162\022.nsb.Metadata.Ty"
+    "pe\022\020\n\006src_id\030\002 \001(\tH\000\022\022\n\010src_addr\030\003 \001(\007H\000"
+    "\022\021\n\007dest_id\030\004 \001(\tH\001\022\023\n\tdest_addr\030\005 \001(\007H\001"
+    "\022\024\n\014payload_size\030\006 \001(\005\"\030\n\004Type\022\007\n\003INT\020\000\022"
+    "\007\n\003STR\020\001B\005\n\003srcB\006\n\004destb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nsb_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nsb_2eproto = {
     false,
     false,
-    705,
+    596,
     descriptor_table_protodef_nsb_2eproto,
     "nsb.proto",
     &descriptor_table_nsb_2eproto_once,
     nullptr,
     0,
-    3,
+    2,
     schemas,
     file_default_instances,
     TableStruct_nsb_2eproto::offsets,
@@ -219,233 +171,227 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nsb_2eproto = 
     file_level_service_descriptors_nsb_2eproto,
 };
 namespace nsb {
-const ::google::protobuf::EnumDescriptor* nsbm_Manifest_Operation_descriptor() {
+const ::google::protobuf::EnumDescriptor* Manifest_Operation_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_nsb_2eproto);
   return file_level_enum_descriptors_nsb_2eproto[0];
 }
-PROTOBUF_CONSTINIT const uint32_t nsbm_Manifest_Operation_internal_data_[] = {
-    131073u, 32u, 32u, };
-bool nsbm_Manifest_Operation_IsValid(int value) {
-  return 0 <= value && value <= 8 && ((262u >> value) & 1) != 0;
+PROTOBUF_CONSTINIT const uint32_t Manifest_Operation_internal_data_[] = {
+    131072u, 32u, 32u, };
+bool Manifest_Operation_IsValid(int value) {
+  return 0 <= value && value <= 7 && ((131u >> value) & 1) != 0;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
-constexpr nsbm_Manifest_Operation nsbm_Manifest::PING;
-constexpr nsbm_Manifest_Operation nsbm_Manifest::INIT;
-constexpr nsbm_Manifest_Operation nsbm_Manifest::EXIT;
-constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MIN;
-constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MAX;
-constexpr int nsbm_Manifest::Operation_ARRAYSIZE;
+constexpr Manifest_Operation Manifest::PING;
+constexpr Manifest_Operation Manifest::INIT;
+constexpr Manifest_Operation Manifest::EXIT;
+constexpr Manifest_Operation Manifest::Operation_MIN;
+constexpr Manifest_Operation Manifest::Operation_MAX;
+constexpr int Manifest::Operation_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-const ::google::protobuf::EnumDescriptor* nsbm_Manifest_Originator_descriptor() {
+const ::google::protobuf::EnumDescriptor* Manifest_Originator_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_nsb_2eproto);
   return file_level_enum_descriptors_nsb_2eproto[1];
 }
-PROTOBUF_CONSTINIT const uint32_t nsbm_Manifest_Originator_internal_data_[] = {
+PROTOBUF_CONSTINIT const uint32_t Manifest_Originator_internal_data_[] = {
     196608u, 0u, };
-bool nsbm_Manifest_Originator_IsValid(int value) {
+bool Manifest_Originator_IsValid(int value) {
   return 0 <= value && value <= 2;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
-constexpr nsbm_Manifest_Originator nsbm_Manifest::DAEMON;
-constexpr nsbm_Manifest_Originator nsbm_Manifest::APP_CLIENT;
-constexpr nsbm_Manifest_Originator nsbm_Manifest::SIM_CLIENT;
-constexpr nsbm_Manifest_Originator nsbm_Manifest::Originator_MIN;
-constexpr nsbm_Manifest_Originator nsbm_Manifest::Originator_MAX;
-constexpr int nsbm_Manifest::Originator_ARRAYSIZE;
+constexpr Manifest_Originator Manifest::DAEMON;
+constexpr Manifest_Originator Manifest::APP_CLIENT;
+constexpr Manifest_Originator Manifest::SIM_CLIENT;
+constexpr Manifest_Originator Manifest::Originator_MIN;
+constexpr Manifest_Originator Manifest::Originator_MAX;
+constexpr int Manifest::Originator_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-const ::google::protobuf::EnumDescriptor* nsbm_Manifest_OpCode_descriptor() {
+const ::google::protobuf::EnumDescriptor* Manifest_OpCode_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_nsb_2eproto);
   return file_level_enum_descriptors_nsb_2eproto[2];
 }
-PROTOBUF_CONSTINIT const uint32_t nsbm_Manifest_OpCode_internal_data_[] = {
+PROTOBUF_CONSTINIT const uint32_t Manifest_OpCode_internal_data_[] = {
     524288u, 0u, };
-bool nsbm_Manifest_OpCode_IsValid(int value) {
+bool Manifest_OpCode_IsValid(int value) {
   return 0 <= value && value <= 7;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::SUCCESS;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::FAILURE;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::CLIENT_REQUEST;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::DAEMON_RESPONSE;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::IMPLICIT_TARGET;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::EXPLICIT_TARGET;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::MESSAGE;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::NO_MESSAGE;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::OpCode_MIN;
-constexpr nsbm_Manifest_OpCode nsbm_Manifest::OpCode_MAX;
-constexpr int nsbm_Manifest::OpCode_ARRAYSIZE;
+constexpr Manifest_OpCode Manifest::SUCCESS;
+constexpr Manifest_OpCode Manifest::FAILURE;
+constexpr Manifest_OpCode Manifest::CLIENT_REQUEST;
+constexpr Manifest_OpCode Manifest::DAEMON_RESPONSE;
+constexpr Manifest_OpCode Manifest::IMPLICIT_TARGET;
+constexpr Manifest_OpCode Manifest::EXPLICIT_TARGET;
+constexpr Manifest_OpCode Manifest::MESSAGE;
+constexpr Manifest_OpCode Manifest::NO_MESSAGE;
+constexpr Manifest_OpCode Manifest::OpCode_MIN;
+constexpr Manifest_OpCode Manifest::OpCode_MAX;
+constexpr int Manifest::OpCode_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-const ::google::protobuf::EnumDescriptor* nsbm_Metadata_Type_descriptor() {
+const ::google::protobuf::EnumDescriptor* Metadata_Type_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_nsb_2eproto);
   return file_level_enum_descriptors_nsb_2eproto[3];
 }
-PROTOBUF_CONSTINIT const uint32_t nsbm_Metadata_Type_internal_data_[] = {
+PROTOBUF_CONSTINIT const uint32_t Metadata_Type_internal_data_[] = {
     131072u, 0u, };
-bool nsbm_Metadata_Type_IsValid(int value) {
+bool Metadata_Type_IsValid(int value) {
   return 0 <= value && value <= 1;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
-constexpr nsbm_Metadata_Type nsbm_Metadata::INT;
-constexpr nsbm_Metadata_Type nsbm_Metadata::STR;
-constexpr nsbm_Metadata_Type nsbm_Metadata::Type_MIN;
-constexpr nsbm_Metadata_Type nsbm_Metadata::Type_MAX;
-constexpr int nsbm_Metadata::Type_ARRAYSIZE;
+constexpr Metadata_Type Metadata::INT;
+constexpr Metadata_Type Metadata::STR;
+constexpr Metadata_Type Metadata::Type_MIN;
+constexpr Metadata_Type Metadata::Type_MAX;
+constexpr int Metadata::Type_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 // ===================================================================
 
-class nsbm_Manifest::_Internal {
+class Manifest::_Internal {
  public:
   using HasBits =
-      decltype(std::declval<nsbm_Manifest>()._impl_._has_bits_);
+      decltype(std::declval<Manifest>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_._has_bits_);
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000005) ^ 0x00000005) != 0;
-  }
+      8 * PROTOBUF_FIELD_OFFSET(Manifest, _impl_._has_bits_);
 };
 
-nsbm_Manifest::nsbm_Manifest(::google::protobuf::Arena* arena)
+Manifest::Manifest(::google::protobuf::Arena* arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, _class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:nsb.nsbm.Manifest)
+  // @@protoc_insertion_point(arena_constructor:nsb.Manifest)
 }
-nsbm_Manifest::nsbm_Manifest(
-    ::google::protobuf::Arena* arena, const nsbm_Manifest& from)
-    : nsbm_Manifest(arena) {
+Manifest::Manifest(
+    ::google::protobuf::Arena* arena, const Manifest& from)
+    : Manifest(arena) {
   MergeFrom(from);
 }
-inline PROTOBUF_NDEBUG_INLINE nsbm_Manifest::Impl_::Impl_(
+inline PROTOBUF_NDEBUG_INLINE Manifest::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
-      : _cached_size_{0},
-        op_{static_cast< ::nsb::nsbm_Manifest_Operation >(1)} {}
+      : _cached_size_{0} {}
 
-inline void nsbm_Manifest::SharedCtor(::_pb::Arena* arena) {
+inline void Manifest::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, og_),
+               offsetof(Impl_, op_),
            0,
            offsetof(Impl_, code_) -
-               offsetof(Impl_, og_) +
+               offsetof(Impl_, op_) +
                sizeof(Impl_::code_));
 }
-nsbm_Manifest::~nsbm_Manifest() {
-  // @@protoc_insertion_point(destructor:nsb.nsbm.Manifest)
+Manifest::~Manifest() {
+  // @@protoc_insertion_point(destructor:nsb.Manifest)
   SharedDtor(*this);
 }
-inline void nsbm_Manifest::SharedDtor(MessageLite& self) {
-  nsbm_Manifest& this_ = static_cast<nsbm_Manifest&>(self);
+inline void Manifest::SharedDtor(MessageLite& self) {
+  Manifest& this_ = static_cast<Manifest&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   this_._impl_.~Impl_();
 }
 
-inline void* nsbm_Manifest::PlacementNew_(const void*, void* mem,
+inline void* Manifest::PlacementNew_(const void*, void* mem,
                                         ::google::protobuf::Arena* arena) {
-  return ::new (mem) nsbm_Manifest(arena);
+  return ::new (mem) Manifest(arena);
 }
-constexpr auto nsbm_Manifest::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(nsbm_Manifest),
-                                            alignof(nsbm_Manifest));
+constexpr auto Manifest::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(Manifest),
+                                            alignof(Manifest));
 }
 PROTOBUF_CONSTINIT
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull nsbm_Manifest::_class_data_ = {
+const ::google::protobuf::internal::ClassDataFull Manifest::_class_data_ = {
     ::google::protobuf::internal::ClassData{
-        &_nsbm_Manifest_default_instance_._instance,
+        &_Manifest_default_instance_._instance,
         &_table_.header,
         nullptr,  // OnDemandRegisterArenaDtor
-        nsbm_Manifest::IsInitializedImpl,
-        &nsbm_Manifest::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<nsbm_Manifest>(),
+        nullptr,  // IsInitialized
+        &Manifest::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<Manifest>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        &nsbm_Manifest::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<nsbm_Manifest>(), &nsbm_Manifest::ByteSizeLong,
-            &nsbm_Manifest::_InternalSerialize,
+        &Manifest::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<Manifest>(), &Manifest::ByteSizeLong,
+            &Manifest::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_._cached_size_),
+        PROTOBUF_FIELD_OFFSET(Manifest, _impl_._cached_size_),
         false,
     },
-    &nsbm_Manifest::kDescriptorMethods,
+    &Manifest::kDescriptorMethods,
     &descriptor_table_nsb_2eproto,
     nullptr,  // tracker
 };
-const ::google::protobuf::internal::ClassData* nsbm_Manifest::GetClassData() const {
+const ::google::protobuf::internal::ClassData* Manifest::GetClassData() const {
   ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
   ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 3, 0, 2> nsbm_Manifest::_table_ = {
+const ::_pbi::TcParseTable<2, 3, 0, 0, 2> Manifest::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(Manifest, _impl_._has_bits_),
     0, // no _extensions_
     3, 24,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
     4294967288,  // skipmap
     offsetof(decltype(_table_), field_entries),
     3,  // num_field_entries
-    3,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
     _class_data_.base(),
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::nsb::nsbm_Manifest>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::nsb::Manifest>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
     {::_pbi::TcParser::MiniParse, {}},
-    // required .nsb.nsbm.Manifest.Operation op = 1;
-    {::_pbi::TcParser::FastEvS1,
-     {8, 2, 0, PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.op_)}},
-    // required .nsb.nsbm.Manifest.Originator og = 2;
-    {::_pbi::TcParser::FastEr0S1,
-     {16, 0, 2, PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.og_)}},
-    // optional .nsb.nsbm.Manifest.OpCode code = 3;
-    {::_pbi::TcParser::FastEr0S1,
-     {24, 1, 7, PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.code_)}},
+    // .nsb.Manifest.Operation op = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Manifest, _impl_.op_), 0>(),
+     {8, 0, 0, PROTOBUF_FIELD_OFFSET(Manifest, _impl_.op_)}},
+    // .nsb.Manifest.Originator og = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Manifest, _impl_.og_), 1>(),
+     {16, 1, 0, PROTOBUF_FIELD_OFFSET(Manifest, _impl_.og_)}},
+    // .nsb.Manifest.OpCode code = 3;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Manifest, _impl_.code_), 2>(),
+     {24, 2, 0, PROTOBUF_FIELD_OFFSET(Manifest, _impl_.code_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // required .nsb.nsbm.Manifest.Operation op = 1;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.op_), _Internal::kHasBitsOffset + 2, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kEnum)},
-    // required .nsb.nsbm.Manifest.Originator og = 2;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.og_), _Internal::kHasBitsOffset + 0, 1,
-    (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
-    // optional .nsb.nsbm.Manifest.OpCode code = 3;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.code_), _Internal::kHasBitsOffset + 1, 2,
-    (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
-  }}, {{
-    {::_pbi::FieldAuxEnumData{}, ::nsb::nsbm_Manifest_Operation_internal_data_},
-    {0, 3},
-    {0, 8},
-  }}, {{
+    // .nsb.Manifest.Operation op = 1;
+    {PROTOBUF_FIELD_OFFSET(Manifest, _impl_.op_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
+    // .nsb.Manifest.Originator og = 2;
+    {PROTOBUF_FIELD_OFFSET(Manifest, _impl_.og_), _Internal::kHasBitsOffset + 1, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
+    // .nsb.Manifest.OpCode code = 3;
+    {PROTOBUF_FIELD_OFFSET(Manifest, _impl_.code_), _Internal::kHasBitsOffset + 2, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
+  }},
+  // no aux_entries
+  {{
   }},
 };
 
-PROTOBUF_NOINLINE void nsbm_Manifest::Clear() {
-// @@protoc_insertion_point(message_clear_start:nsb.nsbm.Manifest)
+PROTOBUF_NOINLINE void Manifest::Clear() {
+// @@protoc_insertion_point(message_clear_start:nsb.Manifest)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
@@ -453,47 +399,46 @@ PROTOBUF_NOINLINE void nsbm_Manifest::Clear() {
 
   cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
-    ::memset(&_impl_.og_, 0, static_cast<::size_t>(
+    ::memset(&_impl_.op_, 0, static_cast<::size_t>(
         reinterpret_cast<char*>(&_impl_.code_) -
-        reinterpret_cast<char*>(&_impl_.og_)) + sizeof(_impl_.code_));
-    _impl_.op_ = 1;
+        reinterpret_cast<char*>(&_impl_.op_)) + sizeof(_impl_.code_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* nsbm_Manifest::_InternalSerialize(
+        ::uint8_t* Manifest::_InternalSerialize(
             const MessageLite& base, ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const nsbm_Manifest& this_ = static_cast<const nsbm_Manifest&>(base);
+          const Manifest& this_ = static_cast<const Manifest&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* nsbm_Manifest::_InternalSerialize(
+        ::uint8_t* Manifest::_InternalSerialize(
             ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const nsbm_Manifest& this_ = *this;
+          const Manifest& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:nsb.nsbm.Manifest)
+          // @@protoc_insertion_point(serialize_to_array_start:nsb.Manifest)
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
           cached_has_bits = this_._impl_._has_bits_[0];
-          // required .nsb.nsbm.Manifest.Operation op = 1;
-          if (cached_has_bits & 0x00000004u) {
+          // .nsb.Manifest.Operation op = 1;
+          if (cached_has_bits & 0x00000001u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
                 1, this_._internal_op(), target);
           }
 
-          // required .nsb.nsbm.Manifest.Originator og = 2;
-          if (cached_has_bits & 0x00000001u) {
+          // .nsb.Manifest.Originator og = 2;
+          if (cached_has_bits & 0x00000002u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
                 2, this_._internal_og(), target);
           }
 
-          // optional .nsb.nsbm.Manifest.OpCode code = 3;
-          if (cached_has_bits & 0x00000002u) {
+          // .nsb.Manifest.OpCode code = 3;
+          if (cached_has_bits & 0x00000004u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
                 3, this_._internal_code(), target);
@@ -504,18 +449,18 @@ PROTOBUF_NOINLINE void nsbm_Manifest::Clear() {
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
                     this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
           }
-          // @@protoc_insertion_point(serialize_to_array_end:nsb.nsbm.Manifest)
+          // @@protoc_insertion_point(serialize_to_array_end:nsb.Manifest)
           return target;
         }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t nsbm_Manifest::ByteSizeLong(const MessageLite& base) {
-          const nsbm_Manifest& this_ = static_cast<const nsbm_Manifest&>(base);
+        ::size_t Manifest::ByteSizeLong(const MessageLite& base) {
+          const Manifest& this_ = static_cast<const Manifest&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t nsbm_Manifest::ByteSizeLong() const {
-          const nsbm_Manifest& this_ = *this;
+        ::size_t Manifest::ByteSizeLong() const {
+          const Manifest& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:nsb.nsbm.Manifest)
+          // @@protoc_insertion_point(message_byte_size_start:nsb.Manifest)
           ::size_t total_size = 0;
 
           ::uint32_t cached_has_bits = 0;
@@ -523,36 +468,32 @@ PROTOBUF_NOINLINE void nsbm_Manifest::Clear() {
           (void)cached_has_bits;
 
           ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // required .nsb.nsbm.Manifest.Originator og = 2;
-            cached_has_bits = this_._impl_._has_bits_[0];
+          cached_has_bits = this_._impl_._has_bits_[0];
+          if (cached_has_bits & 0x00000007u) {
+            // .nsb.Manifest.Operation op = 1;
             if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::_pbi::WireFormatLite::EnumSize(this_._internal_op());
+            }
+            // .nsb.Manifest.Originator og = 2;
+            if (cached_has_bits & 0x00000002u) {
               total_size += 1 +
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_og());
             }
-          }
-           {
-            // optional .nsb.nsbm.Manifest.OpCode code = 3;
-            if (cached_has_bits & 0x00000002u) {
-              total_size += 1 +
-                            ::_pbi::WireFormatLite::EnumSize(this_._internal_code());
-            }
-          }
-           {
-            // required .nsb.nsbm.Manifest.Operation op = 1;
+            // .nsb.Manifest.OpCode code = 3;
             if (cached_has_bits & 0x00000004u) {
               total_size += 1 +
-                            ::_pbi::WireFormatLite::EnumSize(this_._internal_op());
+                            ::_pbi::WireFormatLite::EnumSize(this_._internal_code());
             }
           }
           return this_.MaybeComputeUnknownFieldsSize(total_size,
                                                      &this_._impl_._cached_size_);
         }
 
-void nsbm_Manifest::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<nsbm_Manifest*>(&to_msg);
-  auto& from = static_cast<const nsbm_Manifest&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:nsb.nsbm.Manifest)
+void Manifest::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<Manifest*>(&to_msg);
+  auto& from = static_cast<const Manifest&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:nsb.Manifest)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -560,92 +501,81 @@ void nsbm_Manifest::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::g
   cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      _this->_impl_.og_ = from._impl_.og_;
+      _this->_impl_.op_ = from._impl_.op_;
     }
     if (cached_has_bits & 0x00000002u) {
-      _this->_impl_.code_ = from._impl_.code_;
+      _this->_impl_.og_ = from._impl_.og_;
     }
     if (cached_has_bits & 0x00000004u) {
-      _this->_impl_.op_ = from._impl_.op_;
+      _this->_impl_.code_ = from._impl_.code_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
-void nsbm_Manifest::CopyFrom(const nsbm_Manifest& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:nsb.nsbm.Manifest)
+void Manifest::CopyFrom(const Manifest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:nsb.Manifest)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-PROTOBUF_NOINLINE bool nsbm_Manifest::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const nsbm_Manifest&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  return true;
-}
 
-void nsbm_Manifest::InternalSwap(nsbm_Manifest* PROTOBUF_RESTRICT other) {
+void Manifest::InternalSwap(Manifest* PROTOBUF_RESTRICT other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.op_)
-      + sizeof(nsbm_Manifest::_impl_.op_)
-      - PROTOBUF_FIELD_OFFSET(nsbm_Manifest, _impl_.og_)>(
-          reinterpret_cast<char*>(&_impl_.og_),
-          reinterpret_cast<char*>(&other->_impl_.og_));
+      PROTOBUF_FIELD_OFFSET(Manifest, _impl_.code_)
+      + sizeof(Manifest::_impl_.code_)
+      - PROTOBUF_FIELD_OFFSET(Manifest, _impl_.op_)>(
+          reinterpret_cast<char*>(&_impl_.op_),
+          reinterpret_cast<char*>(&other->_impl_.op_));
 }
 
-::google::protobuf::Metadata nsbm_Manifest::GetMetadata() const {
+::google::protobuf::Metadata Manifest::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
 
-class nsbm_Metadata::_Internal {
+class Metadata::_Internal {
  public:
   using HasBits =
-      decltype(std::declval<nsbm_Metadata>()._impl_._has_bits_);
+      decltype(std::declval<Metadata>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_._has_bits_);
+      8 * PROTOBUF_FIELD_OFFSET(Metadata, _impl_._has_bits_);
   static constexpr ::int32_t kOneofCaseOffset =
-      PROTOBUF_FIELD_OFFSET(::nsb::nsbm_Metadata, _impl_._oneof_case_);
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000001) ^ 0x00000001) != 0;
-  }
+      PROTOBUF_FIELD_OFFSET(::nsb::Metadata, _impl_._oneof_case_);
 };
 
-nsbm_Metadata::nsbm_Metadata(::google::protobuf::Arena* arena)
+Metadata::Metadata(::google::protobuf::Arena* arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, _class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:nsb.nsbm.Metadata)
+  // @@protoc_insertion_point(arena_constructor:nsb.Metadata)
 }
-inline PROTOBUF_NDEBUG_INLINE nsbm_Metadata::Impl_::Impl_(
+inline PROTOBUF_NDEBUG_INLINE Metadata::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::nsb::nsbm_Metadata& from_msg)
+    const Impl_& from, const ::nsb::Metadata& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0},
         src_{},
         dest_{},
         _oneof_case_{from._oneof_case_[0], from._oneof_case_[1]} {}
 
-nsbm_Metadata::nsbm_Metadata(
+Metadata::Metadata(
     ::google::protobuf::Arena* arena,
-    const nsbm_Metadata& from)
+    const Metadata& from)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, _class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  nsbm_Metadata* const _this = this;
+  Metadata* const _this = this;
   (void)_this;
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
@@ -678,9 +608,9 @@ nsbm_Metadata::nsbm_Metadata(
         break;
   }
 
-  // @@protoc_insertion_point(copy_constructor:nsb.nsbm.Metadata)
+  // @@protoc_insertion_point(copy_constructor:nsb.Metadata)
 }
-inline PROTOBUF_NDEBUG_INLINE nsbm_Metadata::Impl_::Impl_(
+inline PROTOBUF_NDEBUG_INLINE Metadata::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
       : _cached_size_{0},
@@ -688,7 +618,7 @@ inline PROTOBUF_NDEBUG_INLINE nsbm_Metadata::Impl_::Impl_(
         dest_{},
         _oneof_case_{} {}
 
-inline void nsbm_Metadata::SharedCtor(::_pb::Arena* arena) {
+inline void Metadata::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char *>(&_impl_) +
                offsetof(Impl_, addr_type_),
@@ -697,12 +627,12 @@ inline void nsbm_Metadata::SharedCtor(::_pb::Arena* arena) {
                offsetof(Impl_, addr_type_) +
                sizeof(Impl_::payload_size_));
 }
-nsbm_Metadata::~nsbm_Metadata() {
-  // @@protoc_insertion_point(destructor:nsb.nsbm.Metadata)
+Metadata::~Metadata() {
+  // @@protoc_insertion_point(destructor:nsb.Metadata)
   SharedDtor(*this);
 }
-inline void nsbm_Metadata::SharedDtor(MessageLite& self) {
-  nsbm_Metadata& this_ = static_cast<nsbm_Metadata&>(self);
+inline void Metadata::SharedDtor(MessageLite& self) {
+  Metadata& this_ = static_cast<Metadata&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   if (this_.has_src()) {
@@ -714,8 +644,8 @@ inline void nsbm_Metadata::SharedDtor(MessageLite& self) {
   this_._impl_.~Impl_();
 }
 
-void nsbm_Metadata::clear_src() {
-// @@protoc_insertion_point(one_of_clear_start:nsb.nsbm.Metadata)
+void Metadata::clear_src() {
+// @@protoc_insertion_point(one_of_clear_start:nsb.Metadata)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   switch (src_case()) {
     case kSrcId: {
@@ -733,8 +663,8 @@ void nsbm_Metadata::clear_src() {
   _impl_._oneof_case_[0] = SRC_NOT_SET;
 }
 
-void nsbm_Metadata::clear_dest() {
-// @@protoc_insertion_point(one_of_clear_start:nsb.nsbm.Metadata)
+void Metadata::clear_dest() {
+// @@protoc_insertion_point(one_of_clear_start:nsb.Metadata)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   switch (dest_case()) {
     case kDestId: {
@@ -753,99 +683,99 @@ void nsbm_Metadata::clear_dest() {
 }
 
 
-inline void* nsbm_Metadata::PlacementNew_(const void*, void* mem,
+inline void* Metadata::PlacementNew_(const void*, void* mem,
                                         ::google::protobuf::Arena* arena) {
-  return ::new (mem) nsbm_Metadata(arena);
+  return ::new (mem) Metadata(arena);
 }
-constexpr auto nsbm_Metadata::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(nsbm_Metadata),
-                                            alignof(nsbm_Metadata));
+constexpr auto Metadata::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(Metadata),
+                                            alignof(Metadata));
 }
 PROTOBUF_CONSTINIT
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull nsbm_Metadata::_class_data_ = {
+const ::google::protobuf::internal::ClassDataFull Metadata::_class_data_ = {
     ::google::protobuf::internal::ClassData{
-        &_nsbm_Metadata_default_instance_._instance,
+        &_Metadata_default_instance_._instance,
         &_table_.header,
         nullptr,  // OnDemandRegisterArenaDtor
-        nsbm_Metadata::IsInitializedImpl,
-        &nsbm_Metadata::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<nsbm_Metadata>(),
+        nullptr,  // IsInitialized
+        &Metadata::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<Metadata>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        &nsbm_Metadata::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<nsbm_Metadata>(), &nsbm_Metadata::ByteSizeLong,
-            &nsbm_Metadata::_InternalSerialize,
+        &Metadata::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<Metadata>(), &Metadata::ByteSizeLong,
+            &Metadata::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_._cached_size_),
+        PROTOBUF_FIELD_OFFSET(Metadata, _impl_._cached_size_),
         false,
     },
-    &nsbm_Metadata::kDescriptorMethods,
+    &Metadata::kDescriptorMethods,
     &descriptor_table_nsb_2eproto,
     nullptr,  // tracker
 };
-const ::google::protobuf::internal::ClassData* nsbm_Metadata::GetClassData() const {
+const ::google::protobuf::internal::ClassData* Metadata::GetClassData() const {
   ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
   ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 6, 1, 39, 2> nsbm_Metadata::_table_ = {
+const ::_pbi::TcParseTable<1, 6, 0, 34, 2> Metadata::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(Metadata, _impl_._has_bits_),
     0, // no _extensions_
     6, 8,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
     4294967232,  // skipmap
     offsetof(decltype(_table_), field_entries),
     6,  // num_field_entries
-    1,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
     _class_data_.base(),
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::nsb::nsbm_Metadata>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::nsb::Metadata>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional int32 payload_size = 6;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(nsbm_Metadata, _impl_.payload_size_), 1>(),
-     {48, 1, 0, PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.payload_size_)}},
-    // required .nsb.nsbm.Metadata.Type addr_type = 1;
-    {::_pbi::TcParser::FastEr0S1,
-     {8, 0, 1, PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.addr_type_)}},
+    // int32 payload_size = 6;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Metadata, _impl_.payload_size_), 1>(),
+     {48, 1, 0, PROTOBUF_FIELD_OFFSET(Metadata, _impl_.payload_size_)}},
+    // .nsb.Metadata.Type addr_type = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Metadata, _impl_.addr_type_), 0>(),
+     {8, 0, 0, PROTOBUF_FIELD_OFFSET(Metadata, _impl_.addr_type_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // required .nsb.nsbm.Metadata.Type addr_type = 1;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.addr_type_), _Internal::kHasBitsOffset + 0, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
+    // .nsb.Metadata.Type addr_type = 1;
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.addr_type_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
     // string src_id = 2;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.src_.src_id_), _Internal::kOneofCaseOffset + 0, 0,
-    (0 | ::_fl::kFcOneof | ::_fl::kRawString | ::_fl::kRepAString)},
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.src_.src_id_), _Internal::kOneofCaseOffset + 0, 0,
+    (0 | ::_fl::kFcOneof | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // fixed32 src_addr = 3;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.src_.src_addr_), _Internal::kOneofCaseOffset + 0, 0,
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.src_.src_addr_), _Internal::kOneofCaseOffset + 0, 0,
     (0 | ::_fl::kFcOneof | ::_fl::kFixed32)},
     // string dest_id = 4;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.dest_.dest_id_), _Internal::kOneofCaseOffset + 4, 0,
-    (0 | ::_fl::kFcOneof | ::_fl::kRawString | ::_fl::kRepAString)},
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.dest_.dest_id_), _Internal::kOneofCaseOffset + 4, 0,
+    (0 | ::_fl::kFcOneof | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // fixed32 dest_addr = 5;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.dest_.dest_addr_), _Internal::kOneofCaseOffset + 4, 0,
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.dest_.dest_addr_), _Internal::kOneofCaseOffset + 4, 0,
     (0 | ::_fl::kFcOneof | ::_fl::kFixed32)},
-    // optional int32 payload_size = 6;
-    {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.payload_size_), _Internal::kHasBitsOffset + 1, 0,
+    // int32 payload_size = 6;
+    {PROTOBUF_FIELD_OFFSET(Metadata, _impl_.payload_size_), _Internal::kHasBitsOffset + 1, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
-  }}, {{
-    {0, 2},
-  }}, {{
-    "\21\0\6\0\7\0\0\0"
-    "nsb.nsbm.Metadata"
+  }},
+  // no aux_entries
+  {{
+    "\14\0\6\0\7\0\0\0"
+    "nsb.Metadata"
     "src_id"
     "dest_id"
   }},
 };
 
-PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
-// @@protoc_insertion_point(message_clear_start:nsb.nsbm.Metadata)
+PROTOBUF_NOINLINE void Metadata::Clear() {
+// @@protoc_insertion_point(message_clear_start:nsb.Metadata)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
@@ -864,22 +794,22 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* nsbm_Metadata::_InternalSerialize(
+        ::uint8_t* Metadata::_InternalSerialize(
             const MessageLite& base, ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const nsbm_Metadata& this_ = static_cast<const nsbm_Metadata&>(base);
+          const Metadata& this_ = static_cast<const Metadata&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* nsbm_Metadata::_InternalSerialize(
+        ::uint8_t* Metadata::_InternalSerialize(
             ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const nsbm_Metadata& this_ = *this;
+          const Metadata& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:nsb.nsbm.Metadata)
+          // @@protoc_insertion_point(serialize_to_array_start:nsb.Metadata)
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
           cached_has_bits = this_._impl_._has_bits_[0];
-          // required .nsb.nsbm.Metadata.Type addr_type = 1;
+          // .nsb.Metadata.Type addr_type = 1;
           if (cached_has_bits & 0x00000001u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
@@ -889,8 +819,8 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
           switch (this_.src_case()) {
             case kSrcId: {
               const std::string& _s = this_._internal_src_id();
-              ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(_s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormat::SERIALIZE,
-                                          "nsb.nsbm.Metadata.src_id");
+              ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                  _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "nsb.Metadata.src_id");
               target = stream->WriteStringMaybeAliased(2, _s, target);
               break;
             }
@@ -906,8 +836,8 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
           switch (this_.dest_case()) {
             case kDestId: {
               const std::string& _s = this_._internal_dest_id();
-              ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(_s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormat::SERIALIZE,
-                                          "nsb.nsbm.Metadata.dest_id");
+              ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                  _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "nsb.Metadata.dest_id");
               target = stream->WriteStringMaybeAliased(4, _s, target);
               break;
             }
@@ -920,7 +850,7 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
             default:
               break;
           }
-          // optional int32 payload_size = 6;
+          // int32 payload_size = 6;
           if (cached_has_bits & 0x00000002u) {
             target = ::google::protobuf::internal::WireFormatLite::
                 WriteInt32ToArrayWithField<6>(
@@ -932,18 +862,18 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
                     this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
           }
-          // @@protoc_insertion_point(serialize_to_array_end:nsb.nsbm.Metadata)
+          // @@protoc_insertion_point(serialize_to_array_end:nsb.Metadata)
           return target;
         }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t nsbm_Metadata::ByteSizeLong(const MessageLite& base) {
-          const nsbm_Metadata& this_ = static_cast<const nsbm_Metadata&>(base);
+        ::size_t Metadata::ByteSizeLong(const MessageLite& base) {
+          const Metadata& this_ = static_cast<const Metadata&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t nsbm_Metadata::ByteSizeLong() const {
-          const nsbm_Metadata& this_ = *this;
+        ::size_t Metadata::ByteSizeLong() const {
+          const Metadata& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:nsb.nsbm.Metadata)
+          // @@protoc_insertion_point(message_byte_size_start:nsb.Metadata)
           ::size_t total_size = 0;
 
           ::uint32_t cached_has_bits = 0;
@@ -951,16 +881,14 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
           (void)cached_has_bits;
 
           ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // required .nsb.nsbm.Metadata.Type addr_type = 1;
-            cached_has_bits = this_._impl_._has_bits_[0];
+          cached_has_bits = this_._impl_._has_bits_[0];
+          if (cached_has_bits & 0x00000003u) {
+            // .nsb.Metadata.Type addr_type = 1;
             if (cached_has_bits & 0x00000001u) {
               total_size += 1 +
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_addr_type());
             }
-          }
-           {
-            // optional int32 payload_size = 6;
+            // int32 payload_size = 6;
             if (cached_has_bits & 0x00000002u) {
               total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
                   this_._internal_payload_size());
@@ -1002,11 +930,11 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
                                                      &this_._impl_._cached_size_);
         }
 
-void nsbm_Metadata::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<nsbm_Metadata*>(&to_msg);
-  auto& from = static_cast<const nsbm_Metadata&>(from_msg);
+void Metadata::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<Metadata*>(&to_msg);
+  auto& from = static_cast<const Metadata&>(from_msg);
   ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:nsb.nsbm.Metadata)
+  // @@protoc_insertion_point(class_specific_merge_from_start:nsb.Metadata)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -1076,30 +1004,22 @@ void nsbm_Metadata::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::g
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
-void nsbm_Metadata::CopyFrom(const nsbm_Metadata& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:nsb.nsbm.Metadata)
+void Metadata::CopyFrom(const Metadata& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:nsb.Metadata)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-PROTOBUF_NOINLINE bool nsbm_Metadata::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const nsbm_Metadata&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  return true;
-}
 
-void nsbm_Metadata::InternalSwap(nsbm_Metadata* PROTOBUF_RESTRICT other) {
+void Metadata::InternalSwap(Metadata* PROTOBUF_RESTRICT other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.payload_size_)
-      + sizeof(nsbm_Metadata::_impl_.payload_size_)
-      - PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.addr_type_)>(
+      PROTOBUF_FIELD_OFFSET(Metadata, _impl_.payload_size_)
+      + sizeof(Metadata::_impl_.payload_size_)
+      - PROTOBUF_FIELD_OFFSET(Metadata, _impl_.addr_type_)>(
           reinterpret_cast<char*>(&_impl_.addr_type_),
           reinterpret_cast<char*>(&other->_impl_.addr_type_));
   swap(_impl_.src_, other->_impl_.src_);
@@ -1108,359 +1028,7 @@ void nsbm_Metadata::InternalSwap(nsbm_Metadata* PROTOBUF_RESTRICT other) {
   swap(_impl_._oneof_case_[1], other->_impl_._oneof_case_[1]);
 }
 
-::google::protobuf::Metadata nsbm_Metadata::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class nsbm::_Internal {
- public:
-  using HasBits =
-      decltype(std::declval<nsbm>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(nsbm, _impl_._has_bits_);
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000002) ^ 0x00000002) != 0;
-  }
-};
-
-nsbm::nsbm(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:nsb.nsbm)
-}
-inline PROTOBUF_NDEBUG_INLINE nsbm::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::nsb::nsbm& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0},
-        payload_(arena, from.payload_) {}
-
-nsbm::nsbm(
-    ::google::protobuf::Arena* arena,
-    const nsbm& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  nsbm* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.manifest_ = (cached_has_bits & 0x00000002u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Manifest>(
-                              arena, *from._impl_.manifest_)
-                        : nullptr;
-  _impl_.metadata_ = (cached_has_bits & 0x00000004u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Metadata>(
-                              arena, *from._impl_.metadata_)
-                        : nullptr;
-
-  // @@protoc_insertion_point(copy_constructor:nsb.nsbm)
-}
-inline PROTOBUF_NDEBUG_INLINE nsbm::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : _cached_size_{0},
-        payload_(arena) {}
-
-inline void nsbm::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, manifest_),
-           0,
-           offsetof(Impl_, metadata_) -
-               offsetof(Impl_, manifest_) +
-               sizeof(Impl_::metadata_));
-}
-nsbm::~nsbm() {
-  // @@protoc_insertion_point(destructor:nsb.nsbm)
-  SharedDtor(*this);
-}
-inline void nsbm::SharedDtor(MessageLite& self) {
-  nsbm& this_ = static_cast<nsbm&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.payload_.Destroy();
-  delete this_._impl_.manifest_;
-  delete this_._impl_.metadata_;
-  this_._impl_.~Impl_();
-}
-
-inline void* nsbm::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) nsbm(arena);
-}
-constexpr auto nsbm::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(nsbm),
-                                            alignof(nsbm));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull nsbm::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_nsbm_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nsbm::IsInitializedImpl,
-        &nsbm::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<nsbm>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &nsbm::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<nsbm>(), &nsbm::ByteSizeLong,
-            &nsbm::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(nsbm, _impl_._cached_size_),
-        false,
-    },
-    &nsbm::kDescriptorMethods,
-    &descriptor_table_nsb_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* nsbm::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 2, 0, 2> nsbm::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(nsbm, _impl_._has_bits_),
-    0, // no _extensions_
-    7, 24,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967228,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    3,  // num_field_entries
-    2,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::nsb::nsbm>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-    // required .nsb.nsbm.Manifest manifest = 1;
-    {::_pbi::TcParser::FastMtS1,
-     {10, 1, 0, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_)}},
-    // optional .nsb.nsbm.Metadata metadata = 2;
-    {::_pbi::TcParser::FastMtS1,
-     {18, 2, 1, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_)}},
-    // optional bytes payload = 7;
-    {::_pbi::TcParser::FastBS1,
-     {58, 0, 0, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.payload_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // required .nsb.nsbm.Manifest manifest = 1;
-    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_), _Internal::kHasBitsOffset + 1, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional .nsb.nsbm.Metadata metadata = 2;
-    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_), _Internal::kHasBitsOffset + 2, 1,
-    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional bytes payload = 7;
-    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.payload_), _Internal::kHasBitsOffset + 0, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kBytes | ::_fl::kRepAString)},
-  }}, {{
-    {::_pbi::TcParser::GetTable<::nsb::nsbm_Manifest>()},
-    {::_pbi::TcParser::GetTable<::nsb::nsbm_Metadata>()},
-  }}, {{
-  }},
-};
-
-PROTOBUF_NOINLINE void nsbm::Clear() {
-// @@protoc_insertion_point(message_clear_start:nsb.nsbm)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
-    if (cached_has_bits & 0x00000001u) {
-      _impl_.payload_.ClearNonDefaultToEmpty();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      ABSL_DCHECK(_impl_.manifest_ != nullptr);
-      _impl_.manifest_->Clear();
-    }
-    if (cached_has_bits & 0x00000004u) {
-      ABSL_DCHECK(_impl_.metadata_ != nullptr);
-      _impl_.metadata_->Clear();
-    }
-  }
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* nsbm::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const nsbm& this_ = static_cast<const nsbm&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* nsbm::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const nsbm& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:nsb.nsbm)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          cached_has_bits = this_._impl_._has_bits_[0];
-          // required .nsb.nsbm.Manifest manifest = 1;
-          if (cached_has_bits & 0x00000002u) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                1, *this_._impl_.manifest_, this_._impl_.manifest_->GetCachedSize(), target,
-                stream);
-          }
-
-          // optional .nsb.nsbm.Metadata metadata = 2;
-          if (cached_has_bits & 0x00000004u) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                2, *this_._impl_.metadata_, this_._impl_.metadata_->GetCachedSize(), target,
-                stream);
-          }
-
-          // optional bytes payload = 7;
-          if (cached_has_bits & 0x00000001u) {
-            const std::string& _s = this_._internal_payload();
-            target = stream->WriteBytesMaybeAliased(7, _s, target);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:nsb.nsbm)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t nsbm::ByteSizeLong(const MessageLite& base) {
-          const nsbm& this_ = static_cast<const nsbm&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t nsbm::ByteSizeLong() const {
-          const nsbm& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:nsb.nsbm)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // optional bytes payload = 7;
-            cached_has_bits = this_._impl_._has_bits_[0];
-            if (cached_has_bits & 0x00000001u) {
-              total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                                              this_._internal_payload());
-            }
-          }
-           {
-            // required .nsb.nsbm.Manifest manifest = 1;
-            if (cached_has_bits & 0x00000002u) {
-              total_size += 1 +
-                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.manifest_);
-            }
-          }
-           {
-            // optional .nsb.nsbm.Metadata metadata = 2;
-            if (cached_has_bits & 0x00000004u) {
-              total_size += 1 +
-                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.metadata_);
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void nsbm::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<nsbm*>(&to_msg);
-  auto& from = static_cast<const nsbm&>(from_msg);
-  ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:nsb.nsbm)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
-    if (cached_has_bits & 0x00000001u) {
-      _this->_internal_set_payload(from._internal_payload());
-    }
-    if (cached_has_bits & 0x00000002u) {
-      ABSL_DCHECK(from._impl_.manifest_ != nullptr);
-      if (_this->_impl_.manifest_ == nullptr) {
-        _this->_impl_.manifest_ =
-            ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Manifest>(arena, *from._impl_.manifest_);
-      } else {
-        _this->_impl_.manifest_->MergeFrom(*from._impl_.manifest_);
-      }
-    }
-    if (cached_has_bits & 0x00000004u) {
-      ABSL_DCHECK(from._impl_.metadata_ != nullptr);
-      if (_this->_impl_.metadata_ == nullptr) {
-        _this->_impl_.metadata_ =
-            ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Metadata>(arena, *from._impl_.metadata_);
-      } else {
-        _this->_impl_.metadata_->MergeFrom(*from._impl_.metadata_);
-      }
-    }
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void nsbm::CopyFrom(const nsbm& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:nsb.nsbm)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-PROTOBUF_NOINLINE bool nsbm::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const nsbm&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  if ((this_._impl_._has_bits_[0] & 0x00000002u) != 0) {
-    if (!this_._impl_.manifest_->IsInitialized()) return false;
-  }
-  if ((this_._impl_._has_bits_[0] & 0x00000004u) != 0) {
-    if (!this_._impl_.metadata_->IsInitialized()) return false;
-  }
-  return true;
-}
-
-void nsbm::InternalSwap(nsbm* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  auto* arena = GetArena();
-  ABSL_DCHECK_EQ(arena, other->GetArena());
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.payload_, &other->_impl_.payload_, arena);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_)
-      + sizeof(nsbm::_impl_.metadata_)
-      - PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_)>(
-          reinterpret_cast<char*>(&_impl_.manifest_),
-          reinterpret_cast<char*>(&other->_impl_.manifest_));
-}
-
-::google::protobuf::Metadata nsbm::GetMetadata() const {
+::google::protobuf::Metadata Metadata::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)
