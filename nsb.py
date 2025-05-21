@@ -2,7 +2,9 @@ import socket
 import select
 import time
 import nsb_pb2
+import asyncio
 
+SERVER_CONNECTION_TIMEOUT = 10
 DAEMON_RESPONSE_TIMEOUT = 5
 RESPONSE_BUFFER_SIZE = 4096
 
@@ -10,20 +12,30 @@ RESPONSE_BUFFER_SIZE = 4096
 
 class NSBAppClient:
     def __init__(self, server_address, server_port):
-        # Configure client.
-        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.conn.setblocking(False)
-        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
-        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         # Set connection information.
         self.server_addr = server_address
         self.server_port = server_port
         # Connect.
         self.__connect()
 
-    def __connect(self):
-        self.conn.connect((self.server_addr, self.server_port))
+    def __configure(self):
+        # Configure client.
+        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.conn.setblocking(False)
+        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
+        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+    def __connect(self, timeout=SERVER_CONNECTION_TIMEOUT):
+        target_time = time.time() + timeout
+        while time.time() < target_time:
+            try:
+                self.__configure()
+                self.conn.connect((self.server_addr, self.server_port))
+                break
+            except socket.error as e:
+                print(f"Socket error: {e}")
+                time.sleep(1)
 
     def __close(self):
         self.conn.shutdown(socket.SHUT_WR)
@@ -33,20 +45,31 @@ class NSBAppClient:
         self.conn.sendall(message)
 
     def __get_response(self, timeout):
+        self.conn.setblocking(False)
+        # Set target time.
+        target_time = time.time() + timeout
         data = b''
-        while True:
+        message_exists = False
+        while True and time.time() < target_time:
             data_arrived, _, _ = select.select([self.conn], [], [], timeout)
             if data_arrived:
                 try:
                     chunk = self.conn.recv(RESPONSE_BUFFER_SIZE)
                     if len(chunk):
+                        message_exists = True
                         data += chunk
                     else:
                         break
                 except socket.error as e:
-                    self.conn.close()
-                    raise
-        return data
+                    print(f"Socket error: {e}")
+                    self.conn.setblocking(True)
+                    return None
+            else:
+                if message_exists:
+                    self.conn.setblocking(True)
+                    return data
+        self.conn.setblocking(True)
+        return None
 
     def ping(self):
         """
@@ -64,11 +87,11 @@ class NSBAppClient:
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
-            if nsb_resp.manifest.op == nsb_pb2.Manifest.Operation.PING:
-                if nsb_resp.manifest.code == nsb_pb2.Manifest.OpCode.SUCCESS:
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.PING:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.SUCCESS:
                     print("PING: Server has pinged back!")
                     return True
-                elif nsb_resp.manifest.code == nsb_pb2.Manifest.OpCode.FAILURE:
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.FAILURE:
                     print("PING: Server has some issue, but is reachable.")
                     return False
                 else:

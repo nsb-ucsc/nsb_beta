@@ -16,20 +16,29 @@
 #include <vector>
 #include <map>
 #include <fcntl.h>
+#include <signal.h>
 
 class NSBDaemon {
 public:
+    // static NSBDaemon* instance;
     NSBDaemon(int s_port);
     ~NSBDaemon();
     void start();
     void stop();
     bool is_running() const;
+    // static void handle_signal(int sig) {
+    //     if (instance) {
+    //         std::cout << "\nShutting down server..." << std::endl;
+    //         instance->stop();
+    //     }
+    // }
 
 private:
     bool running;
     int server_port;
     void start_server(int port);
-    int handle_message(std::vector<char> message);
+    // static void handle_signal(int sig);
+    void handle_message(int fd, std::vector<char> message);
 };
 
 #endif // NSB_DAEMON_H

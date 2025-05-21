@@ -3,7 +3,12 @@
 #include "nsb_daemon.h"
 #include "nsb.pb.h"
 
-NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {}
+
+
+NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {
+    // signal(SIGINT, handle_signal);
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+}
 
 NSBDaemon::~NSBDaemon() {
     if (running) {
@@ -110,7 +115,7 @@ void NSBDaemon::start_server(int port) {
                 }
                 if (message_exists) {
                     printf("Received message from (FD:%d): %s\n", fd, message.data());
-                    handle_message(message);
+                    handle_message(fd, message);
                     ++it;
                 }
                 else {
@@ -148,12 +153,36 @@ void NSBDaemon::start_server(int port) {
     std::cout << "Server stopped." << std::endl;
 }
 
-int NSBDaemon::handle_message(std::vector<char> message) {
+void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     nsb::nsbm nsb_message;
     nsb_message.ParseFromArray(message.data(), message.size());
     nsb::nsbm::Manifest manifest = nsb_message.manifest();
-    printf("OP %d RECEIVED\n", manifest.op());
-    return 0;
+    printf("Manifest %d-%d-%d received from %d\n",
+        manifest.op(), manifest.og(), manifest.code(), fd);
+    // Prepare response.
+    nsb::nsbm nsb_response;
+    nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+    switch (manifest.op()) {
+        case nsb::nsbm::Manifest::PING:
+            printf("\t...it's a PING!\n");
+            r_manifest->set_op(nsb::nsbm::Manifest::PING);
+            r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
+            r_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+            break;
+        default:
+            printf("\tUnknown operation.");
+            // Create a negative ping response.
+            nsb::nsbm nsb_response;
+            nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+            r_manifest->set_op(nsb::nsbm::Manifest::PING);
+            r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
+            r_manifest->set_code(nsb::nsbm::Manifest::FAILURE);
+    }
+    std::size_t size = nsb_response.ByteSizeLong();
+    void* r_buffer = malloc(size);
+    nsb_response.SerializeToArray(r_buffer, size);
+    printf("\tBack at ya! %s\n", r_buffer);
+    send(fd, r_buffer, size, 0);
 }
 
 void NSBDaemon::stop() {
@@ -168,7 +197,6 @@ bool NSBDaemon::is_running() const {
 }
 
 int main() {
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
     std::cout << "Starting daemon...\n";
     NSBDaemon daemon = NSBDaemon(65432);
     daemon.start();

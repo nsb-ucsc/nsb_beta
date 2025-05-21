@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build NSB Daemon",
+            "type": "cppbuild",
+            "command": "clang++",
+            "args": [
+                "-fcolor-diagnostics",
+                "-fansi-escape-codes",
+                // "-arch", "arm64",
+                "nsb_daemon.cc",
+                "nsb.pb.cc",
+                "-I/opt/homebrew/opt/abseil/include",
+                "-L/opt/homebrew/opt/abseil/lib",
+                "-I/Users/harikuts/playground/protobuf-31.0/src",
+                // "-L/Users/harikuts/playground/protobuf-31.0/src/google/protobuf",
+                // "-lprotobuf",
+                "-std=c++20",
+                // "-I/opt/homebrew/opt/protobuf@3/include",
+                // "/opt/homebrew/opt/protobuf@3/lib/libprotobuf.a",  // Use static library explicitly
+                "-o",
+                "nsb_daemon",
+                "-g"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "detail": "compiler: clang++"
+        },
+        {
+            "label": "CMake: Build NSB Daemon",
+            "type": "shell",
+            "command": "mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
