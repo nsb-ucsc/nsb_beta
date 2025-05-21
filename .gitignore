@@ -1,5 +1,4 @@
 *.o
-.vscode
 *.dSYM
 build/*
 __pycache__
