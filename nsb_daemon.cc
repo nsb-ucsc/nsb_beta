@@ -41,8 +41,8 @@ void NSBDaemon::handle_connection(int fd) {
         // Check for activity.
         int activity = select(fd+1, &conn_read_fds, nullptr, nullptr, &timeout);
         if (activity < 0) {
-            if (activity < 0 && errno != EINTR) {
-                perror("Select error.");
+            if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK) {
+                perror("Select error when handling connection");
                 break;
             }
         } else if (FD_ISSET(fd, &conn_read_fds)) {
@@ -133,9 +133,11 @@ void NSBDaemon::start_server(int port) {
         timeout.tv_usec = 0;
 
         int activity = select(max_fd + 1, &read_fds, nullptr, nullptr, &timeout);
-        if (activity < 0 && errno != EINTR) {
-            perror("Select error.");
-            break;
+        if (activity < 0) {
+            if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK) {
+                perror("Select error.");
+                break;
+            }
         } else if (activity > 0) {
             // Handle new connections.
             if (FD_ISSET(server_fd, &read_fds)) {

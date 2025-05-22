@@ -15,7 +15,8 @@ logging.basicConfig(level=logging.DEBUG,
 
 SERVER_CONNECTION_TIMEOUT = 10
 DAEMON_RESPONSE_TIMEOUT = 5
-RESPONSE_BUFFER_SIZE = 4096
+RECEIVE_BUFFER_SIZE = 4096
+SEND_BUFFER_SIZE = 4096
 
 ### NSB Client Base Class ###
 
@@ -32,7 +33,6 @@ class NSBClient:
     def __configure(self):
         # Configure client.
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.conn.setblocking(False)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -46,6 +46,7 @@ class NSBClient:
                 self.__configure()
                 self.conn.connect((self.server_addr, self.server_port))
                 self.logger.info("\tConnected!")
+                self.conn.setblocking(False)
                 return
             except socket.error as e:
                 # print(f"Socket error: {e}")
@@ -57,10 +58,13 @@ class NSBClient:
         self.conn.close()
 
     def __send_message(self, message):
-        self.conn.sendall(message)
+        while len(message):
+            bytes_sent = self.conn.send(message, SEND_BUFFER_SIZE)
+            if bytes_sent == 0:
+                raise RuntimeError("Socket connection broken, nothing sent.")
+            message = message[bytes_sent:]
 
-    def __get_response(self, timeout=DAEMON_RESPONSE_TIMEOUT):
-        self.conn.setblocking(False)
+    def __recv_message(self, timeout=DAEMON_RESPONSE_TIMEOUT):
         # Set target time.
         target_time = time.time() + timeout
         data = b''
@@ -69,7 +73,7 @@ class NSBClient:
             data_arrived, _, _ = select.select([self.conn], [], [], 0)
             if data_arrived:
                 try:
-                    chunk = self.conn.recv(RESPONSE_BUFFER_SIZE)
+                    chunk = self.conn.recv(RECEIVE_BUFFER_SIZE)
                     if len(chunk):
                         message_exists = True
                         data += chunk
@@ -77,13 +81,10 @@ class NSBClient:
                         break
                 except socket.error as e:
                     print(f"Socket error: {e}")
-                    self.conn.setblocking(True)
                     return None
             else:
                 if message_exists:
-                    self.conn.setblocking(True)
                     return data
-        self.conn.setblocking(True)
         return None
     
     def __del__(self):
@@ -109,7 +110,7 @@ class NSBAppClient(NSBClient):
         # Send the message and get response.
         self._NSBClient__send_message(nsb_msg.SerializeToString())
         self.logger.info("PING: Pinged server.")
-        response = self._NSBClient__get_response()
+        response = self._NSBClient__recv_message()
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
