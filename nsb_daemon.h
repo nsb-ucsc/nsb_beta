@@ -3,20 +3,25 @@
 #ifndef NSB_DAEMON_H
 #define NSB_DAEMON_H
 
+#include <string>
+#include <vector>
+#include <map>
+// Thread libraries.
+#include <atomic>
+#include <thread>
 // I/O libraries.
 #include <iostream>
 #include <cstdio>
-#include <string>
 #include <format>
+#include <signal.h>
 // Networking libraries.
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <vector>
-#include <map>
 #include <fcntl.h>
-#include <signal.h>
+
+int MAX_BUFFER_SIZE = 4096;
 
 class NSBDaemon {
 public:
@@ -34,9 +39,9 @@ public:
     // }
 
 private:
-    int MAX_BUFFER_SIZE = 4096;
-    bool running;
+    std::atomic<bool> running;
     int server_port;
+    void handle_connection(int fd);
     void start_server(int port);
     // static void handle_signal(int sig);
     void handle_message(int fd, std::vector<char> message);
