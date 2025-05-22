@@ -151,9 +151,13 @@ def test_persistent():
     app.test_send2(persistent=True)
 
 def test_ping():
-    app = NSBAppClient("127.0.0.1", 65432)
-    app.ping()
-    app.exit()
+    app1 = NSBAppClient("127.0.0.1", 65432)
+    app2 = NSBAppClient("127.0.0.1", 65432)
+    app1.ping()
+    time.sleep(2)
+    app2.ping()
+    time.sleep(2)
+    app1.exit()
 
 ### MAIN FUNCTION (FOR TESTING) ###
 
