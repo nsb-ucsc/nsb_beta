@@ -3,8 +3,6 @@
 #include "nsb_daemon.h"
 #include "nsb.pb.h"
 
-
-
 NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {
     // signal(SIGINT, handle_signal);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -234,22 +232,24 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     // Prepare response.
     nsb::nsbm nsb_response;
     nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+    r_manifest->set_og(nsb::nsbm::Manifest::DAEMON); // Set originator.
     bool response_required = false;
     switch (manifest.op()) {
         case nsb::nsbm::Manifest::PING:
             printf("\t...it's a PING!\n");
+            // Send a PING back with SUCCESS.
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
-            r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
             r_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
             response_required = true;
             break;
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");
+            // Stop the daemon.
             stop();
             break;
         default:
             printf("\tUnknown operation.");
-            // Create a negative PING response.
+            // Create a negative PING response if confused.
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
             r_manifest->set_code(nsb::nsbm::Manifest::FAILURE);
