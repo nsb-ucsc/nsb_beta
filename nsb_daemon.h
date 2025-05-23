@@ -21,6 +21,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+// Decide whether to use threads per connection (not recommended for now).
+// #define NSB_USE_THREADS
+
 int MAX_BUFFER_SIZE = 4096;
 
 class NSBDaemon {

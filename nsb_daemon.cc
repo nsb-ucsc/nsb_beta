@@ -26,7 +26,6 @@ void NSBDaemon::start() {
 }
 
 void NSBDaemon::handle_connection(int fd) {
-    printf("entered\n");
     fd_set conn_read_fds, conn_write_fds;
     while (running) {
         // Prepare file descriptor.
@@ -121,8 +120,13 @@ void NSBDaemon::start_server(int port) {
 
     // Run server.
     fd_set read_fds;
-    // Create vector to track threads.
+#ifndef NSB_USE_THREADS
+    // Create vector to track client file descriptors.
+    std::vector<int> client_fds;
+#else
+    // Create vector to track connection threads.
     std::vector<std::thread> active_threads;
+#endif
     while (running) {
         FD_ZERO(&read_fds);
         FD_SET(server_fd, &read_fds);
@@ -132,6 +136,14 @@ void NSBDaemon::start_server(int port) {
         timeout.tv_sec = 10;
         timeout.tv_usec = 0;
 
+#ifndef NSB_USE_THREADS
+        // Set clients.
+        for (int client_fd : client_fds) {
+            FD_SET(client_fd, &read_fds);
+            max_fd = std::max(max_fd, client_fd);
+        }
+#endif
+
         int activity = select(max_fd + 1, &read_fds, nullptr, nullptr, &timeout);
         if (activity < 0) {
             if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -139,6 +151,37 @@ void NSBDaemon::start_server(int port) {
                 break;
             }
         } else if (activity > 0) {
+#ifndef NSB_USE_THREADS
+            // Monitor existing connections through FDs.
+            for (auto it=client_fds.begin(); it!=client_fds.end();) {
+                int fd = *it;
+                if (FD_ISSET(fd, &read_fds)) {
+                    bool message_exists = false;
+                    char buffer[MAX_BUFFER_SIZE];
+                    std::vector<char> message;
+                    // Read buffer until there's nothing left.
+                    int bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                    while(bytes_read > 0) {
+                        message_exists = true;
+                        printf("Picked up %d bytes from (FD:%d)\n", bytes_read, fd);
+                        message.insert(message.end(), buffer, buffer+bytes_read);
+                        bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
+                    }
+                    if (message_exists) {
+                        printf("Received message from (FD:%d): %s\n", fd, message.data());
+                        handle_message(fd, message);
+                        ++it;
+                    }
+                    else {
+                        printf("Disconnected from (FD:%d)\n", fd);
+                        shutdown(fd, SHUT_WR);
+                        close(fd);
+                        client_fds.erase(it);
+                    }
+                }
+                else {++it;}
+            }
+#endif
             // Handle new connections.
             if (FD_ISSET(server_fd, &read_fds)) {
                 sockaddr_in client_addr{};
@@ -151,11 +194,23 @@ void NSBDaemon::start_server(int port) {
                 char addr_string[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &(client_addr.sin_addr), addr_string, INET_ADDRSTRLEN);
                 printf("New connection accepted: %s\n", addr_string);
+#ifndef NSB_USE_THREADS
+                // Add to the connection pool.
+                client_fds.push_back(client_fd);
+#else
                 // Spin off each connection as a thread.
                 active_threads.push_back(std::thread(&NSBDaemon::handle_connection, this, client_fd));
+#endif
             }
         }
     }
+#ifndef NSB_USE_THREADS
+    // When running stops, close connections and close server.
+    for (int client_fd : client_fds) {
+        printf("Closing connection to %d\n", client_fd);
+        close(client_fd);
+    }
+#else
     // Clean up threads.
     for (auto it = active_threads.begin(); it != active_threads.end();) {
         if (it->joinable()) {
@@ -165,6 +220,7 @@ void NSBDaemon::start_server(int port) {
             ++it;
         }
     }
+#endif
     close(server_fd);
     std::cout << "Server stopped." << std::endl;
 }
