@@ -29,7 +29,7 @@ namespace nsb {
 inline constexpr nsbm_Metadata::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
-        addr_type_{static_cast< ::nsb::nsbm_Metadata_Type >(0)},
+        addr_type_{static_cast< ::nsb::nsbm_Metadata_AddressType >(0)},
         payload_size_{0},
         src_{},
         dest_{},
@@ -85,6 +85,9 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
 inline constexpr nsbm::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
+        payload_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
         manifest_{nullptr},
         metadata_{nullptr} {}
 
@@ -160,15 +163,17 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.manifest_),
         PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.metadata_),
-        0,
+        PROTOBUF_FIELD_OFFSET(::nsb::nsbm, _impl_.payload_),
         1,
+        2,
+        0,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, 11, -1, sizeof(::nsb::nsbm_Manifest)},
         {14, 30, -1, sizeof(::nsb::nsbm_Metadata)},
-        {36, 46, -1, sizeof(::nsb::nsbm)},
+        {36, 47, -1, sizeof(::nsb::nsbm)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::nsb::_nsbm_Manifest_default_instance_._instance,
@@ -177,30 +182,31 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_nsb_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\tnsb.proto\022\003nsb\"\235\005\n\004nsbm\022$\n\010manifest\030\001 "
+    "\n\tnsb.proto\022\003nsb\"\306\005\n\004nsbm\022$\n\010manifest\030\001 "
     "\001(\0132\022.nsb.nsbm.Manifest\022$\n\010metadata\030\002 \001("
-    "\0132\022.nsb.nsbm.Metadata\032\202\003\n\010Manifest\022(\n\002op"
-    "\030\001 \001(\0162\034.nsb.nsbm.Manifest.Operation\022)\n\002"
-    "og\030\002 \001(\0162\035.nsb.nsbm.Manifest.Originator\022"
-    "\'\n\004code\030\003 \001(\0162\031.nsb.nsbm.Manifest.OpCode"
-    "\")\n\tOperation\022\010\n\004PING\020\000\022\010\n\004INIT\020\001\022\010\n\004EXI"
-    "T\020\007\"8\n\nOriginator\022\n\n\006DAEMON\020\000\022\016\n\nAPP_CLI"
-    "ENT\020\001\022\016\n\nSIM_CLIENT\020\002\"\222\001\n\006OpCode\022\013\n\007SUCC"
-    "ESS\020\000\022\013\n\007FAILURE\020\001\022\022\n\016CLIENT_REQUEST\020\002\022\023"
-    "\n\017DAEMON_RESPONSE\020\003\022\023\n\017IMPLICIT_TARGET\020\004"
-    "\022\023\n\017EXPLICIT_TARGET\020\005\022\013\n\007MESSAGE\020\006\022\016\n\nNO"
-    "_MESSAGE\020\007\032\303\001\n\010Metadata\022*\n\taddr_type\030\001 \001"
-    "(\0162\027.nsb.nsbm.Metadata.Type\022\020\n\006src_id\030\002 "
-    "\001(\tH\000\022\022\n\010src_addr\030\003 \001(\007H\000\022\021\n\007dest_id\030\004 \001"
-    "(\tH\001\022\023\n\tdest_addr\030\005 \001(\007H\001\022\024\n\014payload_siz"
-    "e\030\006 \001(\005\"\030\n\004Type\022\007\n\003INT\020\000\022\007\n\003STR\020\001B\005\n\003src"
-    "B\006\n\004destb\010editionsp\350\007"
+    "\0132\022.nsb.nsbm.Metadata\022\017\n\007payload\030\003 \001(\014\032\214"
+    "\003\n\010Manifest\022(\n\002op\030\001 \001(\0162\034.nsb.nsbm.Manif"
+    "est.Operation\022)\n\002og\030\002 \001(\0162\035.nsb.nsbm.Man"
+    "ifest.Originator\022\'\n\004code\030\003 \001(\0162\031.nsb.nsb"
+    "m.Manifest.OpCode\"3\n\tOperation\022\010\n\004PING\020\000"
+    "\022\010\n\004INIT\020\001\022\010\n\004SEND\020\002\022\010\n\004EXIT\020\007\"8\n\nOrigin"
+    "ator\022\n\n\006DAEMON\020\000\022\016\n\nAPP_CLIENT\020\001\022\016\n\nSIM_"
+    "CLIENT\020\002\"\222\001\n\006OpCode\022\013\n\007SUCCESS\020\000\022\013\n\007FAIL"
+    "URE\020\001\022\022\n\016CLIENT_REQUEST\020\002\022\023\n\017DAEMON_RESP"
+    "ONSE\020\003\022\023\n\017IMPLICIT_TARGET\020\004\022\023\n\017EXPLICIT_"
+    "TARGET\020\005\022\013\n\007MESSAGE\020\006\022\016\n\nNO_MESSAGE\020\007\032\321\001"
+    "\n\010Metadata\0221\n\taddr_type\030\001 \001(\0162\036.nsb.nsbm"
+    ".Metadata.AddressType\022\020\n\006src_id\030\002 \001(\tH\000\022"
+    "\022\n\010src_addr\030\003 \001(\007H\000\022\021\n\007dest_id\030\004 \001(\tH\001\022\023"
+    "\n\tdest_addr\030\005 \001(\007H\001\022\024\n\014payload_size\030\006 \001("
+    "\005\"\037\n\013AddressType\022\007\n\003INT\020\000\022\007\n\003STR\020\001B\005\n\003sr"
+    "cB\006\n\004destb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nsb_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nsb_2eproto = {
     false,
     false,
-    701,
+    742,
     descriptor_table_protodef_nsb_2eproto,
     "nsb.proto",
     &descriptor_table_nsb_2eproto_once,
@@ -219,15 +225,16 @@ const ::google::protobuf::EnumDescriptor* nsbm_Manifest_Operation_descriptor() {
   return file_level_enum_descriptors_nsb_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t nsbm_Manifest_Operation_internal_data_[] = {
-    131072u, 32u, 32u, };
+    196608u, 32u, 16u, };
 bool nsbm_Manifest_Operation_IsValid(int value) {
-  return 0 <= value && value <= 7 && ((131u >> value) & 1) != 0;
+  return 0 <= value && value <= 7 && ((135u >> value) & 1) != 0;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
 constexpr nsbm_Manifest_Operation nsbm_Manifest::PING;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::INIT;
+constexpr nsbm_Manifest_Operation nsbm_Manifest::SEND;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::EXIT;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MIN;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MAX;
@@ -282,23 +289,23 @@ constexpr int nsbm_Manifest::OpCode_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-const ::google::protobuf::EnumDescriptor* nsbm_Metadata_Type_descriptor() {
+const ::google::protobuf::EnumDescriptor* nsbm_Metadata_AddressType_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_nsb_2eproto);
   return file_level_enum_descriptors_nsb_2eproto[3];
 }
-PROTOBUF_CONSTINIT const uint32_t nsbm_Metadata_Type_internal_data_[] = {
+PROTOBUF_CONSTINIT const uint32_t nsbm_Metadata_AddressType_internal_data_[] = {
     131072u, 0u, };
-bool nsbm_Metadata_Type_IsValid(int value) {
+bool nsbm_Metadata_AddressType_IsValid(int value) {
   return 0 <= value && value <= 1;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
-constexpr nsbm_Metadata_Type nsbm_Metadata::INT;
-constexpr nsbm_Metadata_Type nsbm_Metadata::STR;
-constexpr nsbm_Metadata_Type nsbm_Metadata::Type_MIN;
-constexpr nsbm_Metadata_Type nsbm_Metadata::Type_MAX;
-constexpr int nsbm_Metadata::Type_ARRAYSIZE;
+constexpr nsbm_Metadata_AddressType nsbm_Metadata::INT;
+constexpr nsbm_Metadata_AddressType nsbm_Metadata::STR;
+constexpr nsbm_Metadata_AddressType nsbm_Metadata::AddressType_MIN;
+constexpr nsbm_Metadata_AddressType nsbm_Metadata::AddressType_MAX;
+constexpr int nsbm_Metadata::AddressType_ARRAYSIZE;
 
 #endif  // (__cplusplus < 201703) &&
         // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
@@ -783,13 +790,13 @@ const ::_pbi::TcParseTable<1, 6, 0, 39, 2> nsbm_Metadata::_table_ = {
     // int32 payload_size = 6;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(nsbm_Metadata, _impl_.payload_size_), 1>(),
      {48, 1, 0, PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.payload_size_)}},
-    // .nsb.nsbm.Metadata.Type addr_type = 1;
+    // .nsb.nsbm.Metadata.AddressType addr_type = 1;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(nsbm_Metadata, _impl_.addr_type_), 0>(),
      {8, 0, 0, PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.addr_type_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // .nsb.nsbm.Metadata.Type addr_type = 1;
+    // .nsb.nsbm.Metadata.AddressType addr_type = 1;
     {PROTOBUF_FIELD_OFFSET(nsbm_Metadata, _impl_.addr_type_), _Internal::kHasBitsOffset + 0, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
     // string src_id = 2;
@@ -852,7 +859,7 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
           (void)cached_has_bits;
 
           cached_has_bits = this_._impl_._has_bits_[0];
-          // .nsb.nsbm.Metadata.Type addr_type = 1;
+          // .nsb.nsbm.Metadata.AddressType addr_type = 1;
           if (cached_has_bits & 0x00000001u) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
@@ -926,7 +933,7 @@ PROTOBUF_NOINLINE void nsbm_Metadata::Clear() {
           ::_pbi::Prefetch5LinesFrom7Lines(&this_);
           cached_has_bits = this_._impl_._has_bits_[0];
           if (cached_has_bits & 0x00000003u) {
-            // .nsb.nsbm.Metadata.Type addr_type = 1;
+            // .nsb.nsbm.Metadata.AddressType addr_type = 1;
             if (cached_has_bits & 0x00000001u) {
               total_size += 1 +
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_addr_type());
@@ -1097,7 +1104,8 @@ inline PROTOBUF_NDEBUG_INLINE nsbm::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
     const Impl_& from, const ::nsb::nsbm& from_msg)
       : _has_bits_{from._has_bits_},
-        _cached_size_{0} {}
+        _cached_size_{0},
+        payload_(arena, from.payload_) {}
 
 nsbm::nsbm(
     ::google::protobuf::Arena* arena,
@@ -1113,10 +1121,10 @@ nsbm::nsbm(
       from._internal_metadata_);
   new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
   ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.manifest_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Manifest>(
+  _impl_.manifest_ = (cached_has_bits & 0x00000002u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Manifest>(
                               arena, *from._impl_.manifest_)
                         : nullptr;
-  _impl_.metadata_ = (cached_has_bits & 0x00000002u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Metadata>(
+  _impl_.metadata_ = (cached_has_bits & 0x00000004u) ? ::google::protobuf::Message::CopyConstruct<::nsb::nsbm_Metadata>(
                               arena, *from._impl_.metadata_)
                         : nullptr;
 
@@ -1125,7 +1133,8 @@ nsbm::nsbm(
 inline PROTOBUF_NDEBUG_INLINE nsbm::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
-      : _cached_size_{0} {}
+      : _cached_size_{0},
+        payload_(arena) {}
 
 inline void nsbm::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
@@ -1144,6 +1153,7 @@ inline void nsbm::SharedDtor(MessageLite& self) {
   nsbm& this_ = static_cast<nsbm&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.payload_.Destroy();
   delete this_._impl_.manifest_;
   delete this_._impl_.metadata_;
   this_._impl_.~Impl_();
@@ -1154,7 +1164,7 @@ inline void* nsbm::PlacementNew_(const void*, void* mem,
   return ::new (mem) nsbm(arena);
 }
 constexpr auto nsbm::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(nsbm),
+  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(nsbm),
                                             alignof(nsbm));
 }
 PROTOBUF_CONSTINIT
@@ -1185,15 +1195,15 @@ const ::google::protobuf::internal::ClassData* nsbm::GetClassData() const {
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 2, 0, 2> nsbm::_table_ = {
+const ::_pbi::TcParseTable<2, 3, 2, 0, 2> nsbm::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(nsbm, _impl_._has_bits_),
     0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
+    3, 24,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
+    4294967288,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
+    3,  // num_field_entries
     2,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
@@ -1203,21 +1213,28 @@ const ::_pbi::TcParseTable<1, 2, 2, 0, 2> nsbm::_table_ = {
     ::_pbi::TcParser::GetTable<::nsb::nsbm>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // .nsb.nsbm.Metadata metadata = 2;
-    {::_pbi::TcParser::FastMtS1,
-     {18, 1, 1, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // .nsb.nsbm.Manifest manifest = 1;
     {::_pbi::TcParser::FastMtS1,
-     {10, 0, 0, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_)}},
+     {10, 1, 0, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_)}},
+    // .nsb.nsbm.Metadata metadata = 2;
+    {::_pbi::TcParser::FastMtS1,
+     {18, 2, 1, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_)}},
+    // bytes payload = 3;
+    {::_pbi::TcParser::FastBS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(nsbm, _impl_.payload_)}},
   }}, {{
     65535, 65535
   }}, {{
     // .nsb.nsbm.Manifest manifest = 1;
-    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_), _Internal::kHasBitsOffset + 0, 0,
+    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.manifest_), _Internal::kHasBitsOffset + 1, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
     // .nsb.nsbm.Metadata metadata = 2;
-    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_), _Internal::kHasBitsOffset + 1, 1,
+    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_), _Internal::kHasBitsOffset + 2, 1,
     (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // bytes payload = 3;
+    {PROTOBUF_FIELD_OFFSET(nsbm, _impl_.payload_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kBytes | ::_fl::kRepAString)},
   }}, {{
     {::_pbi::TcParser::GetTable<::nsb::nsbm_Manifest>()},
     {::_pbi::TcParser::GetTable<::nsb::nsbm_Metadata>()},
@@ -1233,12 +1250,15 @@ PROTOBUF_NOINLINE void nsbm::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
+  if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
+      _impl_.payload_.ClearNonDefaultToEmpty();
+    }
+    if (cached_has_bits & 0x00000002u) {
       ABSL_DCHECK(_impl_.manifest_ != nullptr);
       _impl_.manifest_->Clear();
     }
-    if (cached_has_bits & 0x00000002u) {
+    if (cached_has_bits & 0x00000004u) {
       ABSL_DCHECK(_impl_.metadata_ != nullptr);
       _impl_.metadata_->Clear();
     }
@@ -1264,17 +1284,23 @@ PROTOBUF_NOINLINE void nsbm::Clear() {
 
           cached_has_bits = this_._impl_._has_bits_[0];
           // .nsb.nsbm.Manifest manifest = 1;
-          if (cached_has_bits & 0x00000001u) {
+          if (cached_has_bits & 0x00000002u) {
             target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
                 1, *this_._impl_.manifest_, this_._impl_.manifest_->GetCachedSize(), target,
                 stream);
           }
 
           // .nsb.nsbm.Metadata metadata = 2;
-          if (cached_has_bits & 0x00000002u) {
+          if (cached_has_bits & 0x00000004u) {
             target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
                 2, *this_._impl_.metadata_, this_._impl_.metadata_->GetCachedSize(), target,
                 stream);
+          }
+
+          // bytes payload = 3;
+          if (cached_has_bits & 0x00000001u) {
+            const std::string& _s = this_._internal_payload();
+            target = stream->WriteBytesMaybeAliased(3, _s, target);
           }
 
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -1302,14 +1328,19 @@ PROTOBUF_NOINLINE void nsbm::Clear() {
 
           ::_pbi::Prefetch5LinesFrom7Lines(&this_);
           cached_has_bits = this_._impl_._has_bits_[0];
-          if (cached_has_bits & 0x00000003u) {
-            // .nsb.nsbm.Manifest manifest = 1;
+          if (cached_has_bits & 0x00000007u) {
+            // bytes payload = 3;
             if (cached_has_bits & 0x00000001u) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
+                                              this_._internal_payload());
+            }
+            // .nsb.nsbm.Manifest manifest = 1;
+            if (cached_has_bits & 0x00000002u) {
               total_size += 1 +
                             ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.manifest_);
             }
             // .nsb.nsbm.Metadata metadata = 2;
-            if (cached_has_bits & 0x00000002u) {
+            if (cached_has_bits & 0x00000004u) {
               total_size += 1 +
                             ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.metadata_);
             }
@@ -1328,8 +1359,11 @@ void nsbm::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::pr
   (void) cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
+  if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
+      _this->_internal_set_payload(from._internal_payload());
+    }
+    if (cached_has_bits & 0x00000002u) {
       ABSL_DCHECK(from._impl_.manifest_ != nullptr);
       if (_this->_impl_.manifest_ == nullptr) {
         _this->_impl_.manifest_ =
@@ -1338,7 +1372,7 @@ void nsbm::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::pr
         _this->_impl_.manifest_->MergeFrom(*from._impl_.manifest_);
       }
     }
-    if (cached_has_bits & 0x00000002u) {
+    if (cached_has_bits & 0x00000004u) {
       ABSL_DCHECK(from._impl_.metadata_ != nullptr);
       if (_this->_impl_.metadata_ == nullptr) {
         _this->_impl_.metadata_ =
@@ -1362,8 +1396,11 @@ void nsbm::CopyFrom(const nsbm& from) {
 
 void nsbm::InternalSwap(nsbm* PROTOBUF_RESTRICT other) {
   using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.payload_, &other->_impl_.payload_, arena);
   ::google::protobuf::internal::memswap<
       PROTOBUF_FIELD_OFFSET(nsbm, _impl_.metadata_)
       + sizeof(nsbm::_impl_.metadata_)

@@ -229,6 +229,8 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     nsb::nsbm::Manifest manifest = nsb_message.manifest();
     printf("Manifest %d-%d-%d received from %d\n",
         manifest.op(), manifest.og(), manifest.code(), fd);
+    // Get message fields.
+    nsb::nsbm::Metadata metadata = nsb_message.metadata();
     // Prepare response.
     nsb::nsbm nsb_response;
     nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
@@ -241,6 +243,17 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
             response_required = true;
+            break;
+        case nsb::nsbm::Manifest::SEND:
+            printf("\tPackage-to-send received.");
+            // Parse the metadata.
+            if (metadata.addr_type() == nsb::nsbm::Metadata::STR) {
+                printf("SRC_ID: %s | DEST_ID: %s\n", metadata.src_id().data(), metadata.dest_id().data());
+            } else if (metadata.addr_type() == nsb::nsbm::Metadata::INT) {
+                printf("SRC_ADDR: %d | DEST_ADDR: %d\n", metadata.src_addr(), metadata.dest_addr());
+            }
+            // Get payload.
+            printf("PAYLOAD: %.*s\n", metadata.payload_size(), nsb_message.payload().c_str());
             break;
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");

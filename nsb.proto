@@ -7,6 +7,7 @@ message nsbm {
         enum Operation {
             PING = 0;
             INIT = 1;
+            SEND = 2;
             EXIT = 7;
         }
         Operation op = 1;
@@ -33,11 +34,11 @@ message nsbm {
     Manifest manifest = 1;
 
     message Metadata {
-        enum Type {
+        enum AddressType {
             INT = 0;
             STR = 1;
         }
-        Type addr_type = 1;
+        AddressType addr_type = 1;
 
         oneof src {
             string src_id = 2;
@@ -52,4 +53,6 @@ message nsbm {
         int32 payload_size = 6;
     }
     Metadata metadata = 2;
+
+    bytes payload = 3;
 }

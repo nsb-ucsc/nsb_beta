@@ -164,34 +164,66 @@ class NSBClient:
 ### NSB Application Client ###
 
 class NSBAppClient(NSBClient):
+    def __init__(self, identifier, server_address, server_port):
+        self._id = identifier
+        super().__init__(server_address, server_port)
+        # Create distinct logger.
+        self.logger = logging.getLogger(f"{self._id} (NSBAppClient)")
+
+    def send(self, dest_id, payload):
+        # Create and populate a SEND message.
+        nsb_msg = nsb_pb2.nsbm()
+        # Manifest.
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.SEND
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        # Metadata.
+        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+        nsb_msg.metadata.src_id = self._id
+        nsb_msg.metadata.dest_id = dest_id
+        nsb_msg.metadata.payload_size = len(payload)
+        nsb_msg.payload = payload
+        # Send the NSB message + payload.
+        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.logger.info("SEND: Sent message + payload to server.")
+
+### NSB Simulator Client ###
+
+class NSBSimClient(NSBClient):
     def __init__(self, server_address, server_port):
         super().__init__(server_address, server_port)
         # Create distinct logger.
-        self.logger = logging.getLogger("NSBAppClient")
+        self.logger = logging.getLogger("NSBSimClient")
         
 
 ### TEST FUNCTIONS ###
 
 def dispatch_app_ping():
-    app = NSBAppClient("127.0.0.1", 65432)
+    app = NSBAppClient("billy", "127.0.0.1", 65432)
     return app.ping()
     
 def test_persistent():
-    app = NSBAppClient("127.0.0.1", 65432)
+    app = NSBAppClient("billy", "127.0.0.1", 65432)
     app.test_send2(persistent=True)
 
 def test_ping():
-    app1 = NSBAppClient("127.0.0.1", 65432)
-    app2 = NSBAppClient("127.0.0.1", 65432)
+    app1 = NSBAppClient("billy", "127.0.0.1", 65432)
+    app2 = NSBAppClient("bob", "127.0.0.1", 65432)
     app1.ping()
     time.sleep(2)
     app2.ping()
     time.sleep(2)
     app1.exit()
 
+def test_send():
+    app1 = NSBAppClient("billy", "127.0.0.1", 65432)
+    app2 = NSBAppClient("bob", "127.0.0.1", 65432)
+    app1.send("bob", b"hello world")
+    time.sleep(2)
+    app1.exit()
+
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
-    import asyncio
-    import random
-    test_ping()
+    # test_ping()
+    test_send()
