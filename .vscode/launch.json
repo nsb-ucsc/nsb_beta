@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug NSB Daemon",
+            "name": "NSB: Debug NSB Daemon",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/nsb_daemon",
@@ -30,7 +30,7 @@
             "preLaunchTask": "CMake: Build NSB Daemon"
         },
         {
-            "name": "Debug Python Client",
+            "name": "NSB: Debug Python Client",
             "type": "debugpy",
             "request": "launch",
             "program": "nsb.py",
@@ -44,8 +44,9 @@
     "compounds": [
         {
             "name": "Run Daemon & App Client",
-            "configurations": ["Debug Python Client", "Debug NSB Daemon"],
-            "stopAll": true
+            "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
+            "stopAll": true,
+            "preLaunchTask": "Protobuf: Generate NSB Message Definitions"
         }
     ]
 }

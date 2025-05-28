@@ -2,39 +2,13 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build NSB Daemon",
-            "type": "cppbuild",
-            "command": "clang++",
-            "args": [
-                "-fcolor-diagnostics",
-                "-fansi-escape-codes",
-                // "-arch", "arm64",
-                "nsb_daemon.cc",
-                "nsb.pb.cc",
-                "-I/opt/homebrew/opt/abseil/include",
-                "-L/opt/homebrew/opt/abseil/lib",
-                "-I/Users/harikuts/playground/protobuf-31.0/src",
-                // "-L/Users/harikuts/playground/protobuf-31.0/src/google/protobuf",
-                // "-lprotobuf",
-                "-std=c++20",
-                // "-I/opt/homebrew/opt/protobuf@3/include",
-                // "/opt/homebrew/opt/protobuf@3/lib/libprotobuf.a",  // Use static library explicitly
-                "-o",
-                "nsb_daemon",
-                "-g"
-            ],
+            "label": "Protobuf: Generate NSB Message Definitions",
+            "type": "shell",
+            "command": "/opt/homebrew/opt/protobuf/bin/protoc-29.3.0 --cpp_out=. --python_out=. nsb.proto",
             "group": {
                 "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "detail": "compiler: clang++"
+                "isDefault": false
+            }
         },
         {
             "label": "CMake: Build NSB Daemon",
