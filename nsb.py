@@ -9,18 +9,34 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
                     datefmt='%H:%M:%S',
-                    handlers=[
-                        logging.StreamHandler(),
-                    ])
+                    handlers=[logging.StreamHandler(),])
 
 SERVER_CONNECTION_TIMEOUT = 10
+"""Maximum time a client will wait to connect to the daemon."""
 DAEMON_RESPONSE_TIMEOUT = 600
-RECEIVE_BUFFER_SIZE = 1
+"""Maximum time a client will wait to get a response from the daemon."""
+RECEIVE_BUFFER_SIZE = 4096
+"""Buffer size when receiving data."""
 SEND_BUFFER_SIZE = 4096
+"""Buffer size when sending data."""
 
 class SocketInterface:
+    """
+    Socket interface network to facilitate network communication between NSB 
+    clients and the server. This can be used as a template to develop other 
+    interfaces for client communication, which must define the same methods with
+    the same arguments as done in this class.
+    """
     def __init__(self, server_address, server_port):
-        # Set connection information.
+        """
+        Sets the address and port of the server at the NSB daemon before 
+        connecting to the server.
+
+        Args:
+            server_address (str): The address of the NSB daemon.
+            server_port (int): The port of the NSB daemon.
+        """
+        # Save connection information.
         self.server_addr = server_address
         self.server_port = server_port
         # Create logger.
@@ -29,16 +45,35 @@ class SocketInterface:
         self._connect()
 
     def _configure(self):
-        # Configure client.
+        """
+        Configures the socket connection with appropriate options. This method 
+        is called by the _connect(...) method.
+        """
+        # Create socket connection and configure for low latency and async.
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
     def _connect(self, timeout=SERVER_CONNECTION_TIMEOUT):
+        """
+        Connects to the daemon with the stored server address and port. This 
+        method uses the _configure() method to configure the socket and then 
+        attempts to connect to the daemon.
+
+        Args:
+            timeout (int): Maximum time to wait for a connection to the daemon.
+                Default is set to SERVER_CONNECTION_TIMEOUT.
+        
+        Raises:
+            TimeoutError: If the connection to the server times out after the 
+                specified timeout period.
+        """
         self.logger.info(f"Connecting to daemon@{self.server_addr}:{self.server_port}...")
+        # Set target time for timing out.
         target_time = time.time() + timeout
         while time.time() < target_time:
+            # Try configuring and connecting to the daemon server.
             try:
                 self.logger.debug("\tAttempting...")
                 self._configure()
@@ -46,30 +81,51 @@ class SocketInterface:
                 self.logger.info("\tConnected!")
                 self.conn.setblocking(False)
                 return
+            # If the server isn't up or reachable, wait and try again.
             except socket.error as e:
-                # print(f"Socket error: {e}")
                 time.sleep(1)
         raise TimeoutError(f"Connection to server timed out after {timeout} seconds.")
 
     def _close(self):
+        """
+        Healthily closes the socket connection.
+        """
         self.conn.shutdown(socket.SHUT_WR)
         self.conn.close()
 
     def _send_msg(self, message):
+        """
+        Sends a message to the server in a non-blocking-compliant way.
+
+        Args:
+            message (bytes): The message to send to the server.
+        """
+        # Wait to write.
         _, ready_to_send, _ = select.select([], [self.conn], [])
         if ready_to_send:
+            # Send bytes, buffer by buffer if necessary.
             while len(message):
                 bytes_sent = self.conn.send(message, SEND_BUFFER_SIZE)
                 if bytes_sent == 0:
                     raise RuntimeError("Socket connection broken, nothing sent.")
                 message = message[bytes_sent:]
-        # self.conn.sendall(message)
+        else:
+            self.logger.error("Socket not ready to send, cannot send message.")
 
     def _recv_msg(self, timeout=None):
+        """
+        Receives a message from the server in a non-blocking-compliant way.
+
+        Args:
+            timeout (int): Maximum time to wait for a response from the server.
+                If None, waits indefinitely. Default is None.
+        """
+        # Wait to select or timeout.
         args = [[self.conn], [], []]
         if timeout is not None:
             args.append(timeout)
         ready_to_read, _, _ = select.select(*args)
+        # Start reading in chunk by chunk.
         if len(ready_to_read) == 0:
             self.logger.error(f"Timed out after {timeout} seconds.")
             return None
@@ -92,14 +148,18 @@ class SocketInterface:
                     return None
         return None
     
-    # def _await_msg(self, timeout)
-    
     def __del__(self):
+        """
+        Processes the deletion of the object. Closes connection.
+        """
         self._close()
 
 ### NSB Client Base Class ###
 
 class NSBClient:
+    """
+    
+    """
     def __init__(self, server_address, server_port):
         self.comms = SocketInterface(server_address, server_port)
         self.listener_waiting = False
