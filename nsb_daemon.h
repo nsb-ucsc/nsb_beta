@@ -38,11 +38,11 @@ int MAX_BUFFER_SIZE = 4096;
 struct MessageEntry {
     std::string source;
     std::string destination;
-    const char* payload;
+    std::string payload;
     // Constructors.
-    MessageEntry() : source(""), destination(""), payload(nullptr) {}
-    MessageEntry(std::string src, std::string dest, const char* data)
-        : source(std::move(src)), destination(std::move(dest)), payload(data) {}
+    MessageEntry() : source(""), destination(""), payload("") {}
+    MessageEntry(std::string src, std::string dest, std::string data)
+        : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
 };
 
 class NSBDaemon {

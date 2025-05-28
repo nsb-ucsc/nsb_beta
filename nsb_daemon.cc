@@ -247,15 +247,16 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
             handle_send(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::FETCH:
-            printf("\tGrabbing the payload.");
+            printf("\tGrabbing the payload.\n");
             handle_fetch(&nsb_message, &nsb_response, &response_required);
+            break;
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");
             // Stop the daemon.
             stop();
             break;
         default:
-            printf("\tUnknown operation.");
+            printf("\tUnknown operation.\n");
             // Create a negative PING response if confused.
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
@@ -284,8 +285,14 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     // Parse the metadata.
     nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
     // Store payload.
-    msg_buffer.push_back(MessageEntry(in_metadata.src_id(), in_metadata.dest_id(),
-        incoming_msg->payload().data()));
+    MessageEntry msg_entry = MessageEntry(
+        in_metadata.src_id(),
+        in_metadata.dest_id(),
+        incoming_msg->payload()
+    );
+    printf("\tEntry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+        in_metadata.payload_size(), msg_entry.source.c_str(), msg_entry.destination.c_str(), msg_entry.payload.c_str());
+    msg_buffer.push_back(msg_entry);
 }
 
 void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -314,6 +321,11 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
         }
     }
     // Prepare response.
+    printf("\tEntry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+        strlen(fetched_message.payload.c_str()),
+        fetched_message.source.c_str(),
+        fetched_message.destination.c_str(),
+        fetched_message.payload.c_str());
     nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
     out_manifest->set_op(nsb::nsbm::Manifest::FETCH);
     out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
@@ -322,7 +334,7 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
         nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
         out_metadata->set_src_id(fetched_message.source);
         out_metadata->set_dest_id(fetched_message.destination);
-        out_metadata->set_payload_size(sizeof(fetched_message.payload));
+        out_metadata->set_payload_size(strlen(fetched_message.payload.c_str()));
         outgoing_msg->set_payload(fetched_message.payload);
     } else {
         out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
