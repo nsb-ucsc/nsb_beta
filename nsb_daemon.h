@@ -34,7 +34,12 @@
 
 int MAX_BUFFER_SIZE = 4096;
 
-// Message storage struct.
+/**
+ * @brief Message storage struct.
+ * 
+ * Contains source and destination information and the payload.
+ * 
+ */
 struct MessageEntry {
     std::string source;
     std::string destination;
@@ -47,25 +52,17 @@ struct MessageEntry {
 
 class NSBDaemon {
 public:
-    // static NSBDaemon* instance;
     NSBDaemon(int s_port);
     ~NSBDaemon();
     void start();
     void stop();
     bool is_running() const;
-    // static void handle_signal(int sig) {
-    //     if (instance) {
-    //         std::cout << "\nShutting down server..." << std::endl;
-    //         instance->stop();
-    //     }
-    // }
 
 private:
     std::atomic<bool> running;
     int server_port;
     std::list<MessageEntry> tx_buffer;
     std::list<MessageEntry> rx_buffer;
-    void handle_connection(int fd);
     void start_server(int port);
     void handle_message(int fd, std::vector<char> message);
     // Operation-specific handlers.
