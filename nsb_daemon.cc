@@ -245,15 +245,15 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
             response_required = true;
             break;
         case nsb::nsbm::Manifest::SEND:
-            printf("\tPackage-to-send received.");
+            printf("\tPackage-to-send received:\n");
             // Parse the metadata.
             if (metadata.addr_type() == nsb::nsbm::Metadata::STR) {
-                printf("SRC_ID: %s | DEST_ID: %s\n", metadata.src_id().data(), metadata.dest_id().data());
+                printf("\tSRC_ID: %s | DEST_ID: %s\n", metadata.src_id().data(), metadata.dest_id().data());
             } else if (metadata.addr_type() == nsb::nsbm::Metadata::INT) {
-                printf("SRC_ADDR: %d | DEST_ADDR: %d\n", metadata.src_addr(), metadata.dest_addr());
+                printf("\tSRC_ADDR: %d | DEST_ADDR: %d\n", metadata.src_addr(), metadata.dest_addr());
             }
             // Get payload.
-            printf("PAYLOAD: %.*s\n", metadata.payload_size(), nsb_message.payload().c_str());
+            printf("\tPAYLOAD: %.*s\n", metadata.payload_size(), nsb_message.payload().c_str());
             break;
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");
