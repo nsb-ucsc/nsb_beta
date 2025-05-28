@@ -1,4 +1,5 @@
 *.o
 *.dSYM
 build/*
+docs/
 __pycache__
