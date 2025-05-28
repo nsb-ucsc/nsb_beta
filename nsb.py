@@ -7,7 +7,7 @@ import asyncio
 # Set up logging.
 import logging
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
+                    format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
                     datefmt='%H:%M:%S',
                     handlers=[
                         logging.StreamHandler(),
@@ -187,6 +187,43 @@ class NSBAppClient(NSBClient):
         self.comms._send_msg(nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
 
+    def receive(self, dest_id=None):
+        # Create and populate a FETCH message.
+        nsb_msg = nsb_pb2.nsbm()
+        # Manifest.
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.RECEIVE
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        # Metadata.
+        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+        if dest_id:
+            nsb_msg.metadata.dest_id = dest_id
+        else:
+            nsb_msg.metadata.dest_id = self._id
+        # Send the NSB message + payload.
+        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.logger.info("RECEIVE: Polling the server.")
+        # Get response.
+        response = self.comms._recv_msg(timeout=DAEMON_RESPONSE_TIMEOUT)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{nsb_resp.payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    print("RECEIVE: Yikes, no message.")
+                    return None
+            else:
+                return None
+        else:
+            return None
+
 ### NSB Simulator Client ###
 
 class NSBSimClient(NSBClient):
@@ -221,6 +258,7 @@ class NSBSimClient(NSBClient):
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{nsb_resp.payload}")
+                    return nsb_resp
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("FETCH: Yikes, no message.")
                     return None
@@ -228,6 +266,24 @@ class NSBSimClient(NSBClient):
                 return None
         else:
             return None
+        
+    def post(self, src_id, dest_id, payload, success=True):
+        # Create and populate a SEND message.
+        nsb_msg = nsb_pb2.nsbm()
+        # Manifest.
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.POST
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE if success else \
+            nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE
+        # Metadata.
+        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+        nsb_msg.metadata.src_id = src_id
+        nsb_msg.metadata.dest_id = dest_id
+        nsb_msg.metadata.payload_size = len(payload)
+        nsb_msg.payload = payload
+        # Send the NSB message + payload.
+        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.logger.info("POST: Posted message + payload to server.")
 
 ### TEST FUNCTIONS ###
 
@@ -248,18 +304,31 @@ def test_ping():
     time.sleep(2)
     app1.exit()
 
-def test_send():
+def test_lifecycle():
     app1 = NSBAppClient("billy", "127.0.0.1", 65432)
     app2 = NSBAppClient("bob", "127.0.0.1", 65432)
     sim = NSBSimClient("127.0.0.1", 65432)
     app1.send("bob", b"hello world")
     time.sleep(2)
-    sim.fetch()
+    fetched_msg = sim.fetch()
     time.sleep(2)
-    app1.exit()
+    if fetched_msg:
+        if fetched_msg.HasField('metadata'):
+            sim.post(fetched_msg.metadata.src_id,
+                     fetched_msg.metadata.dest_id,
+                     fetched_msg.payload,
+                     success=True)
+    else:
+        print("No message fetched.")
+    time.sleep(2)
+    received_msg = app2.receive()
+    time.sleep(2)
+    if not fetched_msg:
+        print("No message received.")
+    app2.exit()
 
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
-    test_send()
+    test_lifecycle()

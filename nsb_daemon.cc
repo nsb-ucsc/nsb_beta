@@ -250,6 +250,14 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
             printf("\tGrabbing the payload.\n");
             handle_fetch(&nsb_message, &nsb_response, &response_required);
             break;
+        case nsb::nsbm::Manifest::POST:
+            printf("\tPosting delivery (or not).\n");
+            handle_post(&nsb_message, &nsb_response, &response_required);
+            break;
+        case nsb::nsbm::Manifest::RECEIVE:
+            printf("\tPolling for payload.\n");
+            handle_receive(&nsb_message, &nsb_response, &response_required);
+            break;
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");
             // Stop the daemon.
@@ -290,9 +298,9 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
         in_metadata.dest_id(),
         incoming_msg->payload()
     );
-    printf("\tEntry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+    printf("\tTX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
         in_metadata.payload_size(), msg_entry.source.c_str(), msg_entry.destination.c_str(), msg_entry.payload.c_str());
-    msg_buffer.push_back(msg_entry);
+    tx_buffer.push_back(msg_entry);
 }
 
 void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -303,7 +311,7 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
         nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
         if (in_metadata.has_src_id()) {
             // Search for the message in the buffer.
-            for (const auto& msg : msg_buffer) {
+            for (const auto& msg : tx_buffer) {
                 if (msg.source == in_metadata.src_id()) {
                     fetched_message = msg;
                     fetched = true;
@@ -314,14 +322,14 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
     }
     // Pop the next message in the queue.
     if (!fetched) {
-        if (!msg_buffer.empty()) {
-            fetched_message = msg_buffer.front();
-            msg_buffer.pop_front();
+        if (!tx_buffer.empty()) {
+            fetched_message = tx_buffer.front();
+            tx_buffer.pop_front();
             fetched = true;
         }
     }
     // Prepare response.
-    printf("\tEntry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+    printf("\tTX entry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
         strlen(fetched_message.payload.c_str()),
         fetched_message.source.c_str(),
         fetched_message.destination.c_str(),
@@ -336,6 +344,71 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
         out_metadata->set_dest_id(fetched_message.destination);
         out_metadata->set_payload_size(strlen(fetched_message.payload.c_str()));
         outgoing_msg->set_payload(fetched_message.payload);
+    } else {
+        out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
+    }
+    *response_required = true;
+}
+
+void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    // Check for message.
+    nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
+    if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
+        // Parse the metadata.
+        nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+        // Store payload.
+        MessageEntry msg_entry = MessageEntry(
+            in_metadata.src_id(),
+            in_metadata.dest_id(),
+            incoming_msg->payload()
+        );
+        printf("\tRX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+            in_metadata.payload_size(), msg_entry.source.c_str(), msg_entry.destination.c_str(), msg_entry.payload.c_str());
+        rx_buffer.push_back(msg_entry);
+    }
+}
+
+void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    MessageEntry received_message;
+    bool fetched = false;
+    // Check for destination.
+    if (incoming_msg->has_metadata()) {
+        nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+        if (in_metadata.has_dest_id()) {
+            fetched = true;
+            // Search for the message in the buffer.
+            for (const auto& msg : rx_buffer) {
+                if (msg.destination == in_metadata.dest_id()) {
+                    received_message = msg;
+                    break;
+                }
+            }
+        }
+    }
+    // Pop the next message in the queue.
+    if (!fetched) {
+        if (!rx_buffer.empty()) {
+            received_message = tx_buffer.front();
+            rx_buffer.pop_front();
+            fetched = true;
+        }
+    }
+    // Prepare response.
+    printf("\tRX entry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+        strlen(received_message.payload.c_str()),
+        received_message.source.c_str(),
+        received_message.destination.c_str(),
+        received_message.payload.c_str());
+    nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
+    out_manifest->set_op(nsb::nsbm::Manifest::RECEIVE);
+    out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
+    if (fetched) {
+        out_manifest->set_code(nsb::nsbm::Manifest::MESSAGE);
+        nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
+        out_metadata->set_src_id(received_message.source);
+        out_metadata->set_dest_id(received_message.destination);
+        out_metadata->set_payload_size(strlen(received_message.payload.c_str()));
+        outgoing_msg->set_payload(received_message.payload);
     } else {
         out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
     }

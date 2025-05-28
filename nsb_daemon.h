@@ -63,7 +63,8 @@ public:
 private:
     std::atomic<bool> running;
     int server_port;
-    std::list<MessageEntry> msg_buffer;
+    std::list<MessageEntry> tx_buffer;
+    std::list<MessageEntry> rx_buffer;
     void handle_connection(int fd);
     void start_server(int port);
     void handle_message(int fd, std::vector<char> message);
@@ -71,6 +72,8 @@ private:
     void handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     void handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     void handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
+    void handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
+    void handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
 };
 
 #endif // NSB_DAEMON_H

@@ -9,6 +9,9 @@ message nsbm {
             INIT = 1;
             SEND = 2;
             FETCH = 3;
+            POST = 4;
+            RECEIVE = 5;
+            FORWARD = 6;
             EXIT = 7;
         }
         Operation op = 1;

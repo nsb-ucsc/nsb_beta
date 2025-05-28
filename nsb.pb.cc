@@ -182,31 +182,32 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_nsb_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\tnsb.proto\022\003nsb\"\321\005\n\004nsbm\022$\n\010manifest\030\001 "
+    "\n\tnsb.proto\022\003nsb\"\365\005\n\004nsbm\022$\n\010manifest\030\001 "
     "\001(\0132\022.nsb.nsbm.Manifest\022$\n\010metadata\030\002 \001("
-    "\0132\022.nsb.nsbm.Metadata\022\017\n\007payload\030\003 \001(\014\032\227"
+    "\0132\022.nsb.nsbm.Metadata\022\017\n\007payload\030\003 \001(\014\032\273"
     "\003\n\010Manifest\022(\n\002op\030\001 \001(\0162\034.nsb.nsbm.Manif"
     "est.Operation\022)\n\002og\030\002 \001(\0162\035.nsb.nsbm.Man"
     "ifest.Originator\022\'\n\004code\030\003 \001(\0162\031.nsb.nsb"
-    "m.Manifest.OpCode\">\n\tOperation\022\010\n\004PING\020\000"
-    "\022\010\n\004INIT\020\001\022\010\n\004SEND\020\002\022\t\n\005FETCH\020\003\022\010\n\004EXIT\020"
-    "\007\"8\n\nOriginator\022\n\n\006DAEMON\020\000\022\016\n\nAPP_CLIEN"
-    "T\020\001\022\016\n\nSIM_CLIENT\020\002\"\222\001\n\006OpCode\022\013\n\007SUCCES"
-    "S\020\000\022\013\n\007FAILURE\020\001\022\022\n\016CLIENT_REQUEST\020\002\022\023\n\017"
-    "DAEMON_RESPONSE\020\003\022\023\n\017IMPLICIT_TARGET\020\004\022\023"
-    "\n\017EXPLICIT_TARGET\020\005\022\013\n\007MESSAGE\020\006\022\016\n\nNO_M"
-    "ESSAGE\020\007\032\321\001\n\010Metadata\0221\n\taddr_type\030\001 \001(\016"
-    "2\036.nsb.nsbm.Metadata.AddressType\022\020\n\006src_"
-    "id\030\002 \001(\tH\000\022\022\n\010src_addr\030\003 \001(\007H\000\022\021\n\007dest_i"
-    "d\030\004 \001(\tH\001\022\023\n\tdest_addr\030\005 \001(\007H\001\022\024\n\014payloa"
-    "d_size\030\006 \001(\005\"\037\n\013AddressType\022\007\n\003INT\020\000\022\007\n\003"
-    "STR\020\001B\005\n\003srcB\006\n\004destb\010editionsp\350\007"
+    "m.Manifest.OpCode\"b\n\tOperation\022\010\n\004PING\020\000"
+    "\022\010\n\004INIT\020\001\022\010\n\004SEND\020\002\022\t\n\005FETCH\020\003\022\010\n\004POST\020"
+    "\004\022\013\n\007RECEIVE\020\005\022\013\n\007FORWARD\020\006\022\010\n\004EXIT\020\007\"8\n"
+    "\nOriginator\022\n\n\006DAEMON\020\000\022\016\n\nAPP_CLIENT\020\001\022"
+    "\016\n\nSIM_CLIENT\020\002\"\222\001\n\006OpCode\022\013\n\007SUCCESS\020\000\022"
+    "\013\n\007FAILURE\020\001\022\022\n\016CLIENT_REQUEST\020\002\022\023\n\017DAEM"
+    "ON_RESPONSE\020\003\022\023\n\017IMPLICIT_TARGET\020\004\022\023\n\017EX"
+    "PLICIT_TARGET\020\005\022\013\n\007MESSAGE\020\006\022\016\n\nNO_MESSA"
+    "GE\020\007\032\321\001\n\010Metadata\0221\n\taddr_type\030\001 \001(\0162\036.n"
+    "sb.nsbm.Metadata.AddressType\022\020\n\006src_id\030\002"
+    " \001(\tH\000\022\022\n\010src_addr\030\003 \001(\007H\000\022\021\n\007dest_id\030\004 "
+    "\001(\tH\001\022\023\n\tdest_addr\030\005 \001(\007H\001\022\024\n\014payload_si"
+    "ze\030\006 \001(\005\"\037\n\013AddressType\022\007\n\003INT\020\000\022\007\n\003STR\020"
+    "\001B\005\n\003srcB\006\n\004destb\010editionsp\350\007"
 };
 static ::absl::once_flag descriptor_table_nsb_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_nsb_2eproto = {
     false,
     false,
-    753,
+    789,
     descriptor_table_protodef_nsb_2eproto,
     "nsb.proto",
     &descriptor_table_nsb_2eproto_once,
@@ -225,9 +226,9 @@ const ::google::protobuf::EnumDescriptor* nsbm_Manifest_Operation_descriptor() {
   return file_level_enum_descriptors_nsb_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t nsbm_Manifest_Operation_internal_data_[] = {
-    262144u, 32u, 8u, };
+    524288u, 0u, };
 bool nsbm_Manifest_Operation_IsValid(int value) {
-  return 0 <= value && value <= 7 && ((143u >> value) & 1) != 0;
+  return 0 <= value && value <= 7;
 }
 #if (__cplusplus < 201703) && \
   (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
@@ -236,6 +237,9 @@ constexpr nsbm_Manifest_Operation nsbm_Manifest::PING;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::INIT;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::SEND;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::FETCH;
+constexpr nsbm_Manifest_Operation nsbm_Manifest::POST;
+constexpr nsbm_Manifest_Operation nsbm_Manifest::RECEIVE;
+constexpr nsbm_Manifest_Operation nsbm_Manifest::FORWARD;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::EXIT;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MIN;
 constexpr nsbm_Manifest_Operation nsbm_Manifest::Operation_MAX;
