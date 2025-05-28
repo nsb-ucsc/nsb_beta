@@ -73,6 +73,7 @@ enum nsbm_Manifest_Operation : int {
   nsbm_Manifest_Operation_PING = 0,
   nsbm_Manifest_Operation_INIT = 1,
   nsbm_Manifest_Operation_SEND = 2,
+  nsbm_Manifest_Operation_FETCH = 3,
   nsbm_Manifest_Operation_EXIT = 7,
   nsbm_Manifest_Operation_nsbm_Manifest_Operation_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
@@ -682,6 +683,7 @@ class nsbm_Manifest final : public ::google::protobuf::Message
   static constexpr Operation PING = nsbm_Manifest_Operation_PING;
   static constexpr Operation INIT = nsbm_Manifest_Operation_INIT;
   static constexpr Operation SEND = nsbm_Manifest_Operation_SEND;
+  static constexpr Operation FETCH = nsbm_Manifest_Operation_FETCH;
   static constexpr Operation EXIT = nsbm_Manifest_Operation_EXIT;
   static inline bool Operation_IsValid(int value) {
     return nsbm_Manifest_Operation_IsValid(value);

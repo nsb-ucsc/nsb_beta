@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tnsb.proto\x12\x03nsb\"\xc6\x05\n\x04nsbm\x12$\n\x08manifest\x18\x01 \x01(\x0b\x32\x12.nsb.nsbm.Manifest\x12$\n\x08metadata\x18\x02 \x01(\x0b\x32\x12.nsb.nsbm.Metadata\x12\x0f\n\x07payload\x18\x03 \x01(\x0c\x1a\x8c\x03\n\x08Manifest\x12(\n\x02op\x18\x01 \x01(\x0e\x32\x1c.nsb.nsbm.Manifest.Operation\x12)\n\x02og\x18\x02 \x01(\x0e\x32\x1d.nsb.nsbm.Manifest.Originator\x12\'\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x19.nsb.nsbm.Manifest.OpCode\"3\n\tOperation\x12\x08\n\x04PING\x10\x00\x12\x08\n\x04INIT\x10\x01\x12\x08\n\x04SEND\x10\x02\x12\x08\n\x04\x45XIT\x10\x07\"8\n\nOriginator\x12\n\n\x06\x44\x41\x45MON\x10\x00\x12\x0e\n\nAPP_CLIENT\x10\x01\x12\x0e\n\nSIM_CLIENT\x10\x02\"\x92\x01\n\x06OpCode\x12\x0b\n\x07SUCCESS\x10\x00\x12\x0b\n\x07\x46\x41ILURE\x10\x01\x12\x12\n\x0e\x43LIENT_REQUEST\x10\x02\x12\x13\n\x0f\x44\x41\x45MON_RESPONSE\x10\x03\x12\x13\n\x0fIMPLICIT_TARGET\x10\x04\x12\x13\n\x0f\x45XPLICIT_TARGET\x10\x05\x12\x0b\n\x07MESSAGE\x10\x06\x12\x0e\n\nNO_MESSAGE\x10\x07\x1a\xd1\x01\n\x08Metadata\x12\x31\n\taddr_type\x18\x01 \x01(\x0e\x32\x1e.nsb.nsbm.Metadata.AddressType\x12\x10\n\x06src_id\x18\x02 \x01(\tH\x00\x12\x12\n\x08src_addr\x18\x03 \x01(\x07H\x00\x12\x11\n\x07\x64\x65st_id\x18\x04 \x01(\tH\x01\x12\x13\n\tdest_addr\x18\x05 \x01(\x07H\x01\x12\x14\n\x0cpayload_size\x18\x06 \x01(\x05\"\x1f\n\x0b\x41\x64\x64ressType\x12\x07\n\x03INT\x10\x00\x12\x07\n\x03STR\x10\x01\x42\x05\n\x03srcB\x06\n\x04\x64\x65stb\x08\x65\x64itionsp\xe8\x07')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tnsb.proto\x12\x03nsb\"\xd1\x05\n\x04nsbm\x12$\n\x08manifest\x18\x01 \x01(\x0b\x32\x12.nsb.nsbm.Manifest\x12$\n\x08metadata\x18\x02 \x01(\x0b\x32\x12.nsb.nsbm.Metadata\x12\x0f\n\x07payload\x18\x03 \x01(\x0c\x1a\x97\x03\n\x08Manifest\x12(\n\x02op\x18\x01 \x01(\x0e\x32\x1c.nsb.nsbm.Manifest.Operation\x12)\n\x02og\x18\x02 \x01(\x0e\x32\x1d.nsb.nsbm.Manifest.Originator\x12\'\n\x04\x63ode\x18\x03 \x01(\x0e\x32\x19.nsb.nsbm.Manifest.OpCode\">\n\tOperation\x12\x08\n\x04PING\x10\x00\x12\x08\n\x04INIT\x10\x01\x12\x08\n\x04SEND\x10\x02\x12\t\n\x05\x46\x45TCH\x10\x03\x12\x08\n\x04\x45XIT\x10\x07\"8\n\nOriginator\x12\n\n\x06\x44\x41\x45MON\x10\x00\x12\x0e\n\nAPP_CLIENT\x10\x01\x12\x0e\n\nSIM_CLIENT\x10\x02\"\x92\x01\n\x06OpCode\x12\x0b\n\x07SUCCESS\x10\x00\x12\x0b\n\x07\x46\x41ILURE\x10\x01\x12\x12\n\x0e\x43LIENT_REQUEST\x10\x02\x12\x13\n\x0f\x44\x41\x45MON_RESPONSE\x10\x03\x12\x13\n\x0fIMPLICIT_TARGET\x10\x04\x12\x13\n\x0f\x45XPLICIT_TARGET\x10\x05\x12\x0b\n\x07MESSAGE\x10\x06\x12\x0e\n\nNO_MESSAGE\x10\x07\x1a\xd1\x01\n\x08Metadata\x12\x31\n\taddr_type\x18\x01 \x01(\x0e\x32\x1e.nsb.nsbm.Metadata.AddressType\x12\x10\n\x06src_id\x18\x02 \x01(\tH\x00\x12\x12\n\x08src_addr\x18\x03 \x01(\x07H\x00\x12\x11\n\x07\x64\x65st_id\x18\x04 \x01(\tH\x01\x12\x13\n\tdest_addr\x18\x05 \x01(\x07H\x01\x12\x14\n\x0cpayload_size\x18\x06 \x01(\x05\"\x1f\n\x0b\x41\x64\x64ressType\x12\x07\n\x03INT\x10\x00\x12\x07\n\x03STR\x10\x01\x42\x05\n\x03srcB\x06\n\x04\x64\x65stb\x08\x65\x64itionsp\xe8\x07')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,17 +32,17 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'nsb_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_NSBM']._serialized_start=19
-  _globals['_NSBM']._serialized_end=729
+  _globals['_NSBM']._serialized_end=740
   _globals['_NSBM_MANIFEST']._serialized_start=121
-  _globals['_NSBM_MANIFEST']._serialized_end=517
+  _globals['_NSBM_MANIFEST']._serialized_end=528
   _globals['_NSBM_MANIFEST_OPERATION']._serialized_start=259
-  _globals['_NSBM_MANIFEST_OPERATION']._serialized_end=310
-  _globals['_NSBM_MANIFEST_ORIGINATOR']._serialized_start=312
-  _globals['_NSBM_MANIFEST_ORIGINATOR']._serialized_end=368
-  _globals['_NSBM_MANIFEST_OPCODE']._serialized_start=371
-  _globals['_NSBM_MANIFEST_OPCODE']._serialized_end=517
-  _globals['_NSBM_METADATA']._serialized_start=520
-  _globals['_NSBM_METADATA']._serialized_end=729
-  _globals['_NSBM_METADATA_ADDRESSTYPE']._serialized_start=683
-  _globals['_NSBM_METADATA_ADDRESSTYPE']._serialized_end=714
+  _globals['_NSBM_MANIFEST_OPERATION']._serialized_end=321
+  _globals['_NSBM_MANIFEST_ORIGINATOR']._serialized_start=323
+  _globals['_NSBM_MANIFEST_ORIGINATOR']._serialized_end=379
+  _globals['_NSBM_MANIFEST_OPCODE']._serialized_start=382
+  _globals['_NSBM_MANIFEST_OPCODE']._serialized_end=528
+  _globals['_NSBM_METADATA']._serialized_start=531
+  _globals['_NSBM_METADATA']._serialized_end=740
+  _globals['_NSBM_METADATA_ADDRESSTYPE']._serialized_start=694
+  _globals['_NSBM_METADATA_ADDRESSTYPE']._serialized_end=725
 # @@protoc_insertion_point(module_scope)

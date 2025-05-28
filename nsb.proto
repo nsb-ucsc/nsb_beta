@@ -8,6 +8,7 @@ message nsbm {
             PING = 0;
             INIT = 1;
             SEND = 2;
+            FETCH = 3;
             EXIT = 7;
         }
         Operation op = 1;

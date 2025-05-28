@@ -194,7 +194,40 @@ class NSBSimClient(NSBClient):
         super().__init__(server_address, server_port)
         # Create distinct logger.
         self.logger = logging.getLogger("NSBSimClient")
-        
+
+    def fetch(self, src_id=None):
+        # Create and populate a FETCH message.
+        nsb_msg = nsb_pb2.nsbm()
+        # Manifest.
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.FETCH
+        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        # Metadata.
+        if src_id:
+            nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+            nsb_msg.metadata.src_id = src_id
+        # Send the NSB message + payload.
+        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.logger.info("FETCH: Sent fetch request to server.")
+        # Get response.
+        response = self.comms._recv_msg(timeout=DAEMON_RESPONSE_TIMEOUT)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FETCH:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{nsb_resp.payload}")
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    print("FETCH: Yikes, no message.")
+                    return None
+            else:
+                return None
+        else:
+            return None
 
 ### TEST FUNCTIONS ###
 
@@ -218,7 +251,10 @@ def test_ping():
 def test_send():
     app1 = NSBAppClient("billy", "127.0.0.1", 65432)
     app2 = NSBAppClient("bob", "127.0.0.1", 65432)
+    sim = NSBSimClient("127.0.0.1", 65432)
     app1.send("bob", b"hello world")
+    time.sleep(2)
+    sim.fetch()
     time.sleep(2)
     app1.exit()
 

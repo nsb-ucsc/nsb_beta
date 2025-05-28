@@ -1,7 +1,6 @@
 // nsb_daemon.cc
 
 #include "nsb_daemon.h"
-#include "nsb.pb.h"
 
 NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {
     // signal(SIGINT, handle_signal);
@@ -234,27 +233,22 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     // Prepare response.
     nsb::nsbm nsb_response;
     nsb::nsbm::Manifest* r_manifest = nsb_response.mutable_manifest();
+    nsb::nsbm::Metadata* r_metadata = nsb_response.mutable_metadata();
     r_manifest->set_og(nsb::nsbm::Manifest::DAEMON); // Set originator.
     bool response_required = false;
     switch (manifest.op()) {
         case nsb::nsbm::Manifest::PING:
             printf("\t...it's a PING!\n");
             // Send a PING back with SUCCESS.
-            r_manifest->set_op(nsb::nsbm::Manifest::PING);
-            r_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
-            response_required = true;
+            handle_ping(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::SEND:
             printf("\tPackage-to-send received:\n");
-            // Parse the metadata.
-            if (metadata.addr_type() == nsb::nsbm::Metadata::STR) {
-                printf("\tSRC_ID: %s | DEST_ID: %s\n", metadata.src_id().data(), metadata.dest_id().data());
-            } else if (metadata.addr_type() == nsb::nsbm::Metadata::INT) {
-                printf("\tSRC_ADDR: %d | DEST_ADDR: %d\n", metadata.src_addr(), metadata.dest_addr());
-            }
-            // Get payload.
-            printf("\tPAYLOAD: %.*s\n", metadata.payload_size(), nsb_message.payload().c_str());
+            handle_send(&nsb_message, &nsb_response, &response_required);
             break;
+        case nsb::nsbm::Manifest::FETCH:
+            printf("\tGrabbing the payload.");
+            handle_fetch(&nsb_message, &nsb_response, &response_required);
         case nsb::nsbm::Manifest::EXIT:
             printf("\tLooks like we're done here.\n");
             // Stop the daemon.
@@ -276,6 +270,64 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
         printf("\tBack at ya! (%dB) %s\n", size, r_buffer);
         send(fd, r_buffer, size, 0);
     }
+}
+
+void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
+    out_manifest->set_op(nsb::nsbm::Manifest::PING);
+    out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
+    out_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+    *response_required = true;
+}
+
+void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    // Parse the metadata.
+    nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+    // Store payload.
+    msg_buffer.push_back(MessageEntry(in_metadata.src_id(), in_metadata.dest_id(),
+        incoming_msg->payload().data()));
+}
+
+void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    MessageEntry fetched_message;
+    bool fetched = false;
+    // Check for source.
+    if (incoming_msg->has_metadata()) {
+        nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+        if (in_metadata.has_src_id()) {
+            // Search for the message in the buffer.
+            for (const auto& msg : msg_buffer) {
+                if (msg.source == in_metadata.src_id()) {
+                    fetched_message = msg;
+                    fetched = true;
+                    break;
+                }
+            }
+        }
+    }
+    // Pop the next message in the queue.
+    if (!fetched) {
+        if (!msg_buffer.empty()) {
+            fetched_message = msg_buffer.front();
+            msg_buffer.pop_front();
+            fetched = true;
+        }
+    }
+    // Prepare response.
+    nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
+    out_manifest->set_op(nsb::nsbm::Manifest::FETCH);
+    out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
+    if (fetched) {
+        out_manifest->set_code(nsb::nsbm::Manifest::MESSAGE);
+        nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
+        out_metadata->set_src_id(fetched_message.source);
+        out_metadata->set_dest_id(fetched_message.destination);
+        out_metadata->set_payload_size(sizeof(fetched_message.payload));
+        outgoing_msg->set_payload(fetched_message.payload);
+    } else {
+        out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
+    }
+    *response_required = true;
 }
 
 void NSBDaemon::stop() {
