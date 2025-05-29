@@ -6,35 +6,71 @@ import asyncio
 
 # Set up logging.
 import logging
+
+## @cond
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
                     datefmt='%H:%M:%S',
                     handlers=[logging.StreamHandler(),])
+## @endcond
 
+"""
+@file nsb_client.py
+@namespace nsb_client
+@brief Application & Simulator Client Interfaces for NSB
+@details Interfaces to facilitate communication with the NSB Daemon to 
+         facilitate independent applications' payloads being routed through 
+         simulated networks. The NSB Application Client provides applications 
+         with the ability to send and receive payloads, similar to basic network
+         interfaces, while the NSB Simulator Client provides network simulators 
+         with the ability to fetch sent payloads to deploy on the simulated 
+         network and post the delivery (or lack of delivery) of the payloads.
+"""
+
+## @var SERVER_CONNECTION_TIMEOUT
+# Maximum time a client will wait to connect to the daemon.
 SERVER_CONNECTION_TIMEOUT = 10
-"""Maximum time a client will wait to connect to the daemon."""
+## @var DAEMON_RESPONSE_TIMEOUT
+# Maximum time a client will wait to get a response from the daemon.
 DAEMON_RESPONSE_TIMEOUT = 600
-"""Maximum time a client will wait to get a response from the daemon."""
+## @var RECEIVE_BUFFER_SIZE
+# Buffer size when receiving data.
 RECEIVE_BUFFER_SIZE = 4096
-"""Buffer size when receiving data."""
+## @var SEND_BUFFER_SIZE
+# Buffer size when sending data.
 SEND_BUFFER_SIZE = 4096
-"""Buffer size when sending data."""
 
-class SocketInterface:
+class CommunicationInterface:
     """
-    Socket interface network to facilitate network communication between NSB 
-    clients and the server. This can be used as a template to develop other 
-    interfaces for client communication, which must define the same methods with
-    the same arguments as done in this class.
+    @brief Base class for communication interfaces.
+
+    As NSB is expected to support different communication paradigms and protocols --
+    including sockets, RabbitMQ, and Websockets -- we plan to provide various 
+    different communication interfaces with the same basic functions. The 
+    SocketInterface class should be used as an example to develop other interfaces.
     """
-    def __init__(self, server_address, server_port):
+    pass
+
+class SocketInterface(CommunicationInterface):
+    """
+    @brief Socket interface for client-server communication.
+
+    This class implements aocket interface network to facilitate network 
+    communication between NSB clients and the server. This can be used as a 
+    template to develop other interfaces for client communication, which must 
+    define the same methods with the same arguments as done in this class.
+    """
+    def __init__(self, server_address: str, server_port: int):
         """
+        @brief Constructor for the NSBClient class.
+
         Sets the address and port of the server at the NSB daemon before 
         connecting to the server.
+        
+        @param server_address The address of the NSB daemon.
+        @param server_port The port of the NSB daemon.
 
-        Args:
-            server_address (str): The address of the NSB daemon.
-            server_port (int): The port of the NSB daemon.
+        @see nsb_client.SocketInterface._connect(timeout)
         """
         # Save connection information.
         self.server_addr = server_address
@@ -46,8 +82,13 @@ class SocketInterface:
 
     def _configure(self):
         """
-        Configures the socket connection with appropriate options. This method 
-        is called by the _connect(...) method.
+        @brief Configures the socket connection with appropriate options.
+        
+        This method is called by the _connect() method. It configures the 
+        sockets to work with the multi-connection server at the daemon with 
+        lower latency.
+
+        @see _connect()
         """
         # Create socket connection and configure for low latency and async.
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,19 +96,16 @@ class SocketInterface:
         self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    def _connect(self, timeout=SERVER_CONNECTION_TIMEOUT):
+    def _connect(self, timeout: int=SERVER_CONNECTION_TIMEOUT):
         """
-        Connects to the daemon with the stored server address and port. This 
-        method uses the _configure() method to configure the socket and then 
-        attempts to connect to the daemon.
+        @brief Connects to the daemon with the stored server address and port.
 
-        Args:
-            timeout (int): Maximum time to wait for a connection to the daemon.
-                Default is set to SERVER_CONNECTION_TIMEOUT.
-        
-        Raises:
-            TimeoutError: If the connection to the server times out after the 
-                specified timeout period.
+        This method uses the _configure() method to configure the socket and 
+        then attempts to connect to the daemon.
+
+        @param timeout Maximum time in seconds to wait to connect to the daemon. 
+        @exception TimeoutError Raised if the connection to the server times out 
+                    after the specified timeout period.
         """
         self.logger.info(f"Connecting to daemon@{self.server_addr}:{self.server_port}...")
         # Set target time for timing out.
@@ -88,17 +126,24 @@ class SocketInterface:
 
     def _close(self):
         """
-        Healthily closes the socket connection.
+        @brief Healthily closes the socket connection.
+
+        Attempts to shutdown the socket, then closes.
         """
         self.conn.shutdown(socket.SHUT_WR)
         self.conn.close()
 
-    def _send_msg(self, message):
+    def _send_msg(self, message:bytes):
         """
-        Sends a message to the server in a non-blocking-compliant way.
+        @brief Sends a message to the server.
+        
+        This method uses selectors to wait for the socket to be ready before 
+        sending SEND_BUFFER SIZE bytes at a time, making it non-blocking 
+        compliant.
 
-        Args:
-            message (bytes): The message to send to the server.
+        @param message The message to send to the server.
+        @exception RuntimeError Raised if the socket connection is broken or 
+                                if the socket is not ready to send.
         """
         # Wait to write.
         _, ready_to_send, _ = select.select([], [self.conn], [])
@@ -112,13 +157,16 @@ class SocketInterface:
         else:
             self.logger.error("Socket not ready to send, cannot send message.")
 
-    def _recv_msg(self, timeout=None):
+    def _recv_msg(self, timeout:int|None=None):
         """
-        Receives a message from the server in a non-blocking-compliant way.
+        @brief Sends a message to the server.
+        
+        This method uses selectors to wait for the socket to be ready before 
+        sending SEND_BUFFER SIZE bytes at a time, making it non-blocking 
+        compliant.
 
-        Args:
-            timeout (int): Maximum time to wait for a response from the server.
-                If None, waits indefinitely. Default is None.
+        @param timeout Maximum time in seconds to wait for a response from the
+                       server. If None, it will wait indefinitely.
         """
         # Wait to select or timeout.
         args = [[self.conn], [], []]
@@ -150,7 +198,9 @@ class SocketInterface:
     
     def __del__(self):
         """
-        Processes the deletion of the object. Closes connection.
+        @brief Closes connection to the server.
+
+        @see _close()
         """
         self._close()
 
@@ -158,32 +208,38 @@ class SocketInterface:
 
 class NSBClient:
     """
-    NSB client base class. This class serves as the base for the implemented 
+    @brief NSB client base class.
+    
+    This class serves as the base for the implemented 
     clients (AppClient and SimClient) will be built on. It provides basic 
     methods and shared operation methods.
     """
-    def __init__(self, server_address, server_port):
+    def __init__(self, server_address:str, server_port:int):
         """
+        @brief Base constructor for NSB Clients.
+
         Sets the communications module to the desired network interface 
         (currently SocketInterface) to connect to the daemon server.
 
-        Args:
-            server_address (str): The address of the NSB daemon.
-            server_port (int): The port of the NSB daemon.
+        @param server_address The address of the NSB daemon.
+        @param server_port The port of the NSB daemon.
+
+        @see SocketInterface
         """
         self.comms = SocketInterface(server_address, server_port)
 
-    def ping(self, timeout=DAEMON_RESPONSE_TIMEOUT):
+    def ping(self, timeout:int=DAEMON_RESPONSE_TIMEOUT):
         """
-        Pings the server and returns whether the the server is reachable or not.
+        @brief Pings the server.
+
+        This method sends a PING message to the server and awaits a response. It
+        returns whether or not the server is reachable.
         
-        Args:
-            timeout (int): Maximum time to wait for a response from the server.
-                Default is set to DAEMON_RESPONSE_TIMEOUT.
+        @param timeout Maximum time to wait for a response from the server.
+                       Default is set to DAEMON_RESPONSE_TIMEOUT.
         
-        Returns:
-            bool: True if the server is reachable and responds correctly, 
-                  False otherwise.
+        @returns bool True if the server is reachable and responds correctly, 
+                      False otherwise.
         """
         # Create and populate a PING message.
         nsb_msg = nsb_pb2.nsbm()
@@ -212,7 +268,9 @@ class NSBClient:
         
     def exit(self):
         """
-        Commands server to exit and shut down and shuts down self.
+        @brief Instructs server and self to exit and shutdown.
+
+        This method sends an EXIT message to the server before deleting itself.
         """
         # Create and populate an EXIT message.
         nsb_msg = nsb_pb2.nsbm()
@@ -230,35 +288,39 @@ class NSBClient:
 
 class NSBAppClient(NSBClient):
     """
-    NSB Application Client class. This client provides the high-level NSB 
-    interface to send and receive messages via NSB by communicating to the 
-    daemon.
+    @brief NSB Application Client interface.
+    
+    This client provides the high-level NSB interface to send and receive 
+    messages via NSB by communicating to the daemon.
     """
-    def __init__(self, identifier, server_address, server_port):
+    def __init__(self, identifier:str, server_address:str, server_port:int):
         """
-        Constructs self using base NSBClient's constructor, which initializes a 
-        network interface to connect and communicate with the NSB daemon. Sets 
-        an identifier that corresponds to the identifier used in the NSB system.
+        @brief Constructs the NSB Application Client interface.
 
-        Args:
-            identifier (str): The identifier for this NSB application client, 
+        This method uses the base NSBClient's constructor, which initializes a 
+        network interface to connect and communicate with the NSB daemon. It 
+        also an identifier that should correspond to the identifier used in the 
+        NSB system.
+
+        @param identifier The identifier for this NSB application client, which
                 should correspond to the identifier in NSB and simulator.
-            server_address (str): The address of the NSB daemon.
-            server_port (int): The port of the NSB daemon.
+        @param server_address The address of the NSB daemon.
+        @param server_port The port of the NSB daemon.
         """
         self._id = identifier
         self.logger = logging.getLogger(f"{self._id} (app)")
         super().__init__(server_address, server_port)
 
-    def send(self, dest_id, payload):
+    def send(self, dest_id:str, payload:bytes):
         """
-        Sends a payload to the specified destination via NSB. This method 
-        creates an NSB SEND message with the appropriate information and payload 
-        and sends it to the daemon.
+        @brief Sends a payload to the specified destination via NSB.
+        
+        This method creates an NSB SEND message with the appropriate information 
+        and payload and sends it to the daemon. It does not expect a response 
+        from the daemon.
 
-        Args:
-            dest_id (str): The identifier of the destination NSB client.
-            payload (bytes): The payload to send to the destination.
+        @param dest_id The identifier of the destination NSB client.
+        @param payload The payload to send to the destination.
         """
         # Create and populate a SEND message.
         nsb_msg = nsb_pb2.nsbm()
@@ -277,10 +339,11 @@ class NSBAppClient(NSBClient):
         self.comms._send_msg(nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
 
-    def receive(self, dest_id=None):
+    def receive(self, dest_id:str|None=None):
         """
-        Receives a payload that has been addressed to the client. If the 
-        destination is specified, it will receive a payload for that 
+        @brief Receives a payload that has been addressed to the client via NSB.
+        
+        If the destination is specified, it will receive a payload for that 
         destination. This method creates an NSB RECEIVE message with the 
         appropriate information and payload and sends it to the daemon. It will
         then get a response that either contains a MESSAGE code and 
@@ -288,13 +351,13 @@ class NSBAppClient(NSBClient):
         message is found, the entire NSB message is returned to provide access
         to the metadata.
 
-        Args:
-            dest_id (str): The identifier of the destination NSB client.
-            payload (bytes): The payload to send to the destination.
+        @param dest_id The identifier of the destination NSB client. The default
+                       None value will automatically assume the destination is 
+                       self.
 
-        Returns:
-            nsb_pb2.nsbm | None: The NSB message containing the received payload 
-                and metadata if a message is found, otherwise None.
+        @returns nsb_pb2.nsbm|None The NSB message containing the received 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
         """
         # Create and populate a FETCH message.
         nsb_msg = nsb_pb2.nsbm()
@@ -338,38 +401,43 @@ class NSBAppClient(NSBClient):
 
 class NSBSimClient(NSBClient):
     """
-    NSB Simulator Client class. This client provides the high-level NSB 
-    interface to fetch and post messages via NSB by communicating to the 
-    daemon.
+    @brief NSB Simulator Client interface.
+    
+    This client provides the high-level NSB interface to fetch and post messages 
+    via NSB by communicating to the daemon.
     """
-    def __init__(self, server_address, server_port):
+    def __init__(self, server_address:str, server_port:int):
         """
-        Constructs self using base NSBClient's constructor, which initializes a 
+        @brief Constructs the NSB Simulator Client interface.
+
+        This method uses the base NSBClient's constructor, which initializes a 
         network interface to connect and communicate with the NSB daemon.
 
-        Args:
-            server_address (str): The address of the NSB daemon.
-            server_port (int): The port of the NSB daemon.
+        @param server_address The address of the NSB daemon.
+        @param server_port The port of the NSB daemon.
         """
         self.logger = logging.getLogger("(SimClient)")
         super().__init__(server_address, server_port)
 
-    def fetch(self, src_id=None):
+    def fetch(self, src_id:str|None=None):
         """
-        Fetches a payload that needs to be sent over the simulated network. If 
-        the source is specified, it will try and fetch a payload for that 
+        @brief Fetches a payload that needs to be sent over the simulated 
+               network.
+        
+        If the source is specified, it will try and fetch a payload for that 
         source. This method creates an NSB FETCH message with the appropriate 
         information and payload and sends it to the daemon. It will then get a 
         response that either contains a MESSAGE code and carries the fetched 
         payload or contains a NO_MESSAGE code. If a message is found, the entire 
         NSB message is returned to provide access to the metadata.
 
-        Args:
-            src_id (str): The identifier of the source NSB client.
+        @param src_id The identifier of the targe source. The default None value 
+               will result in fetching the most recent message, regardless
+               of source.
 
-        Returns:
-            nsb_pb2.nsbm | None: The NSB message containing the fetched payload 
-                and metadata if a message is found, otherwise None.
+        @returns nsb_pb2.nsbm|None The NSB message containing the fetched 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
         """
         # Create and populate a FETCH message.
         nsb_msg = nsb_pb2.nsbm()
@@ -405,20 +473,21 @@ class NSBSimClient(NSBClient):
         else:
             return None
         
-    def post(self, src_id, dest_id, payload, success=True):
+    def post(self, src_id:str, dest_id:str, payload:bytes, success:bool=True):
         """
-        Posts a payload to the specified destination via NSB. This is intended 
-        to be used when a payload is finished being processed (either 
-        successfully delivered or dropped) and the simulator client needs to 
-        hand it off back to NSB. This method creates an NSB SEND message with 
-        the appropriate information and payload and sends it to the daemon.
+        @brief Posts a payload to the specified destination via NSB.
+        
+        This is intended to be used when a payload is finished being processed 
+        (either successfully delivered or dropped) and the simulator client 
+        needs to hand it off back to NSB. This method creates an NSB SEND 
+        message with the appropriate information and payload and sends it to the 
+        daemon.
 
-        Args:
-            src_id (str): The identifier of the source NSB client.
-            dest_id (str): The identifier of the destination NSB client.
-            payload (bytes): The payload to post to the destination.
-            success (bool): Whether the post was successful or not. If False, 
-                it will set the OpCode to NO_MESSAGE.
+        @param src_id The identifier of the source NSB client.
+        @param dest_id The identifier of the destination NSB client.
+        @param payload The payload to post to the destination.
+        @param success Whether the post was successful or not. If False, 
+                       it will set the OpCode to NO_MESSAGE.
         """
         # Create and populate a SEND message.
         nsb_msg = nsb_pb2.nsbm()
@@ -438,14 +507,6 @@ class NSBSimClient(NSBClient):
         self.logger.info("POST: Posted message + payload to server.")
 
 ### TEST FUNCTIONS ###
-
-def dispatch_app_ping():
-    app = NSBAppClient("billy", "127.0.0.1", 65432)
-    return app.ping()
-    
-def test_persistent():
-    app = NSBAppClient("billy", "127.0.0.1", 65432)
-    app.test_send2(persistent=True)
 
 def test_ping():
     app1 = NSBAppClient("billy", "127.0.0.1", 65432)

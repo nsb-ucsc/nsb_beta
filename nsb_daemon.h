@@ -77,7 +77,7 @@ public:
      * This method will launch the server at the server port using the start_server 
      * method.
      * 
-     * @see NSBDaemon::start_server(int port)
+     * @see start_server(int port)
      */
     void start();
     /**
@@ -104,16 +104,16 @@ private:
      * @brief Transmission buffer to store sent payloads waiting to be fetched.
      * 
      * @see MessageEntry
-     * @see NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
+     * @see handle_send()
+     * @see handle_fetch()
      */
     std::list<MessageEntry> tx_buffer;
     /**
      * @brief Reception buffer to store posted payloads waiting to be received.
      * 
      * @see MessageEntry
-     * @see NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
+     * @see handle_post()
+     * @see handle_receive()
      */
     std::list<MessageEntry> rx_buffer;
     /**
@@ -131,8 +131,8 @@ private:
      * 
      * @param port The port that will be accessible for clients to connect.
      * 
-     * @see NSBDaemon::start()
-     * @see NSBDaemon::handle_message(int fd, std::vector<char> message)
+     * @see start()
+     * @see handle_message()
      */
     void start_server(int port);
     /**
@@ -149,12 +149,12 @@ private:
      * @param fd The file descriptor of the client connection.
      * @param message The incoming message to parse and handle.
      * 
-     * @see NSBDaemon::start_server(int port)
-     * @see NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
-     * @see NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
+     * @see start_server()
+     * @see handle_ping()
+     * @see handle_send()
+     * @see handle_fetch()
+     * @see handle_post()
+     * @see handle_receive()
      */
     void handle_message(int fd, std::vector<char> message);
 
@@ -189,7 +189,7 @@ private:
      *                          outgoing message will be sent back to the client.
      * 
      * @see MessageEntry
-     * @see NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
+     * @see handle_fetch()
      */
     void handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     /**
@@ -230,7 +230,7 @@ private:
      *                          outgoing message will be sent back to the client.
      * 
      * @see MessageEntry
-     * @see NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
+     * @see handle_receive()
      */
     void handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     /**
