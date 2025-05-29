@@ -27,10 +27,6 @@
 
 #include "nsb.pb.h"
 
-// Decide whether to use threads per connection (not recommended for now).
-// #define NSB_USE_THREADS
-// Decide whether to use database.
-// #define NSB_USE_DB
 
 /** @brief The maximum buffer size for sending and receiving messages. */
 int MAX_BUFFER_SIZE = 4096;
