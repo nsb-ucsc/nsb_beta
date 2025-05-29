@@ -2,23 +2,10 @@
 
 #include "nsb_daemon.h"
 
-/**
- * @brief Construct a new NSBDaemon::NSBDaemon object.
- * 
- * This method initializes attributes and verifies the Protobuf version.
- * 
- * @param s_port The port that NSB clients will connect to.
- */
 NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 }
 
-/**
- * @brief Destroy the NSBDaemon::NSBDaemon object.
- * 
- * This method will check to see if the server is still running and stop it if 
- * necessary. It will then shut down the Protobuf library.
- */
 NSBDaemon::~NSBDaemon() {
     // If the server is running, stop it.
     if (running) {
@@ -27,14 +14,6 @@ NSBDaemon::~NSBDaemon() {
     google::protobuf::ShutdownProtobufLibrary();
 }
 
-/**
- * @brief Start the NSB Daemon.
- * 
- * This method will launch the server at the server port using the start_server 
- * method.
- * 
- * @see NSBDaemon::start_server(int port)
- */
 void NSBDaemon::start() {
     // If the server isn't running already, start it.
     if (!running) {
@@ -44,24 +23,6 @@ void NSBDaemon::start() {
     }
 }
 
-/**
- * @brief Start the socket-connected server within the NSB Daemon.
- * 
- * This is the main servicing method that runs for the lifetime of the NSB 
- * Daemon. It opens a multiple connection-enabled server and maintains 
- * persistent connections as communication channels with each NSB client that 
- * connects to it. New connections are managed through an updating vector of 
- * file descriptors where each represents a different connection. When messages 
- * come in from existing connections, they will be passed onto the 
- * handle_message method.
- * 
- * This method is invoked by the start() method.
- * 
- * @param port The port that will be accessible for clients to connect.
- * 
- * @see NSBDaemon::start()
- * @see NSBDaemon::handle_message(int fd, std::vector<char> message)
- */
 void NSBDaemon::start_server(int port) {
     // Set file descriptor and address information.
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -190,27 +151,6 @@ void NSBDaemon::start_server(int port) {
     std::cout << "Server stopped." << std::endl;
 }
 
-/**
- * @brief A multiplexer to parse messages and redirect them to handlers.
- * 
- * This method is invoked by the server (in the start_server() method) to handle 
- * an incoming message. It parses the message using Protobuf, and then redirects 
- * the incoming message and a template outgoing message (in case a response is 
- * necessary) to one of the operation-specific handlers.
- * 
- * If the operation is not understood, the server will respond with a negative 
- * PING message.
- * 
- * @param fd The file descriptor of the client connection.
- * @param message The incoming message to parse and handle.
- * 
- * @see NSBDaemon::start_server(int port)
- * @see NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- * @see NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- * @see NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- * @see NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- * @see NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- */
 void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     nsb::nsbm nsb_message;
     nsb_message.ParseFromArray(message.data(), message.size());
@@ -267,19 +207,7 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
         send(fd, r_buffer, size, 0);
     }
 }
-/**
- * @brief Handles PING messages.
- * 
- * Since the PING has been received, it can be assumed to be successful. As such 
- * this method populates the outgoing message as an NSB PING message indicating 
- * success.
- * 
- * @param incoming_msg The incoming message that is being handled.
- * @param outgoing_msg A template message that can be used if a response is 
- *                     required.
- * @param response_required Whether or not a response is required and the 
- *                          outgoing message will be sent back to the client.
- */
+
 void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
     out_manifest->set_op(nsb::nsbm::Manifest::PING);
@@ -288,23 +216,6 @@ void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     *response_required = true;
 }
 
-/**
- * @brief Handles SEND messages from the NSB Application Client.
- * 
- * This method handles SEND messages by parsing the incoming message and storing 
- * the source, destination, and payload as a MessageEntry. The new MessageEntry 
- * will be pushed back in the transmission buffer where it will be ready to be 
- * fetched by the NSB Simulator Client.
- * 
- * @param incoming_msg The incoming message that is being handled.
- * @param outgoing_msg A template message that can be used if a response is 
- *                     required.
- * @param response_required Whether or not a response is required and the 
- *                          outgoing message will be sent back to the client.
- * 
- * @see MessageEntry
- * @see NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- */
 void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     // Parse the metadata.
     nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
@@ -321,28 +232,6 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     tx_buffer.push_back(msg_entry);
 }
 
-/**
- * @brief Handles FETCH messages from the NSB Simulator Client.
- * 
- * This method first creates a blank MessageEntry. If a source has been 
- * specified, it will search the transmission buffer for a message with that 
- * source, either setting the blank MessageEntry to the found entry if the query 
- * was resolved or leaving it blank if not found. If a source has not been 
- * specified, the top MessageEntry of the buffer will be popped off and used; 
- * otherwise, if the buffer is empty, the MessageEntry will be left blank.
- * 
- * If a message was found, a NSB FETCH message indicating MESSAGE will be sent 
- * with the metadata and payload. Otherwise, a NSB FETCH message indicating 
- * NO_MESSAGE will be sent back to the client.
- * 
- * @param incoming_msg The incoming message that is being handled.
- * @param outgoing_msg A template message that can be used if a response is 
- *                     required.
- * @param response_required Whether or not a response is required and the 
- *                          outgoing message will be sent back to the client.
- * 
- * @see MessageEntry
- */
 void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     MessageEntry fetched_message;
     bool tried_to_fetch = false;
@@ -393,23 +282,6 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
     *response_required = true;
 }
 
-/**
- * @brief Handles POST messages from the NSB Simulator Client.
- * 
- * This method handles POST messages by parsing the incoming message and storing 
- * the source, destination, and payload as a MessageEntry. The new MessageEntry 
- * will be pushed back in the reception buffer where it will be ready to be 
- * received by the NSB Application Client.
- * 
- * @param incoming_msg The incoming message that is being handled.
- * @param outgoing_msg A template message that can be used if a response is 
- *                     required.
- * @param response_required Whether or not a response is required and the 
- *                          outgoing message will be sent back to the client.
- * 
- * @see MessageEntry
- * @see NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required)
- */
 void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     // Check for message.
     nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
@@ -428,28 +300,6 @@ void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     }
 }
 
-/**
- * @brief Handles RECEIVE messages from the NSB Application Client.
- * 
- * This method first creates a blank MessageEntry. If a destination has been 
- * specified, it will search the reception buffer for a message with that 
- * destination, either setting the blank MessageEntry to the found entry if the 
- * query was resolved or leaving it blank if not found. If a destination has not 
- * been specified, the top MessageEntry of the buffer will be popped off and 
- * used; otherwise, if the buffer is empty, the MessageEntry will be left blank.
- * 
- * If a message was found, a NSB RECEIVE message indicating MESSAGE will be sent 
- * with the metadata and payload. Otherwise, a NSB RECEIVE message indicating 
- * NO_MESSAGE will be sent back to the client.
- * 
- * @param incoming_msg The incoming message that is being handled.
- * @param outgoing_msg A template message that can be used if a response is 
- *                     required.
- * @param response_required Whether or not a response is required and the 
- *                          outgoing message will be sent back to the client.
- * 
- * @see MessageEntry
- */
 void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     MessageEntry received_message;
     bool fetched = false;
@@ -499,10 +349,6 @@ void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg,
     *response_required = true;
 }
 
-/**
- * @brief Stops the NSB Daemon.
- * 
- */
 void NSBDaemon::stop() {
     // If the server is running, stop it.
     if (running) {
@@ -511,12 +357,6 @@ void NSBDaemon::stop() {
     }
 }
 
-/**
- * @brief Checks if the server is running.
- * 
- * @return true if the server is running, false otherwise.
- * @return false if the server is not running.
- */
 bool NSBDaemon::is_running() const {
     return running;
 }
