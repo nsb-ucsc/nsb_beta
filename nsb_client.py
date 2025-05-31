@@ -6,6 +6,7 @@ import asyncio
 
 # Set up logging.
 import logging
+from enum import IntEnum
 
 ## @cond
 logging.basicConfig(level=logging.DEBUG,
@@ -40,7 +41,33 @@ RECEIVE_BUFFER_SIZE = 4096
 # Buffer size when sending data.
 SEND_BUFFER_SIZE = 4096
 
-class CommunicationInterface:
+class Config:
+    """
+    @brief Class to maintain property codes.
+
+    These property codes should be standardized across Python and C++ libraries, 
+    including the NSB Daemon.
+    """
+    class SystemMode(IntEnum):
+        """
+        @brief Denotes whether the NSB system is in *PUSH* or *PULL* mode.
+
+        The entire system should be using the same mode, and so this should be 
+        set via an INIT message to and response from the daemon or via a shared
+        configuration file.
+
+        *PULL* mode requires clients to request -- or pull -- to fetch or 
+        receive incoming payloads via the daemon server's response. *PUSH* mode 
+        denotes that when clients send or post outgoing payloads, they are 
+        immediately forwarded to the appropriate client.
+
+        @see NSBAppClient.receive()
+        @see NSBSimClient.fetch()
+        """
+        PULL = 0
+        PUSH = 1
+
+class Comms:
     """
     @brief Base class for communication interfaces.
 
@@ -49,9 +76,15 @@ class CommunicationInterface:
     different communication interfaces with the same basic functions. The 
     SocketInterface class should be used as an example to develop other interfaces.
     """
-    pass
+    class Channels(IntEnum):
+        """
+        @brief Shared enumeration to designate different channels.
+        """
+        CTRL = 0
+        SEND = 1
+        RECV = 2
 
-class SocketInterface(CommunicationInterface):
+class SocketInterface(Comms):
     """
     @brief Socket interface for client-server communication.
 
@@ -77,31 +110,16 @@ class SocketInterface(CommunicationInterface):
         self.server_port = server_port
         # Create logger.
         self.logger = logging.getLogger("NSBClient")
-        # Connect.
+        # Initialize set of connections.
+        self.conns = {}
         self._connect()
 
-    def _configure(self):
-        """
-        @brief Configures the socket connection with appropriate options.
-        
-        This method is called by the _connect() method. It configures the 
-        sockets to work with the multi-connection server at the daemon with 
-        lower latency.
-
-        @see _connect()
-        """
-        # Create socket connection and configure for low latency and async.
-        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
-        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-
-    def _connect(self, timeout: int=SERVER_CONNECTION_TIMEOUT):
+    def _connect(self, timeout:int=SERVER_CONNECTION_TIMEOUT):
         """
         @brief Connects to the daemon with the stored server address and port.
 
-        This method uses the _configure() method to configure the socket and 
-        then attempts to connect to the daemon.
+        This method configures and connects sockets for each of the client's
+        channels and then attempts to connect to the daemon.
 
         @param timeout Maximum time in seconds to wait to connect to the daemon. 
         @exception TimeoutError Raised if the connection to the server times out 
@@ -110,19 +128,30 @@ class SocketInterface(CommunicationInterface):
         self.logger.info(f"Connecting to daemon@{self.server_addr}:{self.server_port}...")
         # Set target time for timing out.
         target_time = time.time() + timeout
-        while time.time() < target_time:
-            # Try configuring and connecting to the daemon server.
-            try:
-                self.logger.debug("\tAttempting...")
-                self._configure()
-                self.conn.connect((self.server_addr, self.server_port))
-                self.logger.info("\tConnected!")
-                self.conn.setblocking(False)
-                return
-            # If the server isn't up or reachable, wait and try again.
-            except socket.error as e:
-                time.sleep(1)
-        raise TimeoutError(f"Connection to server timed out after {timeout} seconds.")
+        for channel in Comms.Channels:
+            self.logger.info(f"Configuring & connecting {channel.name}...")
+            while time.time() < target_time:
+                # Try configuring and connecting to the daemon server.
+                try:
+                    # Create socket connection and configure for low latency and async.
+                    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    conn.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
+                    conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                    # Attempt to connect.
+                    conn.connect((self.server_addr, self.server_port))
+                    conn.setblocking(False)
+                    self.conns[channel] = conn
+                    break
+                # If the server isn't up or reachable, wait and try again.
+                except socket.error as e:
+                    # self.logger.debug(f"\tFailed to connect {Comms.Channels(i).name}: {e}\n\tTrying again...")
+                    self.logger.debug(f"\tRetrying connection...")
+                    time.sleep(1)
+            # If loop ended due to timeout, raise error, otherwise continue.
+            if time.time() >= target_time:
+                raise TimeoutError(f"Connection to server timed out after {timeout} seconds.")
+        self.logger.info("\tAll channels connected!")
 
     def _close(self):
         """
@@ -133,43 +162,45 @@ class SocketInterface(CommunicationInterface):
         self.conn.shutdown(socket.SHUT_WR)
         self.conn.close()
 
-    def _send_msg(self, message:bytes):
+    def _send_msg(self, channel:Comms.Channels, message:bytes):
         """
         @brief Sends a message to the server.
         
-        This method uses selectors to wait for the socket to be ready before 
-        sending SEND_BUFFER SIZE bytes at a time, making it non-blocking 
+        This method uses selectors to wait for the channel socket to be ready 
+        before sending SEND_BUFFER SIZE bytes at a time, making it non-blocking 
         compliant.
 
+        @param channel The channel to send the message on (CTRL, SEND, or RECV).
         @param message The message to send to the server.
         @exception RuntimeError Raised if the socket connection is broken or 
                                 if the socket is not ready to send.
         """
         # Wait to write.
-        _, ready_to_send, _ = select.select([], [self.conn], [])
+        _, ready_to_send, _ = select.select([], [self.conns[channel]], [])
         if ready_to_send:
             # Send bytes, buffer by buffer if necessary.
             while len(message):
-                bytes_sent = self.conn.send(message, SEND_BUFFER_SIZE)
+                bytes_sent = self.conns[channel].send(message, SEND_BUFFER_SIZE)
                 if bytes_sent == 0:
                     raise RuntimeError("Socket connection broken, nothing sent.")
                 message = message[bytes_sent:]
         else:
             self.logger.error("Socket not ready to send, cannot send message.")
 
-    def _recv_msg(self, timeout:int|None=None):
+    def _recv_msg(self, channel:Comms.Channels, timeout:int|None=None):
         """
         @brief Sends a message to the server.
         
-        This method uses selectors to wait for the socket to be ready before 
-        sending SEND_BUFFER SIZE bytes at a time, making it non-blocking 
-        compliant.
+        This method uses selectors to wait for the the channel socket to be 
+        ready before receiving up to RECEIVE_BUFFER SIZE bytes at a time, making 
+        it non-blocking compliant.
 
+        @param channel The channel to send the message on (CTRL, SEND, or RECV).
         @param timeout Maximum time in seconds to wait for a response from the
                        server. If None, it will wait indefinitely.
         """
         # Wait to select or timeout.
-        args = [[self.conn], [], []]
+        args = [[self.conns[channel]], [], []]
         if timeout is not None:
             args.append(timeout)
         ready_to_read, _, _ = select.select(*args)
@@ -181,14 +212,14 @@ class SocketInterface(CommunicationInterface):
             data = b''
             while True:
                 try:
-                    chunk = self.conn.recv(RECEIVE_BUFFER_SIZE)
+                    chunk = self.conns[channel].recv(RECEIVE_BUFFER_SIZE)
                     data += chunk
                     # If chunk is less than the buffer size, we're done.
                     if len(chunk) < RECEIVE_BUFFER_SIZE:
                         return data
                     # Otherwise, poll to see if there's more waiting.
                     else:
-                        _fd, _, _ = select.select([self.conn], [], [], 0)
+                        _fd, _, _ = select.select([self.conns[channel]], [], [], 0)
                         if not len(_fd):
                             return data
                 except socket.error as e:
@@ -227,6 +258,11 @@ class NSBClient:
         @see SocketInterface
         """
         self.comms = SocketInterface(server_address, server_port)
+        # Set system mode.
+        self.mode = Config.SystemMode.PULL
+        # If in PUSH mode, create a mapping to the RECV channel's file descriptor.
+        if self.mode == Config.SystemMode.PUSH:
+            self.RFD = self.comms.conns[Comms.Channels.RECV]
 
     def ping(self, timeout:int=DAEMON_RESPONSE_TIMEOUT):
         """
@@ -247,9 +283,9 @@ class NSBClient:
         nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message and get response.
-        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.comms._send_msg(Comms.Channels.CTRL, nsb_msg.SerializeToString())
         self.logger.info("PING: Pinged server.")
-        response = self.comms._recv_msg(timeout=timeout)
+        response = self.comms._recv_msg(Comms.Channels.CTRL, timeout=timeout)
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
@@ -278,7 +314,7 @@ class NSBClient:
         nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message.
-        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.comms._send_msg(Comms.Channels.CTRL, nsb_msg.SerializeToString())
         self.logger.info("EXIT: Sent command to server.")
         # End self.
         del self
@@ -336,13 +372,16 @@ class NSBAppClient(NSBClient):
         # Payload.
         nsb_msg.payload = payload
         # Send NSB message to daemon.
-        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
 
-    def receive(self, dest_id:str|None=None):
+    def receive(self, dest_id:str|None=None, timeout:int|None=DAEMON_RESPONSE_TIMEOUT):
         """
-        @brief Receives a payload that has been addressed to the client via NSB.
+        @brief Receives a payload via NSB.
+
+        The implementations of this function differ based on the system mode.
         
+        *In __PULL__ mode:*
         If the destination is specified, it will receive a payload for that 
         destination. This method creates an NSB RECEIVE message with the 
         appropriate information and payload and sends it to the daemon. It will
@@ -351,51 +390,72 @@ class NSBAppClient(NSBClient):
         message is found, the entire NSB message is returned to provide access
         to the metadata.
 
+        *In __PUSH__ mode:*
+        This method will await a message on the Comms.Channels.RECV channel 
+        using _select_, with an optional timeout. If you want to achieve polling
+        behavior, set _timeout_ to be 0. If this is being used to listen 
+        indefinitely, set the timeout to be None. Listening indefinitely 
+        will result in blocking behavior, but is recommended for asynchronous 
+        listener implementations.
+
         @param dest_id The identifier of the destination NSB client. The default
                        None value will automatically assume the destination is 
                        self.
+        @param timeout The amount of time in seconds to wait to receive data. 
+                       None denotes waiting indefinitely while 0 denotes polling
+                       behavior.
 
         @returns nsb_pb2.nsbm|None The NSB message containing the received 
                                    payload and metadata if a message is found, 
                                    otherwise None.
+
+        @see Config.SystemMode
+        @see SocketInterface._recv_msg()
         """
-        # Create and populate a FETCH message.
-        nsb_msg = nsb_pb2.nsbm()
-        # Manifest.
-        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.RECEIVE
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
-        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
-        # Metadata.
-        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
-        if dest_id:
-            nsb_msg.metadata.dest_id = dest_id
-        else:
-            nsb_msg.metadata.dest_id = self._id
-        # Send the NSB message + payload.
-        self.comms._send_msg(nsb_msg.SerializeToString())
-        self.logger.info("RECEIVE: Polling the server.")
-        # Get response.
-        response = self.comms._recv_msg(timeout=DAEMON_RESPONSE_TIMEOUT)
-        if len(response):
-            # Parse in message.
-            nsb_resp = nsb_pb2.nsbm()
-            nsb_resp.ParseFromString(response)
-            # Check to see that message is of expected operation.
-            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE:
-                # Check to see if there is a message at all.
-                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
-                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
-                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
-                                        f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{nsb_resp.payload}")
-                    return nsb_resp
-                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
-                    print("RECEIVE: Yikes, no message.")
-                    return None
+        if self.mode == Config.SystemMode.PULL:
+            # Create and populate a FETCH message.
+            nsb_msg = nsb_pb2.nsbm()
+            # Manifest.
+            nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.RECEIVE
+            nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+            nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+            # Metadata.
+            nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+            if dest_id:
+                nsb_msg.metadata.dest_id = dest_id
             else:
-                return None
-        else:
-            return None
+                nsb_msg.metadata.dest_id = self._id
+            # Send the NSB message + payload.
+            self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
+            self.logger.info("RECEIVE: Polling the server.")
+            # Get response.
+            response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+            if len(response):
+                # Parse in message.
+                nsb_resp = nsb_pb2.nsbm()
+                nsb_resp.ParseFromString(response)
+                # Check to see that message is of expected operation.
+                if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE:
+                    # Check to see if there is a message at all.
+                    if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                        self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                            f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                            f"{nsb_resp.metadata.dest_id}: " + \
+                                            f"{nsb_resp.payload}")
+                        return nsb_resp
+                    elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                        self.logger.info("RECEIVE: Yikes, no message.")
+                        return None
+        elif self.mode == Config.SystemMode.PUSH:
+            # Listen for incoming messages, indefinitely if necessary.
+            nsb_msg = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+            # Check that an NSB message was retrieved.
+            if nsb_msg:
+                pass
+
+
+        # If nothing, return None.
+        return None
 
 ### NSB Simulator Client ###
 
@@ -450,10 +510,10 @@ class NSBSimClient(NSBClient):
             nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
             nsb_msg.metadata.src_id = src_id
         # Send the NSB message + payload.
-        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
         self.logger.info("FETCH: Sent fetch request to server.")
         # Get response.
-        response = self.comms._recv_msg(timeout=DAEMON_RESPONSE_TIMEOUT)
+        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=DAEMON_RESPONSE_TIMEOUT)
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
@@ -503,7 +563,7 @@ class NSBSimClient(NSBClient):
         nsb_msg.metadata.payload_size = len(payload)
         nsb_msg.payload = payload
         # Send the NSB message + payload.
-        self.comms._send_msg(nsb_msg.SerializeToString())
+        self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("POST: Posted message + payload to server.")
 
 ### TEST FUNCTIONS ###
