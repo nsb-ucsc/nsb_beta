@@ -159,8 +159,9 @@ class SocketInterface(Comms):
 
         Attempts to shutdown the socket, then closes.
         """
-        self.conn.shutdown(socket.SHUT_WR)
-        self.conn.close()
+        for _, conn in self.conns.items():
+            conn.shutdown(socket.SHUT_WR)
+            conn.close()
 
     def _send_msg(self, channel:Comms.Channels, message:bytes):
         """
