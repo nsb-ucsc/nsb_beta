@@ -1,11 +1,4 @@
 ---
-connection:
-  server_address: 127.0.0.1
-  server_port: 65432
-  buffer_size: 4096 # Max buffer size (in bytes) for sending or receiving over sockets.
-  connection_timeout: 10 # Max time (in seconds) to wait when trying to connect to the daemon.
-  response_timeout: 5 # Max time (in seconds) to wait for a response from the server.
-
 system:
   mode: 0 # PULL (clients must request to fetch/receive payloads), PUSH (payloads will be forwarded when sent/posted)
   use_db: true # Whether or not to use in-memory storage of payloads (via Redis)
