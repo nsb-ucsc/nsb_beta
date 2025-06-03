@@ -1,7 +1,7 @@
 import socket
 import select
 import time
-import nsb_pb2
+import build.nsb_pb2 as nsb_pb2
 import asyncio
 
 # Set up logging.

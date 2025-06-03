@@ -26,10 +26,30 @@
 #include <sqlite3.h>
 
 #include "nsb.pb.h"
-
+#include <yaml-cpp/yaml.h>
 
 /** @brief The maximum buffer size for sending and receiving messages. */
 int MAX_BUFFER_SIZE = 4096;
+
+/**
+ * @brief Configuration parameters struct.
+ * 
+ * This struct contains the configuration parameters loaded from the 
+ * configuration file.
+ */
+ struct ConfigParams {
+    enum class SystemMode {
+        PULL = 0,
+        PUSH = 1
+    };
+    std::string SERVER_ADDRESS;
+    std::string SERVER_PORT;
+    int BUFFER_SIZE;
+    int CONNECTION_TIMEOUT;
+    int RESPONSE_TIMEOUT;
+    SystemMode SYSTEM_MODE;
+    bool USE_DB;
+ };
 
 /**
  * @brief Message storage struct.
@@ -62,8 +82,9 @@ public:
      * This method initializes attributes and verifies the Protobuf version.
      * 
      * @param s_port The port that NSB clients will connect to.
+     * @param filename The path to the YAML configuration file.
      */
-    NSBDaemon(int s_port);
+    NSBDaemon(int s_port, std::string filename);
     /**
      * @brief Destroy the NSBDaemon::NSBDaemon object.
      * 
@@ -96,6 +117,8 @@ public:
     bool is_running() const;
 
 private:
+    /** @brief Configuration object. */
+    ConfigParams cfg;
     /** @brief A flag set to indicate daemon server status. */
     std::atomic<bool> running;
     /** @brief The server port accessible to client connections. */
@@ -116,6 +139,16 @@ private:
      * @see handle_receive()
      */
     std::list<MessageEntry> rx_buffer;
+     /**
+     * @brief Configure the daemon with a YAML file.
+     * 
+     * This method uses the passed-in YAML file to set parameters. Some or all
+     * of these parameters will be passed to clients that connect through the 
+     * INIT message transaction.
+     * 
+     * @see handle_init()
+     */
+    void configure(std::string filename);
     /**
      * @brief Start the socket-connected server within the NSB Daemon.
      * 
@@ -160,6 +193,15 @@ private:
 
     /* Operation-specific handlers. */
 
+    /**
+     * @brief Handles INIT messages.
+     * 
+     * When the server receives an INIT message from a client, it will register
+     * the identifier of the client, its address, and its different channel port 
+     * information. In response, it will pass on the configuration parameters to
+     * the client so that they can be inherited across the NSB system.
+     */
+    void handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     /**
      * @brief Handles PING messages.
      * 

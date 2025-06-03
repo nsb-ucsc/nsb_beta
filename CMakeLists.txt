@@ -9,47 +9,58 @@ set(CMAKE_CXX_COMPILER g++)
 include_directories("/opt/homebrew/opt/abseil/include")
 link_directories("/opt/homebrew/opt/abseil/lib")
 
-# Include Protobuf packages.
+
+
+# Get YAML, Protobuf and Python packages.
 find_package(Protobuf REQUIRED)
-message("Protobuf_VERSION: ${Protobuf_VERSION}")
-message("Protobuf_LIBRARIES: ${Protobuf_LIBRARIES}")
-message("Protobuf_INCLUDE_DIRS: ${Protobuf_INCLUDE_DIRS}")
-message("Protobuf_PROTOC_EXECUTABLE: ${Protobuf_PROTOC_EXECUTABLE}")
-include_directories(${Protobuf_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+find_package(PkgConfig REQUIRED)
+find_package(yaml-cpp REQUIRED)
+message(STATUS "YAML_CPP_INCLUDE_DIR: ${YAML_CPP_INCLUDE_DIR}")
 
-# Generate protobuf files
-set(PROTO_FILES
-    nsb.proto
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+message(STATUS "Current working directory: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Binary directory: ${CMAKE_CURRENT_BINARY_DIR}")
+
+include_directories(${YAML_CPP_INCLUDE_DIR})
+
+# Generate protobuf files.
+find_program(PROTOBUF_PROTOC protoc REQUIRED)
+message(STATUS "Protobuf compiler: ${PROTOBUF_PROTOC}")
+
+set(PROTO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/nsb.proto")
+message(STATUS "Protobuf file: ${PROTO_FILE}")
+set(protoc_args 
+    "--cpp_out=${CMAKE_CURRENT_BINARY_DIR}"
+    "--python_out=${CMAKE_CURRENT_BINARY_DIR}"
+    "-I"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/nsb.proto"
 )
-set(Protobuf_PROTOC_EXECUTABLE /opt/homebrew/opt/protobuf/bin/protoc-29.3.0)
-message("Protobuf_PROTOC_EXECUTABLE changed to: ${Protobuf_PROTOC_EXECUTABLE}")
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
-# set(PROTOC_EXECUTABLE /opt/homebrew/opt/protobuf/bin/protoc)
-# # find_program(PROTOC_EXECUTABLE protoc)
-# execute_process(
-#     COMMAND ${PROTOC_EXECUTABLE} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/nsb.proto
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     RESULT_VARIABLE result
-# )
-# if(result)
-#     message(FATAL_ERROR "Protobuf compilation failed.")
-# else()
-#     message(STATUS "Protobuf compilation succeeded.")
-# endif()
+message(STATUS "Protobuf arguments: ${protoc_args}")
 
-# # Include the generated protobuf files
-# set(PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/nsb.pb.cc")
-# set(PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/nsb.pb.h")
+set(PB_CPP_OUT "${CMAKE_CURRENT_BINARY_DIR}/nsb.pb.cc" "${CMAKE_CURRENT_BINARY_DIR}/nsb.pb.h")
+set(PB_PY_OUT "${CMAKE_CURRENT_BINARY_DIR}/nsb_pb2.py")
+
+# Create custom command.
+add_custom_command(
+    OUTPUT ${PB_CPP_OUT} ${PB_PY_OUT}
+    COMMAND ${PROTOBUF_PROTOC}
+    ARGS ${protoc_args}
+    DEPENDS ${PROTO_FILE}
+)
+set_source_files_properties(${output} PROPERTIES GENERATED TRUE)
+# Create and link libraries.
+
+
+
 
 # Add executable
 add_executable(nsb_daemon 
     nsb_daemon.cc
-    ${PROTO_SRCS}
-    ${PROTO_HDRS}
+    ${PB_CPP_OUT}
 )
 
-# Link against protobuf
 target_link_libraries(nsb_daemon
     ${Protobuf_LIBRARIES}
     absl_raw_logging_internal
@@ -59,4 +70,9 @@ target_link_libraries(nsb_daemon
     absl_log_internal_conditions
     absl_log_severity
     absl_strings
+    "/opt/homebrew/lib/libyaml-cpp.dylib"
+)
+target_include_directories(nsb_daemon PUBLIC 
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${Protobuf_INCLUDE_DIRS}
 )

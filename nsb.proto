@@ -58,5 +58,8 @@ message nsbm {
     }
     Metadata metadata = 2;
 
-    bytes payload = 3;
+    oneof message {
+        bytes payload = 3;
+        int32 msg_key = 4;
+    }
 }

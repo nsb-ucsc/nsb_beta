@@ -46,7 +46,7 @@
             "name": "Run Daemon & App Client",
             "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
             "stopAll": true,
-            "preLaunchTask": "Protobuf: Generate NSB Message Definitions"
+            "preLaunchTask": "CMake: Build NSB Daemon"
         }
     ]
 }

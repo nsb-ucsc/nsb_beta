@@ -2,8 +2,9 @@
 
 #include "nsb_daemon.h"
 
-NSBDaemon::NSBDaemon(int s_port) : running(false), server_port(s_port) {
+NSBDaemon::NSBDaemon(int s_port, std::string filename) : running(false), server_port(s_port) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+    configure(filename);
 }
 
 NSBDaemon::~NSBDaemon() {
@@ -21,6 +22,25 @@ void NSBDaemon::start() {
         start_server(server_port);
         std::cout << "NSBDaemon started." << std::endl;
     }
+}
+
+void NSBDaemon::configure(std::string filename) {
+    // Open YAML file.
+    YAML::Node config = YAML::LoadFile("config.yaml");
+    // Check if the file is valid.
+    if (config.IsNull()) {
+        std::cerr << "Failed to load configuration file: " << filename << std::endl;
+        return;
+    }
+    // Parse the configuration file.
+    cfg.SERVER_ADDRESS = config["connection"]["server_address"].as<std::string>();
+    cfg.SERVER_PORT = config["connection"]["server_port"].as<int>();
+    cfg.BUFFER_SIZE = config["connection"]["buffer_size"].as<int>();
+    cfg.CONNECTION_TIMEOUT = config["connection"]["connection_timeout"].as<int>();
+    cfg.RESPONSE_TIMEOUT = config["connection"]["response_timeout"].as<int>();
+    int mode = config["system"]["mode"].as<int>();
+    cfg.SYSTEM_MODE = static_cast<ConfigParams::SystemMode>(mode);
+    cfg.USE_DB = config["system"]["use_db"].as<bool>();
 }
 
 void NSBDaemon::start_server(int port) {
@@ -368,7 +388,7 @@ bool NSBDaemon::is_running() const {
  */
 int main() {
     std::cout << "Starting daemon...\n";
-    NSBDaemon daemon = NSBDaemon(65432);
+    NSBDaemon daemon = NSBDaemon(65432, "config.yaml");
     daemon.start();
     daemon.stop();
     std::cout << "Exit.";
