@@ -42,13 +42,30 @@ int MAX_BUFFER_SIZE = 4096;
         PULL = 0,
         PUSH = 1
     };
-    std::string SERVER_ADDRESS;
-    std::string SERVER_PORT;
-    int BUFFER_SIZE;
-    int CONNECTION_TIMEOUT;
-    int RESPONSE_TIMEOUT;
     SystemMode SYSTEM_MODE;
     bool USE_DB;
+ };
+
+/**
+ * @brief Client details struct.
+ * 
+ * This struct contains address/port information for each client that connects. 
+ * This doesn't have immediate use but may be useful in the future.
+ * 
+ */
+ struct ClientDetails {
+    std::string address;
+    int ch_CTRL;
+    int ch_SEND;
+    int ch_RECV;
+    ClientDetails(std::string addr, int ctrl, int send, int recv)
+        : address(std::move(addr)), ch_CTRL(ctrl), ch_SEND(send), ch_RECV(recv) {}
+    ClientDetails(nsb::nsbm* nsb_msg) {
+        address = nsb_msg->intro().address();
+        ch_CTRL = nsb_msg->intro().ch_ctrl();
+        ch_SEND = nsb_msg->intro().ch_send();
+        ch_RECV = nsb_msg->intro().ch_recv();
+    }
  };
 
 /**
@@ -123,6 +140,8 @@ private:
     std::atomic<bool> running;
     /** @brief The server port accessible to client connections. */
     int server_port;
+    /** @brief A mapping of client identifiers to their details. */
+    std::map<std::string, ClientDetails> client_lookup;
     /**
      * @brief Transmission buffer to store sent payloads waiting to be fetched.
      * 

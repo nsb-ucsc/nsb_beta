@@ -67,6 +67,24 @@ class Config:
         PULL = 0
         PUSH = 1
 
+    def __init__(self, nsb_msg: nsb_pb2.nsbm):
+        """
+        @brief Initializes configuration with a NSB message.
+
+        @param nsb_msg The NSB INIT response message from the daemon server 
+        containing the configuration. The message should have a 'config' field.
+
+        @see NSBClient.initialize()
+        """
+        self.sys_mode = Config.SystemMode(nsb_msg.config.sys_mode)
+        self.use_db = nsb_msg.config.use_db
+
+    def __repr__(self):
+        """
+        @brief String representation of the configuration.
+        """
+        return f"[CONFIG] System Mode: {self.sys_mode.name} | Use Database: {self.use_db})"
+
 class Comms:
     """
     @brief Base class for communication interfaces.
@@ -259,11 +277,43 @@ class NSBClient:
         @see SocketInterface
         """
         self.comms = SocketInterface(server_address, server_port)
-        # Set system mode.
-        self.mode = Config.SystemMode.PULL
-        # If in PUSH mode, create a mapping to the RECV channel's file descriptor.
-        if self.mode == Config.SystemMode.PUSH:
-            self.RFD = self.comms.conns[Comms.Channels.RECV]
+        # Origin indicator to mark outgoing messages.
+        self.og_indicator = None
+
+    def initialize(self):
+        """
+        @brief Initializes configuration with the server.
+
+        This method sends an INIT message containing information about itself to 
+        the server and gets a response containing configuration parameters.
+        """
+        # Create and populate an INIT message.
+        nsb_msg = nsb_pb2.nsbm()
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.INIT
+        nsb_msg.manifest.og = self.og_indicator
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        nsb_msg.intro.address = socket.getnameinfo(self.comms.conns[Comms.Channels.CTRL].getsockname(), socket.NI_NUMERICSERV)[0]
+        nsb_msg.intro.ch_CTRL = int(socket.getnameinfo(self.comms.conns[Comms.Channels.CTRL].getsockname(), socket.NI_NUMERICSERV)[1])
+        nsb_msg.intro.ch_SEND = int(socket.getnameinfo(self.comms.conns[Comms.Channels.SEND].getsockname(), socket.NI_NUMERICSERV)[1])
+        nsb_msg.intro.ch_RECV = int(socket.getnameinfo(self.comms.conns[Comms.Channels.RECV].getsockname(), socket.NI_NUMERICSERV)[1])
+        self.logger.debug(f"Address: {nsb_msg.intro.address} | CTRL: {nsb_msg.intro.ch_CTRL} | " + \
+                          f"SEND: {nsb_msg.intro.ch_SEND} | RECV: {nsb_msg.intro.ch_RECV}")
+        # Send the message over the CTRL
+        self.comms._send_msg(Comms.Channels.CTRL, nsb_msg.SerializeToString())
+        self.logger.debug(f"Sent INIT! Waiting...")
+        response = self.comms._recv_msg(Comms.Channels.CTRL, timeout=DAEMON_RESPONSE_TIMEOUT)
+        if len(response):
+                # Parse in message.
+                nsb_resp = nsb_pb2.nsbm()
+                nsb_resp.ParseFromString(response)
+                # Check to see that message is of expected operation.
+                if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.INIT:
+                    # Get the configuration.
+                    if nsb_resp.HasField('config'):
+                        self.cfg = Config(nsb_resp)
+                        self.logger.info(f"{self.cfg}")
+                        return
+        raise RuntimeError("Failed to initialize NSB client. No response from server or invalid response.")
 
     def ping(self, timeout:int=DAEMON_RESPONSE_TIMEOUT):
         """
@@ -281,7 +331,7 @@ class NSBClient:
         # Create and populate a PING message.
         nsb_msg = nsb_pb2.nsbm()
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.PING
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message and get response.
         self.comms._send_msg(Comms.Channels.CTRL, nsb_msg.SerializeToString())
@@ -312,7 +362,7 @@ class NSBClient:
         # Create and populate an EXIT message.
         nsb_msg = nsb_pb2.nsbm()
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.EXIT
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Send the message.
         self.comms._send_msg(Comms.Channels.CTRL, nsb_msg.SerializeToString())
@@ -347,7 +397,8 @@ class NSBAppClient(NSBClient):
         self._id = identifier
         self.logger = logging.getLogger(f"{self._id} (app)")
         super().__init__(server_address, server_port)
-
+        self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        
     def send(self, dest_id:str, payload:bytes):
         """
         @brief Sends a payload to the specified destination via NSB.
@@ -363,7 +414,7 @@ class NSBAppClient(NSBClient):
         nsb_msg = nsb_pb2.nsbm()
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.SEND
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Metadata.
         nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
@@ -376,7 +427,7 @@ class NSBAppClient(NSBClient):
         self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
 
-    def receive(self, dest_id:str|None=None, timeout:int|None=DAEMON_RESPONSE_TIMEOUT):
+    def receive(self, dest_id:str|None=None, timeout:int|None=None):
         """
         @brief Receives a payload via NSB.
 
@@ -413,12 +464,12 @@ class NSBAppClient(NSBClient):
         @see Config.SystemMode
         @see SocketInterface._recv_msg()
         """
-        if self.mode == Config.SystemMode.PULL:
+        if self.cfg.sys_mode == Config.SystemMode.PULL:
             # Create and populate a FETCH message.
             nsb_msg = nsb_pb2.nsbm()
             # Manifest.
             nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.RECEIVE
-            nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+            nsb_msg.manifest.og = self.og_indicator
             nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
             # Metadata.
             nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
@@ -447,7 +498,7 @@ class NSBAppClient(NSBClient):
                     elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                         self.logger.info("RECEIVE: Yikes, no message.")
                         return None
-        elif self.mode == Config.SystemMode.PUSH:
+        elif self.cfg.sys_mode == Config.SystemMode.PUSH:
             # Listen for incoming messages, indefinitely if necessary.
             nsb_msg = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
             # Check that an NSB message was retrieved.
@@ -467,18 +518,22 @@ class NSBSimClient(NSBClient):
     This client provides the high-level NSB interface to fetch and post messages 
     via NSB by communicating to the daemon.
     """
-    def __init__(self, server_address:str, server_port:int):
+    def __init__(self, identifier:str, server_address:str, server_port:int):
         """
         @brief Constructs the NSB Simulator Client interface.
 
         This method uses the base NSBClient's constructor, which initializes a 
         network interface to connect and communicate with the NSB daemon.
 
+        @param identifier The identifier for this NSB application client, which
+               should correspond to the identifier in NSB and simulator.
         @param server_address The address of the NSB daemon.
         @param server_port The port of the NSB daemon.
         """
-        self.logger = logging.getLogger("(SimClient)")
+        self._id = identifier
+        self.logger = logging.getLogger(f"{self._id} (sim)")
         super().__init__(server_address, server_port)
+        self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
 
     def fetch(self, src_id:str|None=None):
         """
@@ -504,7 +559,7 @@ class NSBSimClient(NSBClient):
         nsb_msg = nsb_pb2.nsbm()
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.FETCH
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
         # Metadata.
         if src_id:
@@ -554,7 +609,7 @@ class NSBSimClient(NSBClient):
         nsb_msg = nsb_pb2.nsbm()
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.POST
-        nsb_msg.manifest.og = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE if success else \
             nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE
         # Metadata.
@@ -581,7 +636,9 @@ def test_ping():
 def test_lifecycle():
     app1 = NSBAppClient("billy", "127.0.0.1", 65432)
     app2 = NSBAppClient("bob", "127.0.0.1", 65432)
-    sim = NSBSimClient("127.0.0.1", 65432)
+    sim = NSBSimClient("sim", "127.0.0.1", 65432)
+    app1.initialize()
+    app2.initialize()
     app1.send("bob", b"hello world")
     time.sleep(2)
     fetched_msg = sim.fetch()

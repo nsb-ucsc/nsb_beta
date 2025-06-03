@@ -58,8 +58,27 @@ message nsbm {
     }
     Metadata metadata = 2;
 
+    message ConfigParams {
+        enum SystemMode {
+            PULL = 0;
+            PUSH = 1;
+        }
+        SystemMode sys_mode = 1;
+        bool use_db = 2;
+    }
+
+    message IntroDetails {
+        string identifier = 1;
+        string address = 2;
+        int32 ch_CTRL = 3;
+        int32 ch_SEND = 4;
+        int32 ch_RECV = 5;
+    }
+
     oneof message {
         bytes payload = 3;
         int32 msg_key = 4;
+        IntroDetails intro = 5;
+        ConfigParams config = 6;
     }
 }
