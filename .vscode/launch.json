@@ -16,7 +16,6 @@
             "externalConsole": false,
             "internalConsoleOptions": "openOnSessionStart",
             "MIMode": "lldb",
-            // "miDebuggerPath": "/usr/bin/gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -24,9 +23,6 @@
                     "ignoreFailures": true
                 }
             ],
-            "presentation": {
-                "order": 1
-            },
             "preLaunchTask": "CMake: Build NSB Daemon"
         },
         {
