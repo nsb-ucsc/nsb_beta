@@ -287,15 +287,17 @@ class NSBClient:
         This method sends an INIT message containing information about itself to 
         the server and gets a response containing configuration parameters.
         """
+        self.logger.info(f"Initializing {self.__getattribute__("_id")} with server at {self.comms.server_addr}:{self.comms.server_port}...")
         # Create and populate an INIT message.
         nsb_msg = nsb_pb2.nsbm()
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.INIT
         nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
-        nsb_msg.intro.address = socket.getnameinfo(self.comms.conns[Comms.Channels.CTRL].getsockname(), socket.NI_NUMERICSERV)[0]
-        nsb_msg.intro.ch_CTRL = int(socket.getnameinfo(self.comms.conns[Comms.Channels.CTRL].getsockname(), socket.NI_NUMERICSERV)[1])
-        nsb_msg.intro.ch_SEND = int(socket.getnameinfo(self.comms.conns[Comms.Channels.SEND].getsockname(), socket.NI_NUMERICSERV)[1])
-        nsb_msg.intro.ch_RECV = int(socket.getnameinfo(self.comms.conns[Comms.Channels.RECV].getsockname(), socket.NI_NUMERICSERV)[1])
+        nsb_msg.intro.identifier = self.__getattribute__("_id")
+        nsb_msg.intro.address = self.comms.conns[Comms.Channels.CTRL].getsockname()[0]
+        nsb_msg.intro.ch_CTRL = self.comms.conns[Comms.Channels.CTRL].getsockname()[1]
+        nsb_msg.intro.ch_SEND = self.comms.conns[Comms.Channels.SEND].getsockname()[1]
+        nsb_msg.intro.ch_RECV = self.comms.conns[Comms.Channels.RECV].getsockname()[1]
         self.logger.debug(f"Address: {nsb_msg.intro.address} | CTRL: {nsb_msg.intro.ch_CTRL} | " + \
                           f"SEND: {nsb_msg.intro.ch_SEND} | RECV: {nsb_msg.intro.ch_RECV}")
         # Send the message over the CTRL
@@ -480,31 +482,24 @@ class NSBAppClient(NSBClient):
             # Send the NSB message + payload.
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
             self.logger.info("RECEIVE: Polling the server.")
-            # Get response.
-            response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
-            if len(response):
-                # Parse in message.
-                nsb_resp = nsb_pb2.nsbm()
-                nsb_resp.ParseFromString(response)
-                # Check to see that message is of expected operation.
-                if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE:
-                    # Check to see if there is a message at all.
-                    if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
-                        self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
-                                            f"bytes from {nsb_resp.metadata.src_id} to " + \
-                                            f"{nsb_resp.metadata.dest_id}: " + \
-                                            f"{nsb_resp.payload}")
-                        return nsb_resp
-                    elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
-                        self.logger.info("RECEIVE: Yikes, no message.")
-                        return None
-        elif self.cfg.sys_mode == Config.SystemMode.PUSH:
-            # Listen for incoming messages, indefinitely if necessary.
-            nsb_msg = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
-            # Check that an NSB message was retrieved.
-            if nsb_msg:
-                pass
-
+        # Get response from request or just wait for message to come in.
+        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            # Check to see that message is of expected operation.
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE or nsb_pb2.nsbm.Manifest.Operation.FORWARD:
+                # Check to see if there is a message at all.
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{nsb_resp.payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("RECEIVE: Yikes, no message.")
+                    return None
 
         # If nothing, return None.
         return None
@@ -555,26 +550,28 @@ class NSBSimClient(NSBClient):
                                    payload and metadata if a message is found, 
                                    otherwise None.
         """
-        # Create and populate a FETCH message.
-        nsb_msg = nsb_pb2.nsbm()
-        # Manifest.
-        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.FETCH
-        nsb_msg.manifest.og = self.og_indicator
-        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
-        # Metadata.
-        if src_id:
-            nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
-            nsb_msg.metadata.src_id = src_id
-        # Send the NSB message + payload.
-        self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
-        self.logger.info("FETCH: Sent fetch request to server.")
-        # Get response.
+        if self.cfg.sys_mode == Config.SystemMode.PULL:
+            # Create and populate a FETCH message.
+            nsb_msg = nsb_pb2.nsbm()
+            # Manifest.
+            nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.FETCH
+            nsb_msg.manifest.og = self.og_indicator
+            nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+            # Metadata.
+            if src_id:
+                nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+                nsb_msg.metadata.src_id = src_id
+            # Send the NSB message + payload.
+            self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
+            self.logger.info("FETCH: Sent fetch request to server.")
+        # Get response from request or await forwarded message.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=DAEMON_RESPONSE_TIMEOUT)
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
-            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FETCH:
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FETCH or \
+                nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FORWARD:
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
                     self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
@@ -639,6 +636,7 @@ def test_lifecycle():
     sim = NSBSimClient("sim", "127.0.0.1", 65432)
     app1.initialize()
     app2.initialize()
+    sim.initialize()
     app1.send("bob", b"hello world")
     time.sleep(2)
     fetched_msg = sim.fetch()
@@ -658,8 +656,12 @@ def test_lifecycle():
         print("No message received.")
     app2.exit()
 
+def test_push_mode():
+    pass
+
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
     test_lifecycle()
+    # test_push_mode()

@@ -149,9 +149,13 @@ void NSBDaemon::start_server(int port) {
                     perror("Accept failed.");
                     continue;
                 }
-                char addr_string[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &(client_addr.sin_addr), addr_string, INET_ADDRSTRLEN);
-                printf("New connection accepted: %s\n", addr_string);
+                char client_ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
+                int client_port = ntohs(client_addr.sin_port);
+                printf("Channel connected from IP: %s, Port: %d\n", client_ip, client_port);
+                // Add to the FD lookup.
+                std::string key = std::string(client_ip) + ":" + std::to_string(client_port);
+                fd_lookup.emplace(key, channel_fd);
                 // Add client FD to the pool of client FDs.
                 channel_fds.push_back(channel_fd);
             }
@@ -222,7 +226,7 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
         std::size_t size = nsb_response.ByteSizeLong();
         void* r_buffer = malloc(size);
         nsb_response.SerializeToArray(r_buffer, size);
-        printf("\tBack at ya! (%dB) %s\n", static_cast<int>(size), (char *)r_buffer);
+        printf("\tBack at ya! (%luB) %s\n", static_cast<unsigned long>(size), static_cast<char *>(r_buffer));
         send(fd, r_buffer, size, 0);
     }
 }
@@ -230,7 +234,14 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
 void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     // Get client details.
     if (incoming_msg->has_intro()) {
-        client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg));
+        if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::APP_CLIENT) {
+            client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
+        } else if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::SIM_CLIENT) {
+            sim = ClientDetails(incoming_msg, fd_lookup);
+        } else {
+            printf("Unknown originator.");
+            return;
+        }
     } else {
         printf("No client details provided in INIT message.\n");
         return;
@@ -255,19 +266,47 @@ void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
 }
 
 void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
-    // Parse the metadata.
-    nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
-    // Store payload.
-    MessageEntry msg_entry = MessageEntry(
-        in_metadata.src_id(),
-        in_metadata.dest_id(),
-        incoming_msg->payload()
-    );
-    printf("\tTX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-        in_metadata.payload_size(), msg_entry.source.c_str(),
-        msg_entry.destination.c_str(), msg_entry.payload.c_str());
-    // Add it to the buffer.
-    tx_buffer.push_back(msg_entry);
+    if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
+        // Parse the metadata.
+        nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+        // Store payload.
+        MessageEntry msg_entry = MessageEntry(
+            in_metadata.src_id(),
+            in_metadata.dest_id(),
+            incoming_msg->payload()
+        );
+        printf("\tTX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+            in_metadata.payload_size(), msg_entry.source.c_str(),
+            msg_entry.destination.c_str(), msg_entry.payload.c_str());
+        // Add it to the buffer.
+        tx_buffer.push_back(msg_entry);
+    } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
+        // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
+        outgoing_msg->Clear();
+        outgoing_msg->MergeFrom(*incoming_msg);
+        nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
+        out_manifest->set_op(nsb::nsbm::Manifest::FORWARD);
+        // Send to sim via RECV channel.
+        fd_set write_fd;
+        FD_ZERO(&write_fd);
+        FD_SET(sim.ch_RECV_fd, &write_fd);
+        // Check if the sim RECV channel is available.
+        printf("\tAttempting to forward message to sim RECV channel (FD:%d)...\n", sim.ch_RECV_fd);
+        if (select(sim.ch_RECV_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
+            if (FD_ISSET(sim.ch_RECV_fd, &write_fd)) {
+                // Serialize the message and send it to the sim RECV channel.
+                std::size_t size = outgoing_msg->ByteSizeLong();
+                void* buffer = malloc(size);
+                outgoing_msg->SerializeToArray(buffer, size);
+                send(sim.ch_RECV_fd, buffer, size, 0);
+                printf("\tForwarded message to sim RECV channel (%zu B)\n", size);
+                free(buffer);
+            }
+        } else {
+            printf("\tSim RECV channel not available for forwarding.\n");
+        }
+    }
+    
 }
 
 void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -296,8 +335,8 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
             tx_buffer.pop_front();
         }
     }
-    printf("\tTX entry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-        static_cast<int>(fetched_message.payload.size()),
+    printf("\tTX entry retrieved | %zu B | src: %s | dest: %s\n\tPayload: %s\n",
+        fetched_message.payload.size(),
         fetched_message.source.c_str(),
         fetched_message.destination.c_str(),
         fetched_message.payload.c_str());
@@ -363,8 +402,8 @@ void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg,
             fetched = true;
         }
     }
-    printf("\tRX entry retrieved | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-        static_cast<int>(received_message.payload.size()),
+    printf("\tRX entry retrieved | %zu B | src: %s | dest: %s\n\tPayload: %s\n",
+        received_message.payload.size(),
         received_message.source.c_str(),
         received_message.destination.c_str(),
         received_message.payload.c_str());

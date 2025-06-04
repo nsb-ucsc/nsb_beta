@@ -55,16 +55,23 @@ int MAX_BUFFER_SIZE = 4096;
  */
  struct ClientDetails {
     std::string address;
-    int ch_CTRL;
-    int ch_SEND;
-    int ch_RECV;
-    ClientDetails(std::string addr, int ctrl, int send, int recv)
-        : address(std::move(addr)), ch_CTRL(ctrl), ch_SEND(send), ch_RECV(recv) {}
-    ClientDetails(nsb::nsbm* nsb_msg) {
+    int ch_CTRL_port;
+    int ch_CTRL_fd;
+    int ch_SEND_port;
+    int ch_SEND_fd;
+    int ch_RECV_port;
+    int ch_RECV_fd;
+    ClientDetails() : address(""), ch_CTRL_port(0), ch_CTRL_fd(-1), ch_SEND_port(0),
+                      ch_SEND_fd(-1), ch_RECV_port(0), ch_RECV_fd(-1) {}
+    ClientDetails(nsb::nsbm* nsb_msg, std::map<std::string, int> fd_lookup) {
         address = nsb_msg->intro().address();
-        ch_CTRL = nsb_msg->intro().ch_ctrl();
-        ch_SEND = nsb_msg->intro().ch_send();
-        ch_RECV = nsb_msg->intro().ch_recv();
+        ch_CTRL_port = nsb_msg->intro().ch_ctrl();
+        ch_SEND_port = nsb_msg->intro().ch_send();
+        ch_RECV_port = nsb_msg->intro().ch_recv();
+        // Populate the file descriptors.
+        std::string ctrl_addr = address + ":" + std::to_string(ch_CTRL_port);
+        ch_CTRL_fd = fd_lookup.find(ctrl_addr) != fd_lookup.end() ?
+                     fd_lookup[ctrl_addr] : -1;
     }
  };
 
@@ -140,8 +147,12 @@ private:
     std::atomic<bool> running;
     /** @brief The server port accessible to client connections. */
     int server_port;
+    /** @brief Details of the simulator client. */
+    ClientDetails sim;
     /** @brief A mapping of client identifiers to their details. */
     std::map<std::string, ClientDetails> client_lookup;
+    /** @brief A mapping of "address:port" strings to their file descriptors. */
+    std::map<std::string, int> fd_lookup;
     /**
      * @brief Transmission buffer to store sent payloads waiting to be fetched.
      * 

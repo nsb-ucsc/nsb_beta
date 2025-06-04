@@ -1,4 +1,4 @@
 ---
 system:
-  mode: 0 # PULL (clients must request to fetch/receive payloads), PUSH (payloads will be forwarded when sent/posted)
+  mode: 1 # PULL (clients must request to fetch/receive payloads), PUSH (payloads will be forwarded when sent/posted)
   use_db: true # Whether or not to use in-memory storage of payloads (via Redis)
