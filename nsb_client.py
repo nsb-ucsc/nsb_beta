@@ -7,6 +7,7 @@ import asyncio
 # Set up logging.
 import logging
 from enum import IntEnum
+import threading
 
 ## @cond
 logging.basicConfig(level=logging.DEBUG,
@@ -127,7 +128,7 @@ class SocketInterface(Comms):
         self.server_addr = server_address
         self.server_port = server_port
         # Create logger.
-        self.logger = logging.getLogger("NSBClient")
+        self.logger = logging.getLogger(f"SIF({self.server_addr}:{self.server_port})")
         # Initialize set of connections.
         self.conns = {}
         self._connect()
@@ -417,7 +418,7 @@ class NSBAppClient(NSBClient):
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.SEND
         nsb_msg.manifest.og = self.og_indicator
-        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE
         # Metadata.
         nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
         nsb_msg.metadata.src_id = self._id
@@ -530,7 +531,7 @@ class NSBSimClient(NSBClient):
         super().__init__(server_address, server_port)
         self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
 
-    def fetch(self, src_id:str|None=None):
+    def fetch(self, src_id:str|None=None, timeout=None):
         """
         @brief Fetches a payload that needs to be sent over the simulated 
                network.
@@ -545,6 +546,9 @@ class NSBSimClient(NSBClient):
         @param src_id The identifier of the targe source. The default None value 
                will result in fetching the most recent message, regardless
                of source.
+        @param timeout The amount of time in seconds to wait to receive data. 
+               None denotes waiting indefinitely while 0 denotes polling 
+               behavior.
 
         @returns nsb_pb2.nsbm|None The NSB message containing the fetched 
                                    payload and metadata if a message is found, 
@@ -565,7 +569,7 @@ class NSBSimClient(NSBClient):
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
             self.logger.info("FETCH: Sent fetch request to server.")
         # Get response from request or await forwarded message.
-        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=DAEMON_RESPONSE_TIMEOUT)
+        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
@@ -639,7 +643,7 @@ def test_lifecycle():
     sim.initialize()
     app1.send("bob", b"hello world")
     time.sleep(2)
-    fetched_msg = sim.fetch()
+    fetched_msg = sim.fetch(0)
     time.sleep(2)
     if fetched_msg:
         if fetched_msg.HasField('metadata'):
@@ -650,18 +654,45 @@ def test_lifecycle():
     else:
         print("No message fetched.")
     time.sleep(2)
-    received_msg = app2.receive()
+    received_msg = app2.receive(0)
     time.sleep(2)
     if not fetched_msg:
         print("No message received.")
     app2.exit()
 
 def test_push_mode():
-    pass
+    app = NSBAppClient("app", "127.0.0.1", 65432)
+    sim = NSBSimClient("sim", "127.0.0.1", 65432)
+    app.initialize()
+    sim.initialize()
+
+    def sim_receive():
+        received_msg = sim.fetch()
+        if received_msg:
+            sim.logger.info(f"Sim received message: {received_msg.payload}")
+        else:
+            sim.logger.info("Sim received no message.")
+
+    # Start the simulator's receive thread.
+    sim_thread = threading.Thread(target=sim_receive)
+    sim_thread.start()
+
+    # Give the simulator some time to start listening.
+    time.sleep(1)
+
+    # Send a message from the app.
+    app.send("sim", b"Hello from app!")
+
+    # Wait for the simulator to process the message.
+    sim_thread.join()
+
+    # Clean up.
+    app.exit()
+    sim.exit()
 
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
-    test_lifecycle()
-    # test_push_mode()
+    # test_lifecycle()
+    test_push_mode()

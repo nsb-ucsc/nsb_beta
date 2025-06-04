@@ -72,6 +72,13 @@ int MAX_BUFFER_SIZE = 4096;
         std::string ctrl_addr = address + ":" + std::to_string(ch_CTRL_port);
         ch_CTRL_fd = fd_lookup.find(ctrl_addr) != fd_lookup.end() ?
                      fd_lookup[ctrl_addr] : -1;
+        std::string send_addr = address + ":" + std::to_string(ch_SEND_port);
+        ch_SEND_fd = fd_lookup.find(send_addr) != fd_lookup.end() ?
+                     fd_lookup[send_addr] : -1;
+        std::string recv_addr = address + ":" + std::to_string(ch_RECV_port);
+        ch_RECV_fd = fd_lookup.find(recv_addr) != fd_lookup.end() ?
+                     fd_lookup[recv_addr] : -1;
+    
     }
  };
 
