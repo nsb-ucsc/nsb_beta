@@ -54,6 +54,7 @@ int MAX_BUFFER_SIZE = 4096;
  * 
  */
  struct ClientDetails {
+    std::string identifier;
     std::string address;
     int ch_CTRL_port;
     int ch_CTRL_fd;
@@ -64,6 +65,7 @@ int MAX_BUFFER_SIZE = 4096;
     ClientDetails() : address(""), ch_CTRL_port(0), ch_CTRL_fd(-1), ch_SEND_port(0),
                       ch_SEND_fd(-1), ch_RECV_port(0), ch_RECV_fd(-1) {}
     ClientDetails(nsb::nsbm* nsb_msg, std::map<std::string, int> fd_lookup) {
+        identifier = nsb_msg->intro().identifier();
         address = nsb_msg->intro().address();
         ch_CTRL_port = nsb_msg->intro().ch_ctrl();
         ch_SEND_port = nsb_msg->intro().ch_send();

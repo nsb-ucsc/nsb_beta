@@ -360,20 +360,55 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
 }
 
 void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
-    // Check for message.
-    nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
-    if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
-        // Parse the metadata.
-        nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
-        // Store payload.
-        MessageEntry msg_entry = MessageEntry(
-            in_metadata.src_id(),
-            in_metadata.dest_id(),
-            incoming_msg->payload()
-        );
-        printf("\tRX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-            in_metadata.payload_size(), msg_entry.source.c_str(), msg_entry.destination.c_str(), msg_entry.payload.c_str());
-        rx_buffer.push_back(msg_entry);
+    if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
+        // Check for message.
+        nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
+        if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
+            // Parse the metadata.
+            nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+            // Store payload.
+            MessageEntry msg_entry = MessageEntry(
+                in_metadata.src_id(),
+                in_metadata.dest_id(),
+                incoming_msg->payload()
+            );
+            printf("\tRX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
+                in_metadata.payload_size(), msg_entry.source.c_str(),
+                msg_entry.destination.c_str(), msg_entry.payload.c_str());
+            rx_buffer.push_back(msg_entry);
+        }
+    } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
+        // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
+        outgoing_msg->Clear();
+        outgoing_msg->MergeFrom(*incoming_msg);
+        nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
+        out_manifest->set_op(nsb::nsbm::Manifest::FORWARD);
+        // Get the destination to forward to.
+        std::string dest_id = incoming_msg->metadata().dest_id();
+        int target_fd = (client_lookup.find(dest_id) != client_lookup.end()) ? client_lookup[dest_id].ch_RECV_fd : -1;
+        // Send to sim via RECV channel.
+        if (target_fd != -1) {
+            fd_set write_fd;
+            FD_ZERO(&write_fd);
+            FD_SET(target_fd, &write_fd);
+            // Check if the client RECV channel is available.
+            printf("\tAttempting to forward message to %s RECV channel (FD:%d)...\n", dest_id.c_str(), target_fd);
+            if (select(target_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
+                if (FD_ISSET(target_fd, &write_fd)) {
+                    // Serialize the message and send it to the target RECV channel.
+                    std::size_t size = outgoing_msg->ByteSizeLong();
+                    void* buffer = malloc(size);
+                    outgoing_msg->SerializeToArray(buffer, size);
+                    send(target_fd, buffer, size, 0);
+                    printf("\tForwarded message to %s RECV channel (%zu B)\n", dest_id.c_str(), size);
+                    free(buffer);
+                }
+            } else {
+                printf("\t%s RECV channel not available for forwarding.\n", dest_id.c_str());
+            }
+        } else {
+            printf("\tNo destination FD found for forwarding to %s.\n", dest_id.c_str());
+        }
     }
 }
 

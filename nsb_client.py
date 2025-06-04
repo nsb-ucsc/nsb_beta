@@ -647,6 +647,8 @@ def test_lifecycle():
     time.sleep(2)
     if fetched_msg:
         if fetched_msg.HasField('metadata'):
+            sim.logger.info(f"Fetched message: {fetched_msg.payload} " + \
+                            f"from {fetched_msg.metadata.src_id} to {fetched_msg.metadata.dest_id}")
             sim.post(fetched_msg.metadata.src_id,
                      fetched_msg.metadata.dest_id,
                      fetched_msg.payload,
@@ -661,34 +663,54 @@ def test_lifecycle():
     app2.exit()
 
 def test_push_mode():
-    app = NSBAppClient("app", "127.0.0.1", 65432)
     sim = NSBSimClient("sim", "127.0.0.1", 65432)
-    app.initialize()
+    app1 = NSBAppClient("app1", "127.0.0.1", 65432)
+    app2 = NSBAppClient("app2", "127.0.0.1", 65432)
     sim.initialize()
+    app1.initialize()
+    app2.initialize()
 
-    def sim_receive():
-        received_msg = sim.fetch()
-        if received_msg:
-            sim.logger.info(f"Sim received message: {received_msg.payload}")
+    def sim_fetch():
+        fetched_msg = sim.fetch()
+        if fetched_msg:
+            sim.logger.info(f"Sim received message: {fetched_msg.payload}")
+            sim.post(fetched_msg.metadata.src_id,
+                     fetched_msg.metadata.dest_id,
+                     fetched_msg.payload,
+                     success=True)
         else:
             sim.logger.info("Sim received no message.")
 
-    # Start the simulator's receive thread.
-    sim_thread = threading.Thread(target=sim_receive)
+    # Start the simulator's fetch thread.
+    sim_thread = threading.Thread(target=sim_fetch)
     sim_thread.start()
 
-    # Give the simulator some time to start listening.
+    def app2_receive():
+        print("receiving??")
+        received_msg = app2.receive()
+        if received_msg:
+            app2.logger.info(f"App2 received message: {received_msg.payload}")
+        else:
+            app2.logger.info("Nada.")
+    
+    # Start the receiving app's receive thread.
+    app2_thread = threading.Thread(target=app2_receive)
+    app2_thread.start()
+
+    # Give the simulator and receiving app some time to start listening.
     time.sleep(1)
 
     # Send a message from the app.
-    app.send("sim", b"Hello from app!")
+    app1.send("app2", b"Hello from app!")
 
     # Wait for the simulator to process the message.
     sim_thread.join()
+    app2_thread.join()
+
+    print("\nGRÆÇIAS A DIOŠ\n")
 
     # Clean up.
-    app.exit()
-    sim.exit()
+    app1.exit()
 
 ### MAIN FUNCTION (FOR TESTING) ###
 
