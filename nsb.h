@@ -110,8 +110,8 @@ namespace nsb {
         // Callback Functions
         static void connectCallback(const redisAsyncContext* c, int status);
         static void disconnectCallback(const redisAsyncContext* c, int status);
-        static void setCallback(const redisAsyncContext* c, void* r, void* privdata);
-        static void getCallback(const redisAsyncContext* c, void* r, void* privdata);
+        static void setCallback(redisAsyncContext* c, void* r, void* privdata);
+        static void getCallback(redisAsyncContext* c, void* r, void* privdata);
     };
 }
 
