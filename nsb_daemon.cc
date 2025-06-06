@@ -34,8 +34,12 @@ void NSBDaemon::configure(std::string filename) {
     }
     // Parse the configuration file.
     int mode = config["system"]["mode"].as<int>();
-    cfg.SYSTEM_MODE = static_cast<ConfigParams::SystemMode>(mode);
-    cfg.USE_DB = config["system"]["use_db"].as<bool>();
+    cfg.SYSTEM_MODE = static_cast<Config::SystemMode>(mode);
+    cfg.USE_DB = config["database"]["use_db"].as<bool>();
+    if (cfg.USE_DB) {
+        cfg.DB_ADDRESS = config["database"]["db_address"].as<std::string>();
+        cfg.DB_PORT = config["database"]["db_port"].as<int>();
+    }
 }
 
 void NSBDaemon::start_server(int port) {
@@ -177,9 +181,8 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     nsb::nsbm nsb_message;
     nsb_message.ParseFromArray(message.data(), message.size());
     nsb::nsbm::Manifest manifest = nsb_message.manifest();
-    DLOG(INFO) << "Manifest " << nsb::nsbm::Manifest::Operation_Name(manifest.op()) << "-" 
-               << nsb::nsbm::Manifest::Originator_Name(manifest.og()) << "⇠" 
-               << " received from FD " << fd << "." << std::endl;
+    DLOG(INFO) << "Manifest " << nsb::nsbm::Manifest::Operation_Name(manifest.op()) << "<--" 
+               << nsb::nsbm::Manifest::Originator_Name(manifest.og()) << " received from FD " << fd << "." << std::endl;
     // Get message fields.
     nsb::nsbm::Metadata metadata = nsb_message.metadata();
     // Prepare template for response.
@@ -246,6 +249,7 @@ void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
         LOG(ERROR) << "\tNo client details provided in INIT message." << std::endl;
         return;
     }
+    *response_required = true;
     // Send back configuration details.
     nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
     out_manifest->set_op(nsb::nsbm::Manifest::INIT);
@@ -254,9 +258,13 @@ void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     nsb::nsbm::ConfigParams* out_config = outgoing_msg->mutable_config();
     out_config->set_sys_mode(static_cast<nsb::nsbm::ConfigParams::SystemMode>(cfg.SYSTEM_MODE));
     out_config->set_use_db(cfg.USE_DB);
-    *response_required = true;
     DLOG(INFO) << "\tReturning configuration: Mode " << nsb::nsbm::ConfigParams::SystemMode(out_config->sys_mode())
                << " | Use DB? " << out_config->use_db() << std::endl;
+    if (cfg.USE_DB) {
+        out_config->set_db_address(cfg.DB_ADDRESS);
+        out_config->set_db_port(cfg.DB_PORT);
+    }
+    DLOG(INFO) << "\tDatabase Address: " << cfg.DB_ADDRESS << " | Database Port: " << cfg.DB_PORT << std::endl;
 }
 
 void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -270,8 +278,8 @@ void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
 void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     LOG(INFO) << "Handling SEND message from client " 
               << incoming_msg->intro().identifier() << " in ";
-    if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
-        LOG(INFO) << "PULL mode..." << std::endl;
+    if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+        LOG(INFO).NoPrefix() << "PULL mode..." << std::endl;
         // Parse the metadata.
         nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
         // Store payload.
@@ -287,8 +295,8 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
         DLOG(INFO) << "\tPayload: " << msg_entry.payload << std::endl;
         // Add it to the buffer.
         tx_buffer.push_back(msg_entry);
-    } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
-        LOG(INFO) << "PUSH mode..." << std::endl;
+    } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
+        LOG(INFO).NoPrefix() << "PUSH mode..." << std::endl;
         // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
         outgoing_msg->Clear();
         outgoing_msg->MergeFrom(*incoming_msg);
@@ -371,8 +379,8 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
 void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
     LOG(INFO) << "Handling POST message from client " 
               << incoming_msg->intro().identifier() << " in ";
-    if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
-        LOG(INFO) << "PULL mode..." << std::endl;
+    if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+        LOG(INFO).NoPrefix() << "PULL mode..." << std::endl;
         // Check for message.
         nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
         if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
@@ -391,8 +399,8 @@ void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
                        << msg_entry.payload << std::endl;
             rx_buffer.push_back(msg_entry);
         }
-    } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
-        LOG(INFO) << "PUSH mode..." << std::endl;
+    } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
+        LOG(INFO).NoPrefix() << "PUSH mode..." << std::endl;
         // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
         outgoing_msg->Clear();
         outgoing_msg->MergeFrom(*incoming_msg);
@@ -502,11 +510,11 @@ bool NSBDaemon::is_running() const {
  * @return int 
  */
 int main() {
+    // Set up logging.
     NsbLogSink log_output = NsbLogSink();
     absl::InitializeLog();
-    // Disable the default stderr logging
-    // absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfinity);
     absl::log_internal::AddLogSink(&log_output);
+    // Start daemon.
     LOG(INFO) << "Starting daemon...\n";
     NSBDaemon daemon = NSBDaemon(65432, "config.yaml");
     daemon.start();

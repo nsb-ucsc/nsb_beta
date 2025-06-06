@@ -47,13 +47,15 @@ int MAX_BUFFER_SIZE = 4096;
  * This struct contains the configuration parameters loaded from the 
  * configuration file.
  */
-struct ConfigParams {
+struct Config {
     enum class SystemMode {
         PULL = 0,
         PUSH = 1
     };
     SystemMode SYSTEM_MODE;
     bool USE_DB;
+    std::string DB_ADDRESS;
+    int DB_PORT;
 };
 
 class NSBDaemon {
@@ -160,7 +162,7 @@ private:
             : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
     };
     /** @brief Configuration object. */
-    ConfigParams cfg;
+    Config cfg;
     /** @brief A flag set to indicate daemon server status. */
     std::atomic<bool> running;
     /** @brief The server port accessible to client connections. */

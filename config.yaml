@@ -2,3 +2,8 @@
 system:
   mode: 1 # PULL (clients must request to fetch/receive payloads), PUSH (payloads will be forwarded when sent/posted)
   use_db: true # Whether or not to use in-memory storage of payloads (via Redis)
+
+database:
+  use_db: true
+  db_address: 127.0.0.1
+  db_port: 5050

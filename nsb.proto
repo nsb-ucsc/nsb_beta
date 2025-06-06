@@ -65,6 +65,8 @@ message nsbm {
         }
         SystemMode sys_mode = 1;
         bool use_db = 2;
+        string db_address = 3;
+        int32 db_port = 4;
     }
 
     message IntroDetails {

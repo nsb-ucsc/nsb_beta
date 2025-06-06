@@ -53,10 +53,6 @@ class Config:
         """
         @brief Denotes whether the NSB system is in *PUSH* or *PULL* mode.
 
-        The entire system should be using the same mode, and so this should be 
-        set via an INIT message to and response from the daemon or via a shared
-        configuration file.
-
         *PULL* mode requires clients to request -- or pull -- to fetch or 
         receive incoming payloads via the daemon server's response. *PUSH* mode 
         denotes that when clients send or post outgoing payloads, they are 
@@ -77,14 +73,20 @@ class Config:
 
         @see NSBClient.initialize()
         """
-        self.sys_mode = Config.SystemMode(nsb_msg.config.sys_mode)
+        self.system_mode = Config.SystemMode(nsb_msg.config.sys_mode)
         self.use_db = nsb_msg.config.use_db
+        if self.use_db:
+            self.db_address = nsb_msg.config.db_address
+            self.db_port = nsb_msg.config.db_port
 
     def __repr__(self):
         """
         @brief String representation of the configuration.
         """
-        return f"[CONFIG] System Mode: {self.sys_mode.name} | Use Database: {self.use_db})"
+        s = f"[CONFIG] System Mode: {self.system_mode.name} | Use DB? {self.use_db}"
+        if self.use_db:
+            s += f" | DB Address: {self.db_address} | DB Port: {self.db_port}"
+        return s
 
 class Comms:
     """
@@ -467,7 +469,7 @@ class NSBAppClient(NSBClient):
         @see Config.SystemMode
         @see SocketInterface._recv_msg()
         """
-        if self.cfg.sys_mode == Config.SystemMode.PULL:
+        if self.cfg.system_mode == Config.SystemMode.PULL:
             # Create and populate a FETCH message.
             nsb_msg = nsb_pb2.nsbm()
             # Manifest.
@@ -554,7 +556,7 @@ class NSBSimClient(NSBClient):
                                    payload and metadata if a message is found, 
                                    otherwise None.
         """
-        if self.cfg.sys_mode == Config.SystemMode.PULL:
+        if self.cfg.system_mode == Config.SystemMode.PULL:
             # Create and populate a FETCH message.
             nsb_msg = nsb_pb2.nsbm()
             # Manifest.
@@ -686,7 +688,6 @@ def test_push_mode():
     sim_thread.start()
 
     def app2_receive():
-        print("receiving??")
         received_msg = app2.receive()
         if received_msg:
             app2.logger.info(f"App2 received message: {received_msg.payload}")
