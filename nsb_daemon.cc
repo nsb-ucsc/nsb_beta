@@ -266,6 +266,7 @@ namespace nsb {
         if (cfg.USE_DB) {
             out_config->set_db_address(cfg.DB_ADDRESS);
             out_config->set_db_port(cfg.DB_PORT);
+            out_config->set_db_num(cfg.DB_NUM);
         }
         DLOG(INFO) << "\tDatabase Address: " << cfg.DB_ADDRESS << " | Database Port: " << cfg.DB_PORT << std::endl;
     }

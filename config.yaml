@@ -7,3 +7,4 @@ database:
   use_db: true
   db_address: 127.0.0.1
   db_port: 5050
+  db_num: 0

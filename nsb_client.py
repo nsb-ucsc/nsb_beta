@@ -78,6 +78,7 @@ class Config:
         if self.use_db:
             self.db_address = nsb_msg.config.db_address
             self.db_port = nsb_msg.config.db_port
+            self.db_num = nsb_msg.config.db_num
 
     def __repr__(self):
         """

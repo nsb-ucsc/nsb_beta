@@ -37,6 +37,9 @@
 #include <absl/log/internal/log_sink_set.h>
 #include <absl/time/time.h>
 #include <absl/time/civil_time.h>
+// Database.
+#include <hiredis/hiredis.h>
+#include <hiredis/async.h>
 
 namespace nsb {
     /**
@@ -54,6 +57,7 @@ namespace nsb {
         bool USE_DB;
         std::string DB_ADDRESS;
         int DB_PORT;
+        int DB_NUM;
     };
     /**
      * @brief Message storage struct.
@@ -76,6 +80,38 @@ namespace nsb {
         /** @brief Populated constructor. */
         MessageEntry(std::string src, std::string dest, std::string data)
             : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
+    };
+
+    /**
+     * @brief Connector for offloading payloads to a Redis database.
+     * 
+     * A database connector that enables NSB to utilize Redis to store payloads 
+     * in a shared memory store to avoid incurring the overhead of moving larger 
+     * payloads over sockets. Using this option may be beneficial for 
+     * applications with larger payloads (>32KB). Database can be configured in 
+     * the configuration file.
+     */
+    class RedisConnector {
+    public:
+        RedisConnector(const std::string& address, int port);
+        ~RedisConnector();
+        bool is_connected() const;
+        bool store(const std::string& value);
+        std::string check_out(const int key);
+        std::string peek(const int key);
+    private:
+        std::string address;
+        int port;
+        int num;
+        redisAsyncContext* context;
+        int num_payloads;
+        bool connect();
+        void disconnect();
+        // Callback Functions
+        static void connectCallback(const redisAsyncContext* c, int status);
+        static void disconnectCallback(const redisAsyncContext* c, int status);
+        static void setCallback(const redisAsyncContext* c, void* r, void* privdata);
+        static void getCallback(const redisAsyncContext* c, void* r, void* privdata);
     };
 }
 

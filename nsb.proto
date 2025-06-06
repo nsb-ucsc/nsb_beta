@@ -67,6 +67,7 @@ message nsbm {
         bool use_db = 2;
         string db_address = 3;
         int32 db_port = 4;
+        int32 db_num = 5;
     }
 
     message IntroDetails {

@@ -14,6 +14,9 @@ find_package(absl REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+# Use pkg-config for hiredis due to this issue (https://github.com/coturn/coturn/issues/1618)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(hiredis REQUIRED IMPORTED_TARGET hiredis)
 
 # Verify that libraries have been found.
 set(link_targets
@@ -22,6 +25,7 @@ set(link_targets
     absl::base
     absl::log
     absl::time
+    PkgConfig::hiredis
 )
 message(STATUS "Checking target libraries:")
 foreach(link_target ${link_targets})
@@ -61,7 +65,8 @@ target_link_libraries(nsb_daemon PUBLIC
     ${link_targets}
 )
 # Include directories.
-target_include_directories(nsb_daemon PUBLIC 
+target_include_directories(nsb_daemon
+    PUBLIC 
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
