@@ -20,7 +20,7 @@ void NSBDaemon::start() {
     if (!running) {
         running = true;
         start_server(server_port);
-        std::cout << "NSBDaemon started." << std::endl;
+        LOG(INFO) << "NSBDaemon started." << std::endl;
     }
 }
 
@@ -73,16 +73,16 @@ void NSBDaemon::start_server(int port) {
     if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         std::string error_msg = "Bind failed on address " + std::string(inet_ntoa(server_addr.sin_addr)) + 
                                 " on port " + std::to_string(ntohs(server_addr.sin_port)) + ".";
-        perror(error_msg.c_str());
+        LOG(ERROR) << error_msg << std::endl;
         close(server_fd);
         return;
     }
     if (listen(server_fd, SOMAXCONN) == -1) {
-        perror("Listen failed.");
+        LOG(ERROR) << "Listen failed." << std::endl;
         close(server_fd);
         return;
     }
-    std::cout << "Server started on port " << port << std::endl;
+    LOG(INFO) << "Server started on port " << port << std::endl;
 
     // Run server.
     fd_set read_fds;
@@ -122,17 +122,18 @@ void NSBDaemon::start_server(int port) {
                     int bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
                     while(bytes_read > 0) {
                         message_exists = true;
-                        printf("Picked up %d bytes from (FD:%d)\n", bytes_read, fd);
+                        DLOG(INFO) << "Picked up " << bytes_read << "B from FD " << fd << "." << std::endl;
                         message.insert(message.end(), buffer, buffer+bytes_read);
                         bytes_read = recv(fd, buffer, sizeof(buffer)-1, 0);
                     }
                     if (message_exists) {
-                        printf("Received message from (FD:%d): %s\n", fd, message.data());
+                        DLOG(INFO) << "Received message from FD " << fd << ": " << 
+                            std::string(message.begin()+1, message.end()) << std::endl;
                         handle_message(fd, message);
                         ++it;
                     }
                     else {
-                        printf("Disconnected from (FD:%d)\n", fd);
+                        LOG(WARNING) << "Disconnected from FD " << fd << "." << std::endl;
                         shutdown(fd, SHUT_WR);
                         close(fd);
                         channel_fds.erase(it);
@@ -146,13 +147,14 @@ void NSBDaemon::start_server(int port) {
                 socklen_t client_len = sizeof(client_addr);
                 int channel_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
                 if (channel_fd == -1) {
-                    perror("Accept failed.");
+                    LOG(ERROR) << "Accept failed." << std::endl;
                     continue;
                 }
                 char client_ip[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
                 int client_port = ntohs(client_addr.sin_port);
-                printf("Channel connected from IP: %s, Port: %d\n", client_ip, client_port);
+                LOG(INFO) << "Channel connected from IP: " << client_ip 
+                          << ", Port: " << client_port << "." << std::endl;
                 // Add to the FD lookup.
                 std::string key = std::string(client_ip) + ":" + std::to_string(client_port);
                 fd_lookup.emplace(key, channel_fd);
@@ -161,21 +163,23 @@ void NSBDaemon::start_server(int port) {
             }
         }
     }
+    LOG(INFO) << "Server is no longer running, closing connections..." << std::endl;
     // When running stops, close connections and close server.
     for (int channel_fd : channel_fds) {
-        printf("Closing connection to %d\n", channel_fd);
+        DLOG(INFO) << "Closing connection to FD " << channel_fd << "." << std::endl;
         close(channel_fd);
     }
     close(server_fd);
-    std::cout << "Server stopped." << std::endl;
+    LOG(INFO) << "Server stopped." << std::endl;
 }
 
 void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     nsb::nsbm nsb_message;
     nsb_message.ParseFromArray(message.data(), message.size());
     nsb::nsbm::Manifest manifest = nsb_message.manifest();
-    printf("Manifest %d-%d-%d received from %d\n",
-        manifest.op(), manifest.og(), manifest.code(), fd);
+    DLOG(INFO) << "Manifest " << nsb::nsbm::Manifest::Operation_Name(manifest.op()) << "-" 
+               << nsb::nsbm::Manifest::Originator_Name(manifest.og()) << "⇠" 
+               << " received from FD " << fd << "." << std::endl;
     // Get message fields.
     nsb::nsbm::Metadata metadata = nsb_message.metadata();
     // Prepare template for response.
@@ -185,36 +189,30 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
     // Redirect handling based on specified operation.
     switch (manifest.op()) {
         case nsb::nsbm::Manifest::INIT:
-            printf("\tNice to meet ya, INIT~\n");
             handle_init(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::PING:
-            printf("\t...it's a PING!\n");
             handle_ping(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::SEND:
-            printf("\tPackage-to-send received:\n");
             handle_send(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::FETCH:
-            printf("\tGrabbing the payload.\n");
             handle_fetch(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::POST:
-            printf("\tPosting delivery (or not).\n");
             handle_post(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::RECEIVE:
-            printf("\tPolling for payload.\n");
             handle_receive(&nsb_message, &nsb_response, &response_required);
             break;
         case nsb::nsbm::Manifest::EXIT:
-            printf("\tLooks like we're done here.\n");
+            LOG(INFO) << "Exiting." << std::endl;
             // Stop the daemon.
             stop();
             break;
         default:
-            printf("\tUnknown operation.\n");
+            LOG(ERROR) << "Unknown operation: " << manifest.op() << std::endl;
             // Create a negative PING response if confused.
             r_manifest->set_op(nsb::nsbm::Manifest::PING);
             r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
@@ -226,12 +224,14 @@ void NSBDaemon::handle_message(int fd, std::vector<char> message) {
         std::size_t size = nsb_response.ByteSizeLong();
         void* r_buffer = malloc(size);
         nsb_response.SerializeToArray(r_buffer, size);
-        printf("\tBack at ya! (%luB) %s\n", static_cast<unsigned long>(size), static_cast<char *>(r_buffer));
+        DLOG(INFO) << "Sending response back: (" << size << "B) " << r_buffer << std::endl;
         send(fd, r_buffer, size, 0);
     }
 }
 
 void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    LOG(INFO) << "Handling INIT message from client " 
+              << incoming_msg->intro().identifier() << "..." << std::endl;
     // Get client details.
     if (incoming_msg->has_intro()) {
         if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::APP_CLIENT) {
@@ -239,11 +239,11 @@ void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
         } else if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::SIM_CLIENT) {
             sim = ClientDetails(incoming_msg, fd_lookup);
         } else {
-            printf("Unknown originator.");
+            LOG(ERROR) << "\tUnknown/unexpected originator." << std::endl;
             return;
         }
     } else {
-        printf("No client details provided in INIT message.\n");
+        LOG(ERROR) << "\tNo client details provided in INIT message." << std::endl;
         return;
     }
     // Send back configuration details.
@@ -255,6 +255,8 @@ void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
     out_config->set_sys_mode(static_cast<nsb::nsbm::ConfigParams::SystemMode>(cfg.SYSTEM_MODE));
     out_config->set_use_db(cfg.USE_DB);
     *response_required = true;
+    DLOG(INFO) << "\tReturning configuration: Mode " << nsb::nsbm::ConfigParams::SystemMode(out_config->sys_mode())
+               << " | Use DB? " << out_config->use_db() << std::endl;
 }
 
 void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -266,7 +268,10 @@ void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
 }
 
 void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    LOG(INFO) << "Handling SEND message from client " 
+              << incoming_msg->intro().identifier() << " in ";
     if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
+        LOG(INFO) << "PULL mode..." << std::endl;
         // Parse the metadata.
         nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
         // Store payload.
@@ -275,12 +280,15 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
             in_metadata.dest_id(),
             incoming_msg->payload()
         );
-        printf("\tTX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-            in_metadata.payload_size(), msg_entry.source.c_str(),
-            msg_entry.destination.c_str(), msg_entry.payload.c_str());
+        DLOG(INFO) << "TX entry created | " 
+              << in_metadata.payload_size() << " B | src: " 
+              << msg_entry.source << " | dest: " 
+              << msg_entry.destination << std::endl;
+        DLOG(INFO) << "\tPayload: " << msg_entry.payload << std::endl;
         // Add it to the buffer.
         tx_buffer.push_back(msg_entry);
     } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
+        LOG(INFO) << "PUSH mode..." << std::endl;
         // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
         outgoing_msg->Clear();
         outgoing_msg->MergeFrom(*incoming_msg);
@@ -291,7 +299,8 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
         FD_ZERO(&write_fd);
         FD_SET(sim.ch_RECV_fd, &write_fd);
         // Check if the sim RECV channel is available.
-        printf("\tAttempting to forward message to sim RECV channel (FD:%d)...\n", sim.ch_RECV_fd);
+        DLOG(INFO) << "Attempting to forward message to sim RECV channel (FD:" 
+              << sim.ch_RECV_fd << ")..." << std::endl;
         if (select(sim.ch_RECV_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
             if (FD_ISSET(sim.ch_RECV_fd, &write_fd)) {
                 // Serialize the message and send it to the sim RECV channel.
@@ -299,17 +308,17 @@ void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
                 void* buffer = malloc(size);
                 outgoing_msg->SerializeToArray(buffer, size);
                 send(sim.ch_RECV_fd, buffer, size, 0);
-                printf("\tForwarded message to sim RECV channel (%zu B)\n", size);
+                DLOG(INFO) << "\tForwarded message to sim RECV channel (" << size << " B)" << std::endl;
                 free(buffer);
             }
         } else {
-            printf("\tSim RECV channel not available for forwarding.\n");
+            DLOG(ERROR) << "Sim RECV channel not available for forwarding." << std::endl; 
         }
     }
-    
 }
 
 void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    LOG(INFO) << "Handling FETCH message from client " << incoming_msg->intro().identifier() << std::endl;
     MessageEntry fetched_message;
     bool tried_to_fetch = false;
     // Check to see if source has been specified.
@@ -335,11 +344,11 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
             tx_buffer.pop_front();
         }
     }
-    printf("\tTX entry retrieved | %zu B | src: %s | dest: %s\n\tPayload: %s\n",
-        fetched_message.payload.size(),
-        fetched_message.source.c_str(),
-        fetched_message.destination.c_str(),
-        fetched_message.payload.c_str());
+    DLOG(INFO) << "TX entry retrieved | " 
+               << fetched_message.payload.size() << " B | src: " 
+               << fetched_message.source << " | dest: " 
+               << fetched_message.destination << std::endl;
+    DLOG(INFO) << "\tPayload: " << fetched_message.payload << std::endl;
     // Prepare response.
     nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
     out_manifest->set_op(nsb::nsbm::Manifest::FETCH);
@@ -360,7 +369,10 @@ void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, b
 }
 
 void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    LOG(INFO) << "Handling POST message from client " 
+              << incoming_msg->intro().identifier() << " in ";
     if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PULL) {
+        LOG(INFO) << "PULL mode..." << std::endl;
         // Check for message.
         nsb::nsbm::Manifest in_manifest = incoming_msg->manifest();
         if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
@@ -372,12 +384,15 @@ void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
                 in_metadata.dest_id(),
                 incoming_msg->payload()
             );
-            printf("\tRX entry created | %d B | src: %s | dest: %s\n\tPayload: %s\n",
-                in_metadata.payload_size(), msg_entry.source.c_str(),
-                msg_entry.destination.c_str(), msg_entry.payload.c_str());
+            DLOG(INFO) << "RX entry created | " 
+                       << in_metadata.payload_size() << " B | src: " 
+                       << msg_entry.source << " | dest: " 
+                       << msg_entry.destination << "\n\tPayload: " 
+                       << msg_entry.payload << std::endl;
             rx_buffer.push_back(msg_entry);
         }
     } else if (cfg.SYSTEM_MODE == ConfigParams::SystemMode::PUSH) {
+        LOG(INFO) << "PUSH mode..." << std::endl;
         // Copy the incoming message to the outgoing message, replacing with SEND to FORWARD.
         outgoing_msg->Clear();
         outgoing_msg->MergeFrom(*incoming_msg);
@@ -392,7 +407,9 @@ void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
             FD_ZERO(&write_fd);
             FD_SET(target_fd, &write_fd);
             // Check if the client RECV channel is available.
-            printf("\tAttempting to forward message to %s RECV channel (FD:%d)...\n", dest_id.c_str(), target_fd);
+            DLOG(INFO) << "Attempting to forward message to " 
+                       << dest_id << " RECV channel (FD:" 
+                       << target_fd << ")..." << std::endl;
             if (select(target_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
                 if (FD_ISSET(target_fd, &write_fd)) {
                     // Serialize the message and send it to the target RECV channel.
@@ -400,19 +417,24 @@ void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bo
                     void* buffer = malloc(size);
                     outgoing_msg->SerializeToArray(buffer, size);
                     send(target_fd, buffer, size, 0);
-                    printf("\tForwarded message to %s RECV channel (%zu B)\n", dest_id.c_str(), size);
+                    DLOG(INFO) << "\tForwarded message to " 
+                               << dest_id << " RECV channel (" 
+                               << size << " B)" << std::endl;
                     free(buffer);
                 }
             } else {
-                printf("\t%s RECV channel not available for forwarding.\n", dest_id.c_str());
+                DLOG(ERROR) << dest_id << " RECV channel not available for forwarding." << std::endl; 
             }
         } else {
-            printf("\tNo destination FD found for forwarding to %s.\n", dest_id.c_str());
+            DLOG(ERROR) << "No destination FD found for forwarding to " 
+                        << dest_id << "." << std::endl;
         }
     }
 }
 
 void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+    LOG(INFO) << "Handling RECEIVE message from client " 
+              << incoming_msg->intro().identifier() << "." << std::endl;
     MessageEntry received_message;
     bool fetched = false;
     // Check for destination.
@@ -437,11 +459,12 @@ void NSBDaemon::handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg,
             fetched = true;
         }
     }
-    printf("\tRX entry retrieved | %zu B | src: %s | dest: %s\n\tPayload: %s\n",
-        received_message.payload.size(),
-        received_message.source.c_str(),
-        received_message.destination.c_str(),
-        received_message.payload.c_str());
+    DLOG(INFO) << "RX entry retrieved | " 
+               << received_message.payload.size() << " B | src: " 
+               << received_message.source << " | dest: " 
+               << received_message.destination << "\n\tPayload: " 
+               << received_message.payload << std::endl;
+
     // Prepare response.
     nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
     out_manifest->set_op(nsb::nsbm::Manifest::RECEIVE);
@@ -465,7 +488,7 @@ void NSBDaemon::stop() {
     // If the server is running, stop it.
     if (running) {
         running = false;
-        std::cout << "NSBDaemon stopped." << std::endl;
+        LOG(INFO) << "NSBDaemon stopped." << std::endl;
     }
 }
 
@@ -479,10 +502,15 @@ bool NSBDaemon::is_running() const {
  * @return int 
  */
 int main() {
-    std::cout << "Starting daemon...\n";
+    NsbLogSink log_output = NsbLogSink();
+    absl::InitializeLog();
+    // Disable the default stderr logging
+    // absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfinity);
+    absl::log_internal::AddLogSink(&log_output);
+    LOG(INFO) << "Starting daemon...\n";
     NSBDaemon daemon = NSBDaemon(65432, "config.yaml");
     daemon.start();
     daemon.stop();
-    std::cout << "Exit.";
+    LOG(INFO) << "Exit.";
     return 0;
 }

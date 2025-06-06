@@ -10,6 +10,7 @@ message(STATUS "Binary directory: ${CMAKE_CURRENT_BINARY_DIR}")
 
 # Get necessary packages.
 find_package(gRPC CONFIG REQUIRED)
+find_package(absl REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -18,6 +19,9 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 set(link_targets
     yaml-cpp::yaml-cpp
     gRPC::grpc++
+    absl::base
+    absl::log
+    absl::time
 )
 message(STATUS "Checking target libraries:")
 foreach(link_target ${link_targets})
@@ -53,8 +57,7 @@ protobuf_generate(
 
 # Link libraries.
 target_link_libraries(nsb_daemon PUBLIC
-    gRPC::grpc++
-    yaml-cpp::yaml-cpp
+    ${link_targets}
 )
 # Include directories.
 target_include_directories(nsb_daemon PUBLIC 

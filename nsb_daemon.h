@@ -13,6 +13,8 @@
 #include <thread>
 // I/O libraries.
 #include <iostream>
+#include <iomanip>
+#include <chrono>
 #include <cstdio>
 #include <format>
 #include <signal.h>
@@ -22,11 +24,19 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-// Data.
+// Data, configuration, and logging.
 #include <sqlite3.h>
-
 #include "nsb.pb.h"
 #include <yaml-cpp/yaml.h>
+#include <absl/log/globals.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
+#include <absl/log/check.h>
+#include <absl/log/log_sink.h>
+#include <absl/log/log_entry.h>
+#include <absl/log/internal/log_sink_set.h>
+#include <absl/time/time.h>
+#include <absl/time/civil_time.h>
 
 /** @brief The maximum buffer size for sending and receiving messages. */
 int MAX_BUFFER_SIZE = 4096;
@@ -37,74 +47,13 @@ int MAX_BUFFER_SIZE = 4096;
  * This struct contains the configuration parameters loaded from the 
  * configuration file.
  */
- struct ConfigParams {
+struct ConfigParams {
     enum class SystemMode {
         PULL = 0,
         PUSH = 1
     };
     SystemMode SYSTEM_MODE;
     bool USE_DB;
- };
-
-/**
- * @brief Client details struct.
- * 
- * This struct contains address/port information for each client that connects. 
- * This doesn't have immediate use but may be useful in the future.
- * 
- */
- struct ClientDetails {
-    std::string identifier;
-    std::string address;
-    int ch_CTRL_port;
-    int ch_CTRL_fd;
-    int ch_SEND_port;
-    int ch_SEND_fd;
-    int ch_RECV_port;
-    int ch_RECV_fd;
-    ClientDetails() : address(""), ch_CTRL_port(0), ch_CTRL_fd(-1), ch_SEND_port(0),
-                      ch_SEND_fd(-1), ch_RECV_port(0), ch_RECV_fd(-1) {}
-    ClientDetails(nsb::nsbm* nsb_msg, std::map<std::string, int> fd_lookup) {
-        identifier = nsb_msg->intro().identifier();
-        address = nsb_msg->intro().address();
-        ch_CTRL_port = nsb_msg->intro().ch_ctrl();
-        ch_SEND_port = nsb_msg->intro().ch_send();
-        ch_RECV_port = nsb_msg->intro().ch_recv();
-        // Populate the file descriptors.
-        std::string ctrl_addr = address + ":" + std::to_string(ch_CTRL_port);
-        ch_CTRL_fd = fd_lookup.find(ctrl_addr) != fd_lookup.end() ?
-                     fd_lookup[ctrl_addr] : -1;
-        std::string send_addr = address + ":" + std::to_string(ch_SEND_port);
-        ch_SEND_fd = fd_lookup.find(send_addr) != fd_lookup.end() ?
-                     fd_lookup[send_addr] : -1;
-        std::string recv_addr = address + ":" + std::to_string(ch_RECV_port);
-        ch_RECV_fd = fd_lookup.find(recv_addr) != fd_lookup.end() ?
-                     fd_lookup[recv_addr] : -1;
-    
-    }
- };
-
-/**
- * @brief Message storage struct.
- * 
- * This struct contains source and destination information and the payload and 
- * is intended to be used to store messages in the daemon's transmission and 
- * reception buffers.
- * 
- */
-struct MessageEntry {
-    /** @brief The source identifier. */
-    std::string source;
-    /** @brief The destination identifier. */
-    std::string destination;
-    /** @brief The payload as a bytestring, but in const char* form. */
-    std::string payload;
-    // Constructors.
-    /** @brief Blank constructor. */
-    MessageEntry() : source(""), destination(""), payload("") {}
-    /** @brief Populated constructor. */
-    MessageEntry(std::string src, std::string dest, std::string data)
-        : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
 };
 
 class NSBDaemon {
@@ -150,6 +99,66 @@ public:
     bool is_running() const;
 
 private:
+    /**
+     * @brief Client details struct.
+     * 
+     * This struct contains address/port information for each client that connects. 
+     * This doesn't have immediate use but may be useful in the future.
+     * 
+     */
+    struct ClientDetails {
+        std::string identifier;
+        std::string address;
+        int ch_CTRL_port;
+        int ch_CTRL_fd;
+        int ch_SEND_port;
+        int ch_SEND_fd;
+        int ch_RECV_port;
+        int ch_RECV_fd;
+        ClientDetails() : address(""), ch_CTRL_port(0), ch_CTRL_fd(-1), ch_SEND_port(0),
+                        ch_SEND_fd(-1), ch_RECV_port(0), ch_RECV_fd(-1) {}
+        ClientDetails(nsb::nsbm* nsb_msg, std::map<std::string, int> fd_lookup) {
+            identifier = nsb_msg->intro().identifier();
+            address = nsb_msg->intro().address();
+            ch_CTRL_port = nsb_msg->intro().ch_ctrl();
+            ch_SEND_port = nsb_msg->intro().ch_send();
+            ch_RECV_port = nsb_msg->intro().ch_recv();
+            // Populate the file descriptors.
+            std::string ctrl_addr = address + ":" + std::to_string(ch_CTRL_port);
+            ch_CTRL_fd = fd_lookup.find(ctrl_addr) != fd_lookup.end() ?
+                        fd_lookup[ctrl_addr] : -1;
+            std::string send_addr = address + ":" + std::to_string(ch_SEND_port);
+            ch_SEND_fd = fd_lookup.find(send_addr) != fd_lookup.end() ?
+                        fd_lookup[send_addr] : -1;
+            std::string recv_addr = address + ":" + std::to_string(ch_RECV_port);
+            ch_RECV_fd = fd_lookup.find(recv_addr) != fd_lookup.end() ?
+                        fd_lookup[recv_addr] : -1;
+        
+        }
+    };
+
+    /**
+     * @brief Message storage struct.
+     * 
+     * This struct contains source and destination information and the payload and 
+     * is intended to be used to store messages in the daemon's transmission and 
+     * reception buffers.
+     * 
+     */
+    struct MessageEntry {
+        /** @brief The source identifier. */
+        std::string source;
+        /** @brief The destination identifier. */
+        std::string destination;
+        /** @brief The payload as a bytestring, but in const char* form. */
+        std::string payload;
+        // Constructors.
+        /** @brief Blank constructor. */
+        MessageEntry() : source(""), destination(""), payload("") {}
+        /** @brief Populated constructor. */
+        MessageEntry(std::string src, std::string dest, std::string data)
+            : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
+    };
     /** @brief Configuration object. */
     ConfigParams cfg;
     /** @brief A flag set to indicate daemon server status. */
@@ -337,6 +346,33 @@ private:
      * @see MessageEntry
      */
     void handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
+};
+
+class NsbLogSink : public absl::LogSink {
+    public:
+        void Send(const absl::LogEntry& entry) override {
+            // Get microseconds.
+            absl::Time ts = entry.timestamp();
+            absl::TimeZone tz = absl::LocalTimeZone();
+            absl::CivilSecond civ_sec = absl::ToCivilSecond(ts, tz);
+
+            int64_t ms = absl::ToInt64Microseconds(ts - absl::FromCivil(civ_sec, tz));
+
+            // Set severity.
+            std::string severity;
+            switch (entry.log_severity()) {
+                case absl::LogSeverity::kInfo:      severity = "(info)"; break;
+                case absl::LogSeverity::kWarning:   severity = "(warning)"; break;
+                case absl::LogSeverity::kError:     severity = "(error)"; break;
+                case absl::LogSeverity::kFatal:     severity = "(FATAL)"; break;
+                default:                            severity = "(other)"; break;
+            }
+
+            // Stream message.
+            std::cout << "[" << std::setw(2) << civ_sec.hour() << ":" << std::setw(2) << civ_sec.minute() << ":" 
+                      << std::setw(2) << civ_sec.second() << "." << std::setw(6) << ms << "] "
+                      << std::setw(9) << severity << " " << entry.text_message();
+        }
 };
 
 #endif // NSB_DAEMON_H

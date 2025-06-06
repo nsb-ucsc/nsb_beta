@@ -74,6 +74,7 @@
         "utility": "cpp",
         "ostream": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "*.inc": "cpp"
     }
 }
