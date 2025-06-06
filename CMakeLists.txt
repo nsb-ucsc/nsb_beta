@@ -40,6 +40,7 @@ message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 # Set up executable.
 add_executable(nsb_daemon 
     nsb_daemon.cc
+    nsb.cc
     nsb.proto
 )
 # Generate C++ protobuf files.
