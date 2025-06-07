@@ -38,10 +38,16 @@ namespace nsb {
         LOG(INFO) << "RedisConnector is gracefully disconnecting." << std::endl;
         redisAsyncDisconnect(context);
     }
-    bool RedisConnector::store(const std::string& value) {
+    std::string RedisConnector::store(const std::string& value) {
         DLOG(INFO) << "Storing payload: " << value << std::endl;
         int key = num_payloads++;
         redisAsyncCommand(context, setCallback, &key, "SET %d %s", key, value);
+        if (context->err) {
+            LOG(ERROR) << "(SET Error) " << context->errstr << std::endl;
+            return "";
+        }
+        DLOG(INFO) << "Payload stored with key: " << key << std::endl;
+        return std::to_string(key);
     }
 
     /* CALLBACK FUNCTIONS */

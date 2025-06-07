@@ -93,10 +93,10 @@ namespace nsb {
      */
     class RedisConnector {
     public:
-        RedisConnector(const std::string& address, int port);
+        RedisConnector(const std::string& db_address, int db_port);
         ~RedisConnector();
         bool is_connected() const;
-        bool store(const std::string& value);
+        std::string store(const std::string& value);
         std::string check_out(const int key);
         std::string peek(const int key);
     private:

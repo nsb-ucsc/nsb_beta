@@ -9,6 +9,8 @@ import logging
 from enum import IntEnum
 import threading
 
+import redis
+
 ## @cond
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
@@ -258,6 +260,40 @@ class SocketInterface(Comms):
         """
         self._close()
 
+class RedisConnector:
+    def __init__(self, address:str, port:int):
+        self.address = address
+        self.port = port
+        self.r = redis.Redis(host=self.address, port=self.port)
+        self.num_payloads = 0
+
+    def is_connected(self):
+        try:
+            return self.r.ping()
+        except redis.ConnectionError:
+            return False
+        
+    def store(self, value:bytes):
+        key = str(self.num_payloads)
+        self.r.set(key, value)
+        self.num_payloads += 1
+        return key
+
+    def check_out(self, key:str):
+        value = self.r.get(key)
+        self.r.delete(key)
+        return value
+    
+    def peek(self, key:str):
+        return self.r.get(key)
+
+    def __del__(self):
+        """
+        @brief Closes the Redis connection.
+        """
+        if self.is_connected():
+            self.r.close()
+
 ### NSB Client Base Class ###
 
 class NSBClient:
@@ -427,8 +463,12 @@ class NSBAppClient(NSBClient):
         nsb_msg.metadata.src_id = self._id
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = len(payload)
-        # Payload.
-        nsb_msg.payload = payload
+        if self.cfg.use_db:
+
+            nsb_msg.msg_key = 0
+        else:
+            # If not using database, attach the payload.
+            nsb_msg.payload = payload
         # Send NSB message to daemon.
         self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
@@ -714,9 +754,23 @@ def test_push_mode():
     # Clean up.
     app1.exit()
 
+def test_db():
+    conn1 = RedisConnector("127.0.0.1", 5050)
+    conn2 = RedisConnector("127.0.0.1", 5050)
+    key1 = conn1.store(b"hello world")
+    key2 = conn2.store(b"hola mundo")
+    key3 = conn1.store(b"bonjour le monde")
+    print(key1 ,conn2.peek(key1))
+    print(key1 ,conn1.check_out(key1))
+    print(key2 ,conn1.peek(key2))
+    print(key2 ,conn2.check_out(key2))
+    print(key3 ,conn2.peek(key3))
+    print(key3 ,conn1.check_out(key3))
+
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
     # test_lifecycle()
-    test_push_mode()
+    # test_push_mode()
+    test_db()
