@@ -44,6 +44,8 @@ RECEIVE_BUFFER_SIZE = 4096
 # Buffer size when sending data.
 SEND_BUFFER_SIZE = 4096
 
+### SYSTEM CONFIG ###
+
 class Config:
     """
     @brief Class to maintain property codes.
@@ -90,6 +92,8 @@ class Config:
         if self.use_db:
             s += f" | DB Address: {self.db_address} | DB Port: {self.db_port}"
         return s
+
+### COMMUNICATION INTERFACES ###
 
 class Comms:
     """
@@ -147,7 +151,7 @@ class SocketInterface(Comms):
 
         @param timeout Maximum time in seconds to wait to connect to the daemon. 
         @exception TimeoutError Raised if the connection to the server times out 
-                    after the specified timeout period.
+                                after the specified timeout period.
         """
         self.logger.info(f"Connecting to daemon@{self.server_addr}:{self.server_port}...")
         # Set target time for timing out.
@@ -260,31 +264,140 @@ class SocketInterface(Comms):
         """
         self._close()
 
-class RedisConnector:
-    def __init__(self, address:str, port:int):
+### DATABASE CONNECTORS ###
+
+class DBConnector:
+    """
+    @brief Base class for database connectors.
+
+    Database connectors enable NSB to use a database to store and retrieve 
+    larger messages being sent over the network. To use this, the 
+    _database.use_db_ parameter must be configured to be true. This class itself
+    does not contain the necessary store(), check_out(), and peek() methods 
+    necessary for NSB, but it can be inherited by other connector 
+    implications that implement those function. This class does provide a basic 
+    message key generator.
+
+    @see RedisConnector
+    """
+    def __init__(self, client_id:str):
+        """
+        @brief Base class constructor.
+        
+        Stores the client ID for the database connector and initiatializes a 
+        payload counter and lock method call to be used in the payload ID 
+        generator.
+
+        @param client_id The identifier for the client object using this 
+                         connector.
+
+        @see generate_payload_id()
+        """
+        self.client_id = client_id
+        self.plctr = 0
+        self.lock = threading.Lock()
+    def generate_payload_id(self):
+        """
+        @brief Payload ID generator.
+        
+        This simple message key generator method uses the client ID, the current 
+        time, and an incrementing counter to create unique message IDs. This can 
+        be overridden by child class methods.
+
+        @returns str The newly generated unique ID for a payload.
+        """
+        with self.lock:
+            self.plctr = (self.plctr + 1) & 0xFFFFF
+            tms = int(time.time() * 1000) & 0x1FFFFFFFFFF
+            payload_id = f"{tms}-{self.client_id}-{self.plctr}"
+            return payload_id
+
+
+class RedisConnector(DBConnector):
+    """
+    @brief Connector for Redis Database.
+
+    This connector enables NSB to store and retrieve payload data using Redis's 
+    in-memory key-value store. This class is built on the base database 
+    connector class.
+
+    @see DBConnector
+    """
+    def __init__(self, client_id:str, address:str, port:int):
+        """
+        @brief Constructor for RedisConnector.
+
+        This constructor passes the client ID to the base class constructor and
+        uses the address and port to connect to the Redis instance. The Redis 
+        server must be started from outside this program.
+
+        @param client_id The identifier of the client object that is using this
+                         connector.
+        @param address The address of the Redis server.
+        @param port The port to be used to access the Redis server.
+        """
+        super().__init__(client_id)
         self.address = address
         self.port = port
         self.r = redis.Redis(host=self.address, port=self.port)
-        self.num_payloads = 0
 
     def is_connected(self):
+        """
+        @brief Checks connection to the Redis server.
+
+        This method pings the Redis server to check for connectivity. Because
+        this method relies on a response from the server, it should be carefully 
+        considered when implementing in systems where lower latency is desired.
+
+        @returns bool Whether or not the Redis server is reachable.
+        """
         try:
             return self.r.ping()
         except redis.ConnectionError:
             return False
         
     def store(self, value:bytes):
-        key = str(self.num_payloads)
+        """
+        @brief Stores a payload.
+
+        This method creates a new unique payload key and then stores the
+        payload under that key.
+
+        @param value The value (payload) to be stored.
+        """
+        key = self.generate_payload_id()
         self.r.set(key, value)
-        self.num_payloads += 1
         return key
 
     def check_out(self, key:str):
+        """
+        @brief Checks out a payload.
+
+        This method uses the passed in key to check out a payload, deleting the
+        payload after it has been retrieved. This method is expected to be used 
+        in the final retrieval in the lifecycle of a payload.
+
+        @param key The key to retrieve the payload from the Redis server.
+
+        @see NSBAppClient.receive()
+        """
         value = self.r.get(key)
         self.r.delete(key)
         return value
     
     def peek(self, key:str):
+        """
+        @brief Peeks at the payload at the given key.
+
+        This method uses the passed in key to retrieve a payload, similar to 
+        the check_out() method, but without deleting the stored value. This is
+        expected to be used when payloads are fetched before they must be 
+        accessible again later in the payload's lifetime.
+
+        @param key The key to retrieve the payload from the Redis server.
+
+        @see NSBSimClient.fetch()
+        """
         return self.r.get(key)
 
     def __del__(self):
@@ -354,6 +467,9 @@ class NSBClient:
                     if nsb_resp.HasField('config'):
                         self.cfg = Config(nsb_resp)
                         self.logger.info(f"{self.cfg}")
+                        # If database is specified, start it up.
+                        if self.cfg.use_db:
+                            self.db = RedisConnector(self.cfg.db_address, self.cfg.db_port)
                         return
         raise RuntimeError("Failed to initialize NSB client. No response from server or invalid response.")
 
@@ -464,8 +580,7 @@ class NSBAppClient(NSBClient):
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = len(payload)
         if self.cfg.use_db:
-
-            nsb_msg.msg_key = 0
+            nsb_msg.msg_key = self.db.store(payload)
         else:
             # If not using database, attach the payload.
             nsb_msg.payload = payload
@@ -755,8 +870,8 @@ def test_push_mode():
     app1.exit()
 
 def test_db():
-    conn1 = RedisConnector("127.0.0.1", 5050)
-    conn2 = RedisConnector("127.0.0.1", 5050)
+    conn1 = RedisConnector("billy", "127.0.0.1", 5050)
+    conn2 = RedisConnector("bob", "127.0.0.1", 5050)
     key1 = conn1.store(b"hello world")
     key2 = conn2.store(b"hola mundo")
     key3 = conn1.store(b"bonjour le monde")
