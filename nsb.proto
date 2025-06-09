@@ -80,7 +80,7 @@ message nsbm {
 
     oneof message {
         bytes payload = 3;
-        int32 msg_key = 4;
+        string msg_key = 4;
         IntroDetails intro = 5;
         ConfigParams config = 6;
     }

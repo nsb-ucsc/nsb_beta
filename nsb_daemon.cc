@@ -286,17 +286,20 @@ namespace nsb {
             LOG(INFO).NoPrefix() << "PULL mode..." << std::endl;
             // Parse the metadata.
             nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+            // Retrieve payload if using database, otherwise no need.
+            std::string payload_obj = msg_get_payload_obj(incoming_msg);
             // Store payload.
             MessageEntry msg_entry = MessageEntry(
                 in_metadata.src_id(),
                 in_metadata.dest_id(),
-                incoming_msg->payload()
+                payload_obj,
+                in_metadata.payload_size()
             );
             DLOG(INFO) << "TX entry created | " 
                 << in_metadata.payload_size() << " B | src: " 
                 << msg_entry.source << " | dest: " 
                 << msg_entry.destination << std::endl;
-            DLOG(INFO) << "\tPayload: " << msg_entry.payload << std::endl;
+            DLOG(INFO) << (cfg.USE_DB ? "\tPayload ID: ": "\tPayload: ") << msg_entry.payload_obj << std::endl;
             // Add it to the buffer.
             tx_buffer.push_back(msg_entry);
         } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
@@ -357,10 +360,10 @@ namespace nsb {
             }
         }
         DLOG(INFO) << "TX entry retrieved | " 
-                << fetched_message.payload.size() << " B | src: " 
+                << fetched_message.payload_size << " B | src: " 
                 << fetched_message.source << " | dest: " 
                 << fetched_message.destination << std::endl;
-        DLOG(INFO) << "\tPayload: " << fetched_message.payload << std::endl;
+        DLOG(INFO) << "\tPayload: " << fetched_message.payload_obj << std::endl;
         // Prepare response.
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
         out_manifest->set_op(nsb::nsbm::Manifest::FETCH);
@@ -371,8 +374,8 @@ namespace nsb {
             nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
             out_metadata->set_src_id(fetched_message.source);
             out_metadata->set_dest_id(fetched_message.destination);
-            out_metadata->set_payload_size(static_cast<int>(fetched_message.payload.size()));
-            outgoing_msg->set_payload(fetched_message.payload);
+            out_metadata->set_payload_size(static_cast<int>(fetched_message.payload_size));
+            msg_set_payload_obj(fetched_message.payload_obj, outgoing_msg);
         } else {
             // Otherwise, indicate no message was fetched.
             out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
@@ -390,17 +393,20 @@ namespace nsb {
             if (in_manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
                 // Parse the metadata.
                 nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
+                // Retrieve payload if using database, otherwise no need.
+                std::string payload_obj = msg_get_payload_obj(incoming_msg);
                 // Store payload.
                 MessageEntry msg_entry = MessageEntry(
                     in_metadata.src_id(),
                     in_metadata.dest_id(),
-                    incoming_msg->payload()
+                    payload_obj,
+                    in_metadata.payload_size()
                 );
                 DLOG(INFO) << "RX entry created | " 
                         << in_metadata.payload_size() << " B | src: " 
                         << msg_entry.source << " | dest: " 
                         << msg_entry.destination << "\n\tPayload: " 
-                        << msg_entry.payload << std::endl;
+                        << msg_entry.payload_obj << std::endl;
                 rx_buffer.push_back(msg_entry);
             }
         } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
@@ -472,10 +478,10 @@ namespace nsb {
             }
         }
         DLOG(INFO) << "RX entry retrieved | " 
-                << received_message.payload.size() << " B | src: " 
+                << received_message.payload_size << " B | src: " 
                 << received_message.source << " | dest: " 
                 << received_message.destination << "\n\tPayload: " 
-                << received_message.payload << std::endl;
+                << received_message.payload_obj << std::endl;
 
         // Prepare response.
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
@@ -487,8 +493,8 @@ namespace nsb {
             nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
             out_metadata->set_src_id(received_message.source);
             out_metadata->set_dest_id(received_message.destination);
-            out_metadata->set_payload_size(static_cast<int>(received_message.payload.size()));
-            outgoing_msg->set_payload(received_message.payload);
+            out_metadata->set_payload_size(static_cast<int>(received_message.payload_size));
+            msg_set_payload_obj(received_message.payload_obj, outgoing_msg);
         } else {
             // Otherwise, indicate no message found.
             out_manifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);

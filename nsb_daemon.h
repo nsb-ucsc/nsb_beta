@@ -52,6 +52,8 @@ namespace nsb {
         bool is_running() const;
 
     private:
+        /* PRIVATE STRUCTS */
+
         /**
          * @brief Client details struct.
          * 
@@ -90,6 +92,8 @@ namespace nsb {
             }
         };
 
+        /* PRIVATE VARIABLES */
+
         /** @brief Configuration object. */
         Config cfg;
         /** @brief A flag set to indicate daemon server status. */
@@ -118,6 +122,28 @@ namespace nsb {
          * @see handle_receive()
          */
         std::list<MessageEntry> rx_buffer;
+
+        /* PRIVATE LAMBDAS */
+
+        std::string msg_get_payload_obj(nsb::nsbm *message) {
+            if (cfg.USE_DB) {
+                return message->msg_key();
+            }
+            else {
+                return message->payload();
+            }
+        }
+
+        void msg_set_payload_obj(std::string payload_obj, nsb::nsbm* message) {
+            if (cfg.USE_DB) {
+                message->set_msg_key(payload_obj);
+            } else {
+                message->set_payload(payload_obj);
+            }
+        }
+
+        /* PRIVATE METHODS */
+
         /**
          * @brief Configure the daemon with a YAML file.
          * 

@@ -417,6 +417,7 @@ class NSBClient:
     clients (AppClient and SimClient) will be built on. It provides basic 
     methods and shared operation methods.
     """
+
     def __init__(self, server_address:str, server_port:int):
         """
         @brief Base constructor for NSB Clients.
@@ -440,13 +441,17 @@ class NSBClient:
         This method sends an INIT message containing information about itself to 
         the server and gets a response containing configuration parameters.
         """
-        self.logger.info(f"Initializing {self.__getattribute__("_id")} with server at {self.comms.server_addr}:{self.comms.server_port}...")
+        if hasattr(self, '_id'):
+            client_id = self._id
+        else:
+            raise RuntimeError("Client identifier (_id) not set. Base class without proper implementation called.")
+        self.logger.info(f"Initializing {client_id} with server at {self.comms.server_addr}:{self.comms.server_port}...")
         # Create and populate an INIT message.
         nsb_msg = nsb_pb2.nsbm()
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.INIT
         nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
-        nsb_msg.intro.identifier = self.__getattribute__("_id")
+        nsb_msg.intro.identifier = client_id
         nsb_msg.intro.address = self.comms.conns[Comms.Channels.CTRL].getsockname()[0]
         nsb_msg.intro.ch_CTRL = self.comms.conns[Comms.Channels.CTRL].getsockname()[1]
         nsb_msg.intro.ch_SEND = self.comms.conns[Comms.Channels.SEND].getsockname()[1]
@@ -469,7 +474,7 @@ class NSBClient:
                         self.logger.info(f"{self.cfg}")
                         # If database is specified, start it up.
                         if self.cfg.use_db:
-                            self.db = RedisConnector(self.cfg.db_address, self.cfg.db_port)
+                            self.db = RedisConnector(client_id, self.cfg.db_address, self.cfg.db_port)
                         return
         raise RuntimeError("Failed to initialize NSB client. No response from server or invalid response.")
 
@@ -528,6 +533,16 @@ class NSBClient:
         # End self.
         del self
 
+    ### MACROS ###
+    def msg_get_payload_obj(self, msg):
+        return msg.msg_key if self.cfg.use_db else msg.payload
+    
+    def msg_set_payload_obj(self, payload_obj, msg): 
+        if self.cfg.use_db:
+            msg.msg_key = payload_obj
+        else:
+            msg.payload = payload_obj
+
 
 ### NSB Application Client ###
 
@@ -580,6 +595,7 @@ class NSBAppClient(NSBClient):
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = len(payload)
         if self.cfg.use_db:
+            # If using databsae, store the payload and set the payload key.
             nsb_msg.msg_key = self.db.store(payload)
         else:
             # If not using database, attach the payload.
@@ -651,10 +667,15 @@ class NSBAppClient(NSBClient):
             if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE or nsb_pb2.nsbm.Manifest.Operation.FORWARD:
                 # Check to see if there is a message at all.
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.check_out(nsb_resp.msg_key)
+                    else:
+                        payload = nsb_resp.payload
                     self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{nsb_resp.payload}")
+                                        f"{payload}")
                     return nsb_resp
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     self.logger.info("RECEIVE: Yikes, no message.")
@@ -689,7 +710,7 @@ class NSBSimClient(NSBClient):
         super().__init__(server_address, server_port)
         self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
 
-    def fetch(self, src_id:str|None=None, timeout=None):
+    def fetch(self, src_id:str|None=None, timeout=None, get_payload=True):
         """
         @brief Fetches a payload that needs to be sent over the simulated 
                network.
@@ -707,6 +728,10 @@ class NSBSimClient(NSBClient):
         @param timeout The amount of time in seconds to wait to receive data. 
                None denotes waiting indefinitely while 0 denotes polling 
                behavior.
+        @param get_payload Whether or not to retrieve the payload. Setting this 
+                           to True enables passing the actual payload through 
+                           the simulated network. Setting this to False may 
+                           result in lower latency for the system.
 
         @returns nsb_pb2.nsbm|None The NSB message containing the fetched 
                                    payload and metadata if a message is found, 
@@ -735,10 +760,15 @@ class NSBSimClient(NSBClient):
             if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FETCH or \
                 nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FORWARD:
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.peek(nsb_resp.msg_key)
+                    else:
+                        payload = nsb_resp.payload
                     self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{nsb_resp.payload}")
+                                        f"{payload}")
                     return nsb_resp
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("FETCH: Yikes, no message.")
@@ -748,7 +778,7 @@ class NSBSimClient(NSBClient):
         else:
             return None
         
-    def post(self, src_id:str, dest_id:str, payload:bytes, success:bool=True):
+    def post(self, src_id:str, dest_id:str, payload_obj:bytes, payload_size:int, success:bool=True):
         """
         @brief Posts a payload to the specified destination via NSB.
         
@@ -760,7 +790,7 @@ class NSBSimClient(NSBClient):
 
         @param src_id The identifier of the source NSB client.
         @param dest_id The identifier of the destination NSB client.
-        @param payload The payload to post to the destination.
+        @param payload_obj The payload or payload ID to post to the destination.
         @param success Whether the post was successful or not. If False, 
                        it will set the OpCode to NO_MESSAGE.
         """
@@ -775,22 +805,13 @@ class NSBSimClient(NSBClient):
         nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
         nsb_msg.metadata.src_id = src_id
         nsb_msg.metadata.dest_id = dest_id
-        nsb_msg.metadata.payload_size = len(payload)
-        nsb_msg.payload = payload
+        nsb_msg.metadata.payload_size = payload_size
+        self.msg_set_payload_obj(payload_obj, nsb_msg)
         # Send the NSB message + payload.
         self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("POST: Posted message + payload to server.")
 
 ### TEST FUNCTIONS ###
-
-def test_ping():
-    app1 = NSBAppClient("billy", "127.0.0.1", 65432)
-    app2 = NSBAppClient("bob", "127.0.0.1", 65432)
-    app1.ping()
-    time.sleep(2)
-    app2.ping()
-    time.sleep(2)
-    app1.exit()
 
 def test_lifecycle():
     app1 = NSBAppClient("billy", "127.0.0.1", 65432)
@@ -810,6 +831,7 @@ def test_lifecycle():
             sim.post(fetched_msg.metadata.src_id,
                      fetched_msg.metadata.dest_id,
                      fetched_msg.payload,
+                     fetched_msg.payload_size,
                      success=True)
     else:
         print("No message fetched.")
@@ -831,10 +853,12 @@ def test_push_mode():
     def sim_fetch():
         fetched_msg = sim.fetch()
         if fetched_msg:
-            sim.logger.info(f"Sim received message: {fetched_msg.payload}")
+            payload_obj = fetched_msg.payload if fetched_msg.HasField("payload") else fetched_msg.msg_key
+            sim.logger.info(f"Sim received message: {payload_obj}")
             sim.post(fetched_msg.metadata.src_id,
                      fetched_msg.metadata.dest_id,
-                     fetched_msg.payload,
+                     payload_obj,
+                     fetched_msg.metadata.payload_size,
                      success=True)
         else:
             sim.logger.info("Sim received no message.")
@@ -846,7 +870,8 @@ def test_push_mode():
     def app2_receive():
         received_msg = app2.receive()
         if received_msg:
-            app2.logger.info(f"App2 received message: {received_msg.payload}")
+            payload_obj = received_msg.payload if received_msg.HasField("payload") else received_msg.msg_key
+            app2.logger.info(f"App2 received message: {payload_obj}")
         else:
             app2.logger.info("Nada.")
     
@@ -882,10 +907,21 @@ def test_db():
     print(key3 ,conn2.peek(key3))
     print(key3 ,conn1.check_out(key3))
 
+class AppWithListener():
+    def __init__(self, name, address, port):
+        self.name = name
+        self.nsb = NSBAppClient(name, address, port)
+        self.nsb.initialize()
+        self.listening = True
+        self.listener_thread = threading.Thread(target=self.listen)
+    def listen(self):
+        while self.listening:
+            self.nsb.receive(self.name, timeout=None)
+
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
     # test_lifecycle()
-    # test_push_mode()
-    test_db()
+    test_push_mode()
+    # test_db()

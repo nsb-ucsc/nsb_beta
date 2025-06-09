@@ -72,14 +72,17 @@ namespace nsb {
         std::string source;
         /** @brief The destination identifier. */
         std::string destination;
-        /** @brief The payload as a bytestring, but in const char* form. */
-        std::string payload;
+        /** @brief The payload or payload key (if using database). */
+        std::string payload_obj;
+        /** @brief The size of the payload. */
+        int payload_size;
         // Constructors.
         /** @brief Blank constructor. */
-        MessageEntry() : source(""), destination(""), payload("") {}
+        MessageEntry() : source(""), destination(""), payload_obj(""), payload_size(0) {}
         /** @brief Populated constructor. */
-        MessageEntry(std::string src, std::string dest, std::string data)
-            : source(std::move(src)), destination(std::move(dest)), payload(std::move(data)) {}
+        MessageEntry(std::string src, std::string dest, std::string data, int size)
+            : source(std::move(src)), destination(std::move(dest)),
+              payload_obj(std::move(data)), payload_size(size){}
     };
 
     /**
