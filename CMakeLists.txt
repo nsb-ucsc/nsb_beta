@@ -79,3 +79,10 @@ target_include_directories(nsb_daemon
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
 )
+
+# Cleaning up.
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/proto"
+    "${PYTHON_DIR}/proto"
+    "${PYTHON_DIR}/__pycache__"
+)
