@@ -4,3 +4,4 @@ build/*
 docs/
 __pycache__
 nsb_pb2.py
+*/proto

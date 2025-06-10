@@ -1,7 +1,7 @@
 import socket
 import select
 import time
-import nsb_pb2 as nsb_pb2
+import proto.nsb_pb2 as nsb_pb2
 import asyncio
 
 # Set up logging.
@@ -170,7 +170,6 @@ class SocketInterface(Comms):
                     conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
                     # Attempt to connect.
                     conn.connect((self.server_addr, self.server_port))
-                    conn.setblocking(False)
                     self.conns[channel] = conn
                     break
                 # If the server isn't up or reachable, wait and try again.
@@ -181,6 +180,9 @@ class SocketInterface(Comms):
             # If loop ended due to timeout, raise error, otherwise continue.
             if time.time() >= target_time:
                 raise TimeoutError(f"Connection to server timed out after {timeout} seconds.")
+        # Set all connections non-blocking after setup.
+        for _, conn in self.conns.items():
+            conn.setblocking(False)
         self.logger.info("\tAll channels connected!")
 
     def _close(self):

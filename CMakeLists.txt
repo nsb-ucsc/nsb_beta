@@ -1,12 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
-
+# set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(NSBDaemon)
 
-message(STATUS "Current working directory: ${CMAKE_CURRENT_SOURCE_DIR}")
+# Set directories as necessary.
+message(STATUS "Current source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_CURRENT_BINARY_DIR}")
+set(CPP_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(PYTHON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/python")
+set(PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/proto")
+message(STATUS "C++ source directory: ${CPP_SRC_DIR}")
+message(STATUS "Python source directory: ${PYTHON_DIR}")
+message(STATUS "Protobuf directory: ${PROTO_DIR}")
 
 # Get necessary packages.
 find_package(gRPC CONFIG REQUIRED)
@@ -43,21 +50,22 @@ message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 
 # Set up executable.
 add_executable(nsb_daemon 
-    nsb_daemon.cc
-    nsb.cc
-    nsb.proto
+    src/nsb_daemon.cc
+    src/nsb.cc
 )
 # Generate C++ protobuf files.
 protobuf_generate(
     TARGET nsb_daemon
     LANGUAGE cpp
     PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    PROTOS ${PROTO_DIR}/nsb.proto
 )
 # Generate Python protobuf file.
 protobuf_generate(
     TARGET nsb_daemon
     LANGUAGE python
-    PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+    PROTOC_OUT_DIR ${PYTHON_DIR}
+    PROTOS ${PROTO_DIR}/nsb.proto
 )
 
 # Link libraries.
