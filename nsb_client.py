@@ -11,6 +11,8 @@ import threading
 
 import redis
 
+import random
+
 ## @cond
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
@@ -123,7 +125,7 @@ class SocketInterface(Comms):
     """
     def __init__(self, server_address: str, server_port: int):
         """
-        @brief Constructor for the NSBClient class.
+        @brief Constructor for the SocketInterface class.
 
         Sets the address and port of the server at the NSB daemon before 
         connecting to the server.
@@ -218,7 +220,7 @@ class SocketInterface(Comms):
 
     def _recv_msg(self, channel:Comms.Channels, timeout:int|None=None):
         """
-        @brief Sends a message to the server.
+        @brief Receives a message from the server.
         
         This method uses selectors to wait for the the channel socket to be 
         ready before receiving up to RECEIVE_BUFFER SIZE bytes at a time, making 
@@ -256,6 +258,35 @@ class SocketInterface(Comms):
                     return None
         return None
     
+    async def _listen_msg(self, channel:Comms.Channels):
+        """
+        @brief Asyncronously listens for a message.
+        
+        This method is implemented similarly to the _recv_msg() method, however,
+        it uses asynchronous socket receiving to wait for a message to come in 
+        over the target channel without blocking other potential coroutines.
+
+        @param channel The channel to send the message on (CTRL, SEND, or RECV).
+        @param timeout Maximum time in seconds to wait for a response from the
+                       server. If None, it will wait indefinitely.
+        """
+        data = b''
+        while True:
+            try:
+                chunk = await asyncio.get_event_loop().sock_recv(self.conns[channel], RECEIVE_BUFFER_SIZE)
+                data += chunk
+                # If chunk is less than the buffer size, we're done.
+                if len(chunk) < RECEIVE_BUFFER_SIZE:
+                    return data
+                # Otherwise, poll to see if there's more waiting.
+                else:
+                    _fd, _, _ = select.select([self.conns[channel]], [], [], 0)
+                    if not len(_fd):
+                        return data
+            except socket.error as e:
+                print(f"Socket error: {e}")
+                return None
+    
     def __del__(self):
         """
         @brief Closes connection to the server.
@@ -263,6 +294,7 @@ class SocketInterface(Comms):
         @see _close()
         """
         self._close()
+    
 
 ### DATABASE CONNECTORS ###
 
@@ -571,6 +603,7 @@ class NSBAppClient(NSBClient):
         self.logger = logging.getLogger(f"{self._id} (app)")
         super().__init__(server_address, server_port)
         self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        self.initialize()
         
     def send(self, dest_id:str, payload:bytes):
         """
@@ -670,6 +703,7 @@ class NSBAppClient(NSBClient):
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
                         payload = self.db.check_out(nsb_resp.msg_key)
+                        nsb_resp.payload = payload
                     else:
                         payload = nsb_resp.payload
                     self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
@@ -680,7 +714,52 @@ class NSBAppClient(NSBClient):
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     self.logger.info("RECEIVE: Yikes, no message.")
                     return None
+        # If nothing, return None.
+        return None
+    
+    async def listen(self, dest_id:str|None=None):
+        """
+        @brief Asynchronously listens for a payload via NSB.
 
+        This method returns a coroutine to be used in asynchronous calls. Its 
+        implementation is based on the receive() method, but leverages the 
+        asynchronous _listen_msg() instead.
+
+        @param dest_id The identifier of the destination NSB client. The default
+                       None value will automatically assume the destination is 
+                       self.
+
+        @returns nsb_pb2.nsbm|None The NSB message containing the received 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
+
+        @see NSBAppClient.receive()
+        @see SocketInterface._listen_msg()
+        """
+        # Get response from request or just wait for message to come in.
+        response = await self.comms._listen_msg(Comms.Channels.RECV)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            # Check to see that message is of expected operation.
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE or nsb_pb2.nsbm.Manifest.Operation.FORWARD:
+                # Check to see if there is a message at all.
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.check_out(nsb_resp.msg_key)
+                        nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("RECEIVE: Yikes, no message.")
+                    return None
         # If nothing, return None.
         return None
 
@@ -709,8 +788,9 @@ class NSBSimClient(NSBClient):
         self.logger = logging.getLogger(f"{self._id} (sim)")
         super().__init__(server_address, server_port)
         self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        self.initialize()
 
-    def fetch(self, src_id:str|None=None, timeout=None, get_payload=True):
+    def fetch(self, src_id:str|None=None, timeout=None, get_payload=False):
         """
         @brief Fetches a payload that needs to be sent over the simulated 
                network.
@@ -753,6 +833,55 @@ class NSBSimClient(NSBClient):
             self.logger.info("FETCH: Sent fetch request to server.")
         # Get response from request or await forwarded message.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FETCH or \
+                nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.FORWARD:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.peek(nsb_resp.msg_key)
+                        if get_payload:
+                            nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    print("FETCH: Yikes, no message.")
+                    return None
+            else:
+                return None
+        else:
+            return None
+        
+    async def listen(self, src_id:str|None=None):
+        """
+        @brief Asynchronously listens for a payload that needs to be sent over 
+               the simulated network.
+        
+        This method returns a coroutine to be used in asynchronous calls. Its 
+        implementation is based on the fetch() method, but leverages the 
+        asynchronous _listen_msg() instead.
+
+        @param src_id The identifier of the targe source. The default None value 
+               will result in fetching the most recent message, regardless
+               of source.
+
+        @returns nsb_pb2.nsbm|None The NSB message containing the fetched 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
+        
+        @see NSBSimClient.fetch()
+        @see SocketInterface._listen_msg()
+        """
+        # Get response from request or await forwarded message.
+        response = await self.comms._listen_msg(Comms.Channels.RECV)
         if len(response):
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
@@ -907,21 +1036,92 @@ def test_db():
     print(key3 ,conn2.peek(key3))
     print(key3 ,conn1.check_out(key3))
 
-class AppWithListener():
+class AppWithListener:
+    def __init__(self, name, address, port, contacts, rate=0.5):
+        self.name = name
+        self.logger = logging.getLogger(f"{self.name} (app)")
+        self.rate = rate
+        self.contacts = contacts
+        self.nsb = NSBAppClient(name, address, port)
+        # Set runtime flags.
+        self.listening = False
+        self.running = False
+    async def listen(self):
+        self.listening = True
+        while self.listening:
+            received_msg = await self.nsb.listen(self.name)
+            self.logger.info(f"RECV {received_msg.metadata.src_id}-->{received_msg.metadata.dest_id} " + \
+                             f" ({received_msg.metadata.payload_size}) {received_msg.payload}")
+    async def run(self):
+        self.running = True
+        while self.running:
+            for contact in self.contacts:
+                if random.random() < self.rate:
+                    self.logger.info(f"Sending to {contact}...")
+                    self.nsb.send(contact, b"Hello from " + self.name.encode())
+                await asyncio.sleep(random.random() * 5)
+    def __del__(self):
+        # Kill listener if necessary.
+        self.running = False
+        self.listening = False
+        # Exit NSB client.
+        del self.nsb
+
+class SimWithListener:
     def __init__(self, name, address, port):
         self.name = name
-        self.nsb = NSBAppClient(name, address, port)
-        self.nsb.initialize()
-        self.listening = True
-        self.listener_thread = threading.Thread(target=self.listen)
-    def listen(self):
-        while self.listening:
-            self.nsb.receive(self.name, timeout=None)
+        self.logger = logging.getLogger(f"{self.name} (sim)")
+        self.nsb = NSBSimClient(name, address, port)
+        self.running = False
+    async def listen(self):
+        self.running = True
+        while self.running:
+            self.logger.info("Listening...")
+            msg = await self.nsb.listen()
+            if msg:
+                self.nsb.post(msg.metadata.src_id,
+                                msg.metadata.dest_id,
+                                msg.msg_key if self.nsb.cfg.use_db else msg.payload,
+                                msg.metadata.payload_size,
+                                success=True)
+    def __del__(self):
+        self.running = False
+        
+async def run_scenario(agent_roster):
+    # Start sim.
+    sim = SimWithListener("ghost", "127.0.0.1", 65432)
+    # sim.nsb.initialize()
+    sim_runtime = asyncio.create_task(sim.listen())
+    agents = []
+    agent_listen_runtimes = []
+    agent_send_runtimes = []
+    for i, agent_name in enumerate(agent_roster):
+        agent = AppWithListener(agent_name, "127.0.0.1", 65432, agent_roster)
+        agents.append(agent)
+        listen_runtime = asyncio.create_task(agent.listen())
+        agent_listen_runtimes.append(listen_runtime)
+        send_runtime = asyncio.create_task(agent.run())
+        agent_send_runtimes.append(send_runtime)
+
+    # Catch kill signal.
+    try:
+        await asyncio.gather(*agent_listen_runtimes, *agent_send_runtimes, sim_runtime)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        # Cleanup.
+        sim.__del__()
+        for agent in agents:
+            agent.__del__()
+        print("Scenario completed. All agents cleaned up.")
+    
+    
 
 ### MAIN FUNCTION (FOR TESTING) ###
 
 if __name__ == "__main__":
     # test_ping()
     # test_lifecycle()
-    test_push_mode()
+    # test_push_mode()
     # test_db()
+    asyncio.run(run_scenario(["agent1", "agent2", "agent3"]))
