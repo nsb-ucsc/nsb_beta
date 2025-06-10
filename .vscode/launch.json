@@ -29,7 +29,7 @@
             "name": "NSB: Debug Python Client",
             "type": "debugpy",
             "request": "launch",
-            "program": "nsb_client.py",
+            "program": "tests.py",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "presentation": {
