@@ -9,7 +9,7 @@ namespace nsb {
 
     int SERVER_CONNECTION_TIMEOUT = 10;
     int DAEMON_RESPONSE_TIMEOUT = 600;
-    int RECEIVE_BUFFER_SIZE = 4096;
+    size_t RECEIVE_BUFFER_SIZE = 4096;
     int SEND_BUFFER_SIZE = 4096;
 
     class Comms {
@@ -37,8 +37,8 @@ namespace nsb {
         ~SocketInterface();
         int connectToServer(int timeout);
         void closeConnection();
-        void sendMessage(Comms::Channel channel, const std::string& bytes);
-        void receiveMessage(Comms::Channel channel, int timeout);
+        int sendMessage(Comms::Channel channel, const std::string& message);
+        std::string receiveMessage(Comms::Channel channel, int timeout);
         std::future<std::string> listenForMessage(Comms::Channel channel);
     private:
         std::string serverAddress;

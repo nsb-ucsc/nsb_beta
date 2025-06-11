@@ -88,6 +88,49 @@ namespace nsb {
             close(conns.at(channel));
         }
     }
+
+    int SocketInterface::sendMessage(Comms::Channel channel, const std::string& message) {
+        int totalBytesSent = 0;
+        int totalSize = message.size();
+        while (totalBytesSent < totalSize) {
+            int bytesSent = send(conns.at(channel), message.data() + totalBytesSent, totalSize - totalBytesSent, 0);
+            if (bytesSent < 0) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // May not be read to send yet.
+                    continue;
+                } else {
+                    LOG(ERROR) << "Failed to send message on " << getChannelName(channel) << ": " << strerror(errno) << std::endl;
+                    return -1;
+                }
+            }
+            totalBytesSent += bytesSent;
+        }
+        return 0;
+    }
+
+    std::string SocketInterface::receiveMessage(Comms::Channel channel, int timeout) {
+        int* fdPtr = &conns.at(channel);
+        // Set up FD for select.
+        fd_set readFDs;
+        std::string message;
+        bool messageExists = false;
+        std::chrono::time_point startTime = std::chrono::system_clock::now();
+        std::chrono::time_point targetTime = startTime + std::chrono::seconds(timeout);
+        while (std::chrono::system_clock::now() < targetTime) {
+            char buffer[RECEIVE_BUFFER_SIZE];
+            // Read buffer until there's nothing left.
+            int bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
+            while(bytesRead > 0) {
+                messageExists = true;
+                message.append(buffer, bytesRead);
+                bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
+            }
+            if (messageExists) {
+                return message;
+            }
+        }
+        return std::string();
+    }
 }
 
 int main() {
@@ -99,6 +142,15 @@ int main() {
     // Testing
     LOG(INFO) << "Creating socket interface..." << std::endl;
     SocketInterface sif = SocketInterface("127.0.0.1", 65432);
+    LOG(INFO) << "Sending a message..." << std::endl;
+    sif.sendMessage(Comms::Channel::CTRL, "hello");
+    LOG(INFO) << "Receiving a message..." << std::endl;
+    std::string response = sif.receiveMessage(Comms::Channel::CTRL, 5);
+    if (response.empty()) {
+        LOG(ERROR) << "\tNo response received." << std::endl;
+    } else {
+        LOG(INFO) << "\tReceived response: " << response << std::endl;
+    }
     LOG(INFO) << "Disconnecting socket interace..." << std::endl;
     sif.closeConnection();
     LOG(INFO) << "Done!" << std::endl;
