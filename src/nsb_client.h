@@ -38,8 +38,8 @@ namespace nsb {
         int connectToServer(int timeout);
         void closeConnection();
         int sendMessage(Comms::Channel channel, const std::string& message);
-        std::string receiveMessage(Comms::Channel channel, int timeout);
-        std::future<std::string> listenForMessage(Comms::Channel channel);
+        std::string receiveMessage(Comms::Channel channel, int* timeout);
+        std::future<std::string> listenForMessage(Comms::Channel channel, int* timeout);
     private:
         std::string serverAddress;
         int serverPort;

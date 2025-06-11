@@ -108,28 +108,54 @@ namespace nsb {
         return 0;
     }
 
-    std::string SocketInterface::receiveMessage(Comms::Channel channel, int timeout) {
+    std::string SocketInterface::receiveMessage(Comms::Channel channel, int* timeout) {
         int* fdPtr = &conns.at(channel);
         // Set up FD for select.
         fd_set readFDs;
+        FD_ZERO(&readFDs);
+        FD_SET(*fdPtr, &readFDs);
+        // Set up data stores.
         std::string message;
+        char buffer[RECEIVE_BUFFER_SIZE];
         bool messageExists = false;
-        std::chrono::time_point startTime = std::chrono::system_clock::now();
-        std::chrono::time_point targetTime = startTime + std::chrono::seconds(timeout);
-        while (std::chrono::system_clock::now() < targetTime) {
-            char buffer[RECEIVE_BUFFER_SIZE];
-            // Read buffer until there's nothing left.
-            int bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
-            while(bytesRead > 0) {
-                messageExists = true;
-                message.append(buffer, bytesRead);
-                bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
-            }
-            if (messageExists) {
-                return message;
+        // Wait for messages.
+        timeval* t;
+        if (timeout == nullptr) {
+            t = nullptr;
+        } else {
+            timeval timeoutVal{};
+            timeoutVal.tv_sec = *timeout;
+            timeoutVal.tv_usec = 0;
+            t = &timeoutVal;
+        }
+        while (true) {
+            int activity = select(*fdPtr + 1, &readFDs, nullptr, nullptr, t);
+            if (activity < 0) {
+                LOG(ERROR) << "Select error: " << strerror(errno) << std::endl;
+                return std::string();
+            } else if (activity == 0) {
+                LOG(WARNING) << "Timeout waiting for message on " << getChannelName(channel) << "." << std::endl;
+                return std::string();
+            } else {
+                // Read buffer until there's nothing left.
+                int bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
+                while (bytesRead > 0) {
+                    messageExists = true;
+                    message.append(buffer, bytesRead);
+                    bytesRead = recv(*fdPtr, buffer, RECEIVE_BUFFER_SIZE-1, 0);
+                }
+                if (messageExists) {
+                    return message;
+                }
             }
         }
         return std::string();
+    }
+
+    std::future<std::string> SocketInterface::listenForMessage(Comms::Channel channel, int* timeout) {
+        return std::async(std::launch::async, [this, channel, timeout]() {
+            return receiveMessage(channel, timeout);
+        });
     }
 }
 
@@ -145,7 +171,9 @@ int main() {
     LOG(INFO) << "Sending a message..." << std::endl;
     sif.sendMessage(Comms::Channel::CTRL, "hello");
     LOG(INFO) << "Receiving a message..." << std::endl;
-    std::string response = sif.receiveMessage(Comms::Channel::CTRL, 5);
+    int timeout = 5;
+    std::future<std::string> futureResponse = sif.listenForMessage(Comms::Channel::CTRL, &timeout);
+    std::string response = futureResponse.get();
     if (response.empty()) {
         LOG(ERROR) << "\tNo response received." << std::endl;
     } else {
