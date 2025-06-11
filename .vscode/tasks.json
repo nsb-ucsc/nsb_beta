@@ -13,7 +13,7 @@
         {
             "label": "CMake: Build NSB Daemon",
             "type": "shell",
-            "command": "mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .",
+            "command": "mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --clean-first",
             "group": {
                 "kind": "build",
                 "isDefault": true

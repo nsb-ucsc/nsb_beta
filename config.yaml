@@ -1,5 +1,7 @@
 ---
 system:
+  daemon_address: 127.0.0.1
+  daemon_port: 65432
   mode: 1 # PULL (clients must request to fetch/receive payloads), PUSH (payloads will be forwarded when sent/posted)
 
 database:

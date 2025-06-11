@@ -23,7 +23,6 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "CMake: Build NSB Daemon"
         },
         {
             "name": "NSB: Debug Python Client",
@@ -35,14 +34,45 @@
             "presentation": {
                 "order": 2
             }
-        }
+        },
+        {
+            "name": "NSB: Debug C++ Client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/nsb_client",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+        },
     ],
     "compounds": [
         {
-            "name": "Run Daemon & App Client",
+            "name": "Run Daemon & Python Clients",
             "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
             "stopAll": true,
             "preLaunchTask": "CMake: Build NSB Daemon"
-        }
+        },
+        {
+            "name": "Run Daemon & C++ Clients",
+            "configurations": ["NSB: Debug C++ Client", "NSB: Debug NSB Daemon"],
+            "stopAll": true,
+            "preLaunchTask": "CMake: Build NSB Daemon"
+        },
+        {
+            "name": "Run Daemon Only",
+            "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
+            "stopAll": true,
+            "preLaunchTask": "CMake: Build NSB Daemon"
+        },
     ]
 }

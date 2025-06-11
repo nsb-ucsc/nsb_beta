@@ -18,9 +18,11 @@
 #include <cstdio>
 #include <format>
 #include <signal.h>
+#include <future>
 // Networking libraries.
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -42,6 +44,34 @@
 #include <hiredis/async.h>
 
 namespace nsb {
+
+    class NsbLogSink : public absl::LogSink {
+        public:
+            void Send(const absl::LogEntry& entry) override {
+                // Get microseconds.
+                absl::Time ts = entry.timestamp();
+                absl::TimeZone tz = absl::LocalTimeZone();
+                absl::CivilSecond civ_sec = absl::ToCivilSecond(ts, tz);
+
+                int64_t ms = absl::ToInt64Microseconds(ts - absl::FromCivil(civ_sec, tz));
+
+                // Set severity.
+                std::string severity;
+                switch (entry.log_severity()) {
+                    case absl::LogSeverity::kInfo:      severity = "(info)"; break;
+                    case absl::LogSeverity::kWarning:   severity = "(warning)"; break;
+                    case absl::LogSeverity::kError:     severity = "(error)"; break;
+                    case absl::LogSeverity::kFatal:     severity = "(FATAL)"; break;
+                    default:                            severity = "(other)"; break;
+                }
+
+                // Stream message.
+                std::cout << "[" << std::setw(2) << civ_sec.hour() << ":" << std::setw(2) << civ_sec.minute() << ":" 
+                        << std::setw(2) << civ_sec.second() << "." << std::setw(6) << ms << "] "
+                        << std::setw(9) << severity << " " << entry.text_message();
+            }
+    };
+
     /**
      * @brief Configuration parameters struct.
      * 
@@ -58,6 +88,18 @@ namespace nsb {
         std::string DB_ADDRESS;
         int DB_PORT;
         int DB_NUM;
+
+        Config() : SYSTEM_MODE(SystemMode::PULL), USE_DB(false), DB_ADDRESS(""), DB_PORT(0), DB_NUM(0) {}
+        Config(nsb::nsbm msg) {
+            nsb::nsbm::ConfigParams cfg = msg.config();
+            SYSTEM_MODE = SystemMode(cfg.sys_mode());
+            USE_DB = cfg.use_db();
+            if (USE_DB) {
+                DB_ADDRESS = cfg.db_address();
+                DB_PORT = cfg.db_port();
+                DB_NUM = cfg.db_num();
+            }
+        }
     };
     /**
      * @brief Message storage struct.
@@ -116,6 +158,10 @@ namespace nsb {
         static void setCallback(redisAsyncContext* c, void* r, void* privdata);
         static void getCallback(redisAsyncContext* c, void* r, void* privdata);
     };
+
+    
+
+    
 }
 
 #endif // NSB_H

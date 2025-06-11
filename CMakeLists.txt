@@ -48,41 +48,47 @@ message(STATUS "▸ Binary: ${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "▸ Protobuf: ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 
-# Set up executable.
-add_executable(nsb_daemon 
-    src/nsb_daemon.cc
-    src/nsb.cc
-)
-# Generate C++ protobuf files.
-protobuf_generate(
-    TARGET nsb_daemon
-    LANGUAGE cpp
-    PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    PROTOS ${PROTO_DIR}/nsb.proto
-)
-# Generate Python protobuf file.
-protobuf_generate(
-    TARGET nsb_daemon
-    LANGUAGE python
-    PROTOC_OUT_DIR ${PYTHON_DIR}
-    PROTOS ${PROTO_DIR}/nsb.proto
+set(EXEC_TARGETS
+    nsb_daemon
+    nsb_client
 )
 
-# Link libraries.
-target_link_libraries(nsb_daemon PUBLIC
-    ${link_targets}
-)
-# Include directories.
-target_include_directories(nsb_daemon
-    PUBLIC 
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${Protobuf_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIR}
-)
+foreach(exec_target ${EXEC_TARGETS})
+    # Set up executable.
+    add_executable(${exec_target}
+        src/${exec_target}.cc
+        src/nsb.cc
+        )
 
-# Cleaning up.
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/proto"
-    "${PYTHON_DIR}/proto"
-    "${PYTHON_DIR}/__pycache__"
-)
+    # Generate C++ protobuf files.
+    protobuf_generate(
+        TARGET ${exec_target}
+        LANGUAGE cpp
+        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+        PROTOS ${PROTO_DIR}/nsb.proto
+    )
+    # Generate Python protobuf file.
+    protobuf_generate(
+        TARGET ${exec_target}
+        LANGUAGE python
+        PROTOC_OUT_DIR ${PYTHON_DIR}
+        PROTOS ${PROTO_DIR}/nsb.proto
+    )
+
+    # Link libraries.
+    target_link_libraries(${exec_target} PUBLIC
+        ${link_targets}
+    )
+    # Include directories.
+    target_include_directories(${exec_target} PUBLIC 
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${Protobuf_INCLUDE_DIRS}
+        ${YAML_CPP_INCLUDE_DIR}
+    )
+
+    # Cleaning up.
+    set_target_properties(${exec_target} PROPERTIES
+        ADDITIONAL_CLEAN_FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
+    )
+endforeach(exec_target ${EXEC_TARGETS})

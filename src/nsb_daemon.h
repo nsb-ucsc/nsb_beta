@@ -304,32 +304,5 @@ namespace nsb {
          */
         void handle_receive(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required);
     };
-
-    class NsbLogSink : public absl::LogSink {
-        public:
-            void Send(const absl::LogEntry& entry) override {
-                // Get microseconds.
-                absl::Time ts = entry.timestamp();
-                absl::TimeZone tz = absl::LocalTimeZone();
-                absl::CivilSecond civ_sec = absl::ToCivilSecond(ts, tz);
-
-                int64_t ms = absl::ToInt64Microseconds(ts - absl::FromCivil(civ_sec, tz));
-
-                // Set severity.
-                std::string severity;
-                switch (entry.log_severity()) {
-                    case absl::LogSeverity::kInfo:      severity = "(info)"; break;
-                    case absl::LogSeverity::kWarning:   severity = "(warning)"; break;
-                    case absl::LogSeverity::kError:     severity = "(error)"; break;
-                    case absl::LogSeverity::kFatal:     severity = "(FATAL)"; break;
-                    default:                            severity = "(other)"; break;
-                }
-
-                // Stream message.
-                std::cout << "[" << std::setw(2) << civ_sec.hour() << ":" << std::setw(2) << civ_sec.minute() << ":" 
-                        << std::setw(2) << civ_sec.second() << "." << std::setw(6) << ms << "] "
-                        << std::setw(9) << severity << " " << entry.text_message();
-            }
-    };
 }
 #endif // NSB_DAEMON_H
