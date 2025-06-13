@@ -46,9 +46,44 @@ namespace nsb {
         std::map<Channel, int> conns;
     };
 
-    
+    class NSBClient {
+    public:
+        NSBClient(std::string& serverAddress, int serverPort);
+        ~NSBClient();
+        void initialize();
+        bool ping();
+        void exit();
+    protected:
+        std::string msgGetPayloadObj(nsb::nsbm msg);
+        std::string msgSetPayloadObj(std::string& payloadObj, nsb::nsbm msg);
+    private:
+        SocketInterface comms;
+        nsb::nsbm::Manifest::Originator originIndicator;
+        Config cfg;
+        RedisConnector db;
+    };
 
+    class NSBAppClient : public NSBClient {
+    public:
+        NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort);
+        ~NSBAppClient();
+        void send(std::string& destId, std::string& payload);
+        nsb::nsbm* receive(int* destId, int timeout);
+        nsb::nsbm* listenReceive();
+    private:
+        const std::string clientId;
+    };
 
+    class NSBSimClient : public NSBClient {
+    public:
+        NSBSimClient(const std::string& identifier, std::string& serverAddress, int serverPort);
+        ~NSBSimClient();
+        nsb::nsbm* fetch(int* srcId, int timeout, bool getPayload);
+        nsb::nsbm* listenFetch();
+        void post(std::string srcId, std::string destId, int payloadSize, bool success);
+    private:
+        const std::string clientId;
+    };
 }
 
 #endif
