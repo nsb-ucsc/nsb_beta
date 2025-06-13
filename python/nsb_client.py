@@ -719,17 +719,13 @@ class NSBAppClient(NSBClient):
         # If nothing, return None.
         return None
     
-    async def listen(self, dest_id:str|None=None):
+    async def listen(self):
         """
         @brief Asynchronously listens for a payload via NSB.
 
         This method returns a coroutine to be used in asynchronous calls. Its 
         implementation is based on the receive() method, but leverages the 
         asynchronous _listen_msg() instead.
-
-        @param dest_id The identifier of the destination NSB client. The default
-                       None value will automatically assume the destination is 
-                       self.
 
         @returns nsb_pb2.nsbm|None The NSB message containing the received 
                                    payload and metadata if a message is found, 
@@ -862,7 +858,7 @@ class NSBSimClient(NSBClient):
         else:
             return None
         
-    async def listen(self, src_id:str|None=None):
+    async def listen(self):
         """
         @brief Asynchronously listens for a payload that needs to be sent over 
                the simulated network.
