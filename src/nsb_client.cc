@@ -194,6 +194,7 @@ int testRedisConnector() {
     std::string recvPayload = thatConn.checkOut(key);
     DLOG(INFO) << "Payload sent: " << sendPayload << std::endl;
     DLOG(INFO) << "Payload received: " << recvPayload << std::endl;
+    return 0;
 }
 
 int main() {
@@ -204,5 +205,4 @@ int main() {
     absl::log_internal::AddLogSink(&log_output);
     // return testSocketInterface();
     return testRedisConnector();
-
 }
