@@ -309,7 +309,7 @@ class DBConnector:
     _database.use_db_ parameter must be configured to be true. This class itself
     does not contain the necessary store(), check_out(), and peek() methods 
     necessary for NSB, but it can be inherited by other connector 
-    implications that implement those function. This class does provide a basic 
+    implications that implement those methods. This class does provide a basic 
     message key generator.
 
     @see RedisConnector

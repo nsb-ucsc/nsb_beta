@@ -128,6 +128,36 @@ namespace nsb {
     };
 
     /**
+     * @brief Base class for database connectors.
+     * 
+     * Database connectors enable NSB to use a database to store and retrieve 
+     * larger messages being sent over the network. To use this, the 
+     * _database.use_db_ parameter must be configured to be __true__. This class 
+     * itself does not contain the necessary _store()_, _checkOut()_, and 
+     * _peek()_ methods necessary for NSB, but it can be inherited by other 
+     * connector implications that implement those methods. This class does 
+     * provide a basic message key generator.
+     * 
+     * @see RedisConnector
+     */
+    class DBConnector {
+    public:
+        DBConnector(std::string& clientIdentifier);
+        ~DBConnector();
+    protected:
+        std::string clientId;
+        int plctr;
+        std::mutex mtx;
+        std::string generatePayloadId() {
+            std::lock_guard<std::mutex> lock(mtx);
+            plctr = (plctr + 1) & 0xFFFFF;
+            int tms = static_cast<int>(std::chrono::system_clock::now().time_since_epoch().count());
+            std::string payloadId = std::to_string(tms) + "-" + clientId + "-" + std::to_string(plctr);
+            return payloadId;
+        }
+    };
+
+    /**
      * @brief Connector for offloading payloads to a Redis database.
      * 
      * A database connector that enables NSB to utilize Redis to store payloads 
@@ -136,20 +166,19 @@ namespace nsb {
      * applications with larger payloads (>32KB). Database can be configured in 
      * the configuration file.
      */
-    class RedisConnector {
+    class RedisConnector : public DBConnector {
     public:
-        RedisConnector(const std::string& db_address, int db_port);
+        RedisConnector(std::string& clientIdentifier, const std::string& db_address, int db_port);
         ~RedisConnector();
         bool is_connected() const;
         std::string store(const std::string& value);
-        std::string check_out(const int key);
+        std::string checkOut(std::string& key);
         std::string peek(const int key);
     private:
         std::string address;
         int port;
         int num;
         redisAsyncContext* context;
-        int num_payloads;
         bool connect();
         void disconnect();
         // Callback Functions

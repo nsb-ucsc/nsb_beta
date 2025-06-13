@@ -159,12 +159,8 @@ namespace nsb {
     }
 }
 
-int main() {
+int testSocketInterface() {
     using namespace nsb;
-    // Set up logging.
-    NsbLogSink log_output = NsbLogSink();
-    absl::InitializeLog();
-    absl::log_internal::AddLogSink(&log_output);
     // Testing
     LOG(INFO) << "Creating socket interface..." << std::endl;
     SocketInterface sif = SocketInterface("127.0.0.1", 65432);
@@ -182,4 +178,31 @@ int main() {
     LOG(INFO) << "Disconnecting socket interace..." << std::endl;
     sif.closeConnection();
     LOG(INFO) << "Done!" << std::endl;
+    return 0;
+}
+
+int testRedisConnector() {
+    using namespace nsb;
+    // Testing Redis Connector
+    std::string thisAppId = "app1";
+    std::string thatAppId = "app2";
+    std::string redisServerAddr = "127.0.0.1";
+    RedisConnector thisConn = RedisConnector(thisAppId, redisServerAddr, 5050);
+    RedisConnector thatConn = RedisConnector(thatAppId, redisServerAddr, 5050);
+    std::string sendPayload = "hola mundo";
+    std::string key = thisConn.store(sendPayload);
+    std::string recvPayload = thatConn.checkOut(key);
+    DLOG(INFO) << "Payload sent: " << sendPayload << std::endl;
+    DLOG(INFO) << "Payload received: " << recvPayload << std::endl;
+}
+
+int main() {
+    using namespace nsb;
+    // Set up logging.
+    NsbLogSink log_output = NsbLogSink();
+    absl::InitializeLog();
+    absl::log_internal::AddLogSink(&log_output);
+    // return testSocketInterface();
+    return testRedisConnector();
+
 }
