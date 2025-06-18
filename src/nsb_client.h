@@ -56,7 +56,6 @@ namespace nsb {
     protected:
         std::string msgGetPayloadObj(nsb::nsbm msg);
         void msgSetPayloadObj(std::string& payloadObj, nsb::nsbm msg);
-    private:
         const std::string clientId;
         SocketInterface comms;
         nsb::nsbm::Manifest::Originator* originIndicator;

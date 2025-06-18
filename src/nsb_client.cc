@@ -187,7 +187,7 @@ namespace nsb {
             LOG(ERROR) << "NSBClient::initialize() called without setting originIndicator." << std::endl;
             return;
         }
-        LOG(INFO) << "Initializing " << clientId << " with NSB daemon...";
+        LOG(INFO) << "Initializing " << clientId << " with NSB daemon..." << std::endl;
         // Create and populate an INIT message.
         nsb::nsbm nsbMsg = nsb::nsbm();
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
@@ -255,11 +255,12 @@ namespace nsb {
             // Get the configuration.
             if (nsbResponse.has_config()) {
                 cfg = Config(nsbResponse);
-                LOG(INFO) << "\tConfiguration received: Mode " << cfg.SYSTEM_MODE <<
+                LOG(INFO) << "\tConfiguration received: Mode " << (int) cfg.SYSTEM_MODE <<
                     " | Use DB? " << cfg.USE_DB << std::endl;
                 // Set up database if necessary.
                 if (cfg.USE_DB) {
                     db = new RedisConnector(clientId, cfg.DB_ADDRESS, cfg.DB_PORT);
+                    LOG(INFO) << "\tConnected to RedisConnecter@" << cfg.DB_ADDRESS << ":" << cfg.DB_PORT;
                 }
                 return;
             } else {
@@ -269,6 +270,18 @@ namespace nsb {
         } else {
             LOG(ERROR) << "\tUnexpected operation received: " << 
                 nsb::nsbm::Manifest::Operation_Name(nsbResponse.manifest().op()) << std::endl;
+        }
+    }
+    
+    NSBAppClient::NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort) : 
+        NSBClient(identifier, serverAddress, serverPort) {
+            originIndicator = new nsb::nsbm::Manifest::Originator(nsb::nsbm::Manifest::APP_CLIENT);
+            initialize();
+        }
+
+    NSBAppClient::~NSBAppClient() {
+        if (originIndicator) {
+            delete originIndicator;
         }
     }
 }
@@ -318,7 +331,7 @@ int testLifecycle() {
     std::string nsbDaemonAddr = "127.0.0.1";
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
-    
+    return 0;
 }
 
 int main() {
@@ -328,5 +341,6 @@ int main() {
     absl::InitializeLog();
     absl::log_internal::AddLogSink(&log_output);
     // return testSocketInterface();
-    return testRedisConnector();
+    // return testRedisConnector();
+    return testLifecycle();
 }
