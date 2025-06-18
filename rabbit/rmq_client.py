@@ -268,22 +268,8 @@ class RabbitInterface(Comms):
         @param timeout Maximum time in seconds to wait for a response from the
                        server. If None, it will wait indefinitely.
         """
-        data = b''
-        while True:
-            try:
-                chunk = await asyncio.get_event_loop().sock_recv(self.conns[channel], RECEIVE_BUFFER_SIZE)
-                data += chunk
-                # If chunk is less than the buffer size, we're done.
-                if len(chunk) < RECEIVE_BUFFER_SIZE:
-                    return data
-                # Otherwise, poll to see if there's more waiting.
-                else:
-                    _fd, _, _ = select.select([self.conns[channel]], [], [], 0)
-                    if not len(_fd):
-                        return data
-            except socket.error as e:
-                print(f"Socket error: {e}")
-                return None
+        self.logger.error("Not implemented yet")
+        return
     
     def __del__(self):
         """
@@ -405,3 +391,182 @@ class NSBRabbitClient:
             msg.msg_key = payload_obj
         else:
             msg.payload = payload_obj
+
+class NSBAppClientRMQ(NSBRabbitClient):
+    """
+    @brief NSB Application Client interface.
+    
+    This client provides the high-level NSB interface to send and receive 
+    messages via NSB by communicating with the RabbitMQ broker.
+    """
+    def __init__(self, identifier:str, server_address:str, server_port:int):
+        """
+        @brief Constructs the NSB Application Client interface.
+
+        This method uses the base NSBClient's constructor, which initializes a 
+        RabbitMQ interface to connect and communicate with the RabbitMQ broker. It 
+        also an identifier that should correspond to the identifier used in the 
+        NSB system.
+
+        @param identifier The identifier for this NSB application client, which
+                should correspond to the identifier in NSB and simulator.
+        @param server_address The address of the RabbitMQ broker.
+        @param server_port The port of the RabbitMQ broker.
+        """
+        self._id = identifier
+        self.logger = logging.getLogger(f"{self._id} (app-rabbit)")
+        super().__init__(server_address, server_port)
+        self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.APP_CLIENT
+        self.initialize()
+        
+    def send(self, dest_id:str, payload:bytes):
+        """
+        @brief Sends a payload to the specified destination via RabbitMQ broker.
+        
+        This method creates an NSB SEND message with the appropriate information 
+        and payload and sends it to the daemon. It does not expect a response 
+        from the simulator client nor broker.
+
+        @param dest_id The identifier of the destination NSB client.
+        @param payload The payload to send to the destination.
+        """
+        # Create and populate a SEND message.
+        nsb_msg = nsb_pb2.nsbm()
+        # Manifest.
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.SEND
+        nsb_msg.manifest.og = self.og_indicator
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE
+        # Metadata.
+        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+        nsb_msg.metadata.src_id = self._id
+        nsb_msg.metadata.dest_id = dest_id
+        nsb_msg.metadata.payload_size = len(payload)
+        # Database stuff
+        if self.cfg.use_db:
+            nsb_msg.msg_key = self.db.store(payload)
+        else:
+            nsb_msg.payload = payload
+        self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
+        self.logger.info("SEND: Sent message + payload to server.")
+
+    def receive(self, dest_id:str|None=None, timeout:int|None=None):
+        """
+        @brief Receives a payload via NSB.
+
+        The implementations of this function differ based on the system mode.
+        
+        *In __PULL__ mode:*
+        If the destination is specified, it will receive a payload for that 
+        destination. This method creates an NSB RECEIVE message with the 
+        appropriate information and payload and sends it to the broker. It will
+        then get a response that either contains a MESSAGE code and 
+        carries the retrieved payload or contains a NO_MESSAGE code. If a 
+        message is found, the entire NSB message is returned to provide access
+        to the metadata.
+
+        *In __PUSH__ mode:*
+        This method will await a message on the Comms.Channels.RECV channel 
+        using _select_, with an optional timeout. If you want to achieve polling
+        behavior, set _timeout_ to be 0. If this is being used to listen 
+        indefinitely, set the timeout to be None. Listening indefinitely 
+        will result in blocking behavior, but is recommended for asynchronous 
+        listener implementations.
+
+        @param dest_id The identifier of the destination NSB client. The default
+                       None value will automatically assume the destination is 
+                       self.
+        @param timeout The amount of time in seconds to wait to receive data. 
+                       None denotes waiting indefinitely while 0 denotes polling
+                       behavior.
+
+        @returns nsb_pb2.nsbm|None The NSB message containing the received 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
+
+        @see Config.SystemMode
+        @see SocketInterface._recv_msg()
+        """
+        if self.cfg.system_mode == Config.SystemMode.PULL:
+            # Create and populate a FETCH message.
+            nsb_msg = nsb_pb2.nsbm()
+            # Manifest.
+            nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.RECEIVE
+            nsb_msg.manifest.og = self.og_indicator
+            nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+            # Metadata.
+            nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+            if dest_id:
+                nsb_msg.metadata.dest_id = dest_id
+            else:
+                nsb_msg.metadata.dest_id = self._id
+            # Send the NSB message + payload.
+            self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
+            self.logger.info("RECEIVE: Polling the server.")
+        # Get response from request or just wait for message to come in.
+        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+        if response and len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            # Check to see that message is of expected operation.
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE or nsb_pb2.nsbm.Manifest.Operation.FORWARD:
+                # Check to see if there is a message at all.
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.check_out(nsb_resp.msg_key)
+                        nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("RECEIVE: Yikes, no message.")
+                    return None
+        # If nothing, return None.
+        return None
+    
+    async def listen(self):
+        """
+        @brief Asynchronously listens for a payload via NSB.
+
+        This method returns a coroutine to be used in asynchronous calls. Its 
+        implementation is based on the receive() method, but leverages the 
+        asynchronous _listen_msg() instead.
+
+        @returns nsb_pb2.nsbm|None The NSB message containing the received 
+                                   payload and metadata if a message is found, 
+                                   otherwise None.
+
+        @see NSBAppClient.receive()
+        @see SocketInterface._listen_msg()
+        """
+        # Get response from request or just wait for message to come in.
+        response = await self.comms._listen_msg(Comms.Channels.RECV)
+        if len(response):
+            # Parse in message.
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            # Check to see that message is of expected operation.
+            if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.RECEIVE or nsb_pb2.nsbm.Manifest.Operation.FORWARD:
+                # Check to see if there is a message at all.
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        # If using a database, retrieve the payload.
+                        payload = self.db.check_out(nsb_resp.msg_key)
+                        nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                                        f"bytes from {nsb_resp.metadata.src_id} to " + \
+                                        f"{nsb_resp.metadata.dest_id}: " + \
+                                        f"{payload}")
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("RECEIVE: Yikes, no message.")
+                    return None
+        # If nothing, return None.
+        return None
