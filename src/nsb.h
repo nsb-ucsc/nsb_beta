@@ -142,7 +142,7 @@ namespace nsb {
      */
     class DBConnector {
     public:
-        DBConnector(std::string& clientIdentifier);
+        DBConnector(const std::string& clientIdentifier);
         ~DBConnector();
     protected:
         std::string clientId;
@@ -168,7 +168,7 @@ namespace nsb {
      */
     class RedisConnector : public DBConnector {
     public:
-        RedisConnector(std::string& clientIdentifier, const std::string& db_address, int db_port);
+        RedisConnector(const std::string& clientIdentifier, std::string& db_address, int db_port);
         ~RedisConnector();
         bool is_connected() const;
         std::string store(const std::string& value);

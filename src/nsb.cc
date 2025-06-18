@@ -3,11 +3,11 @@
 #include "nsb.h"
 
 namespace nsb {
-    DBConnector::DBConnector(std::string& clientIdentifier) : clientId(std::move(clientIdentifier)), plctr(0) {}
+    DBConnector::DBConnector(const std::string& clientIdentifier) : clientId(std::move(clientIdentifier)), plctr(0) {}
     
     DBConnector::~DBConnector() {}
 
-    RedisConnector::RedisConnector(std::string& clientIdentifier, const std::string& db_address, int db_port) : 
+    RedisConnector::RedisConnector(const std::string& clientIdentifier, std::string& db_address, int db_port) : 
         DBConnector(clientIdentifier), address(std::move(db_address)), port(db_port) {
         // Connect to Redis.
         if (connect()) {
