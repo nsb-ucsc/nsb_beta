@@ -76,6 +76,7 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "*.inc": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "iomanip": "cpp"
     }
 }

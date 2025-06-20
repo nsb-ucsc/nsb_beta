@@ -66,9 +66,10 @@ namespace nsb {
                 }
 
                 // Stream message.
-                std::cout << "[" << std::setw(2) << civ_sec.hour() << ":" << std::setw(2) << civ_sec.minute() << ":" 
-                        << std::setw(2) << civ_sec.second() << "." << std::setw(6) << ms << "] "
-                        << std::setw(9) << severity << " " << entry.text_message();
+                std::cout << "[" << std::setfill('0') << std::setw(2)
+                    << civ_sec.hour() << ":" << std::setw(2) << civ_sec.minute() << ":" 
+                    << std::setw(2) << civ_sec.second() << "." << std::setw(6) << ms << "] "
+                    << std::setfill(' ') << std::setw(9) << severity << " " << entry.text_message();
             }
     };
 
