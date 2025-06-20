@@ -238,7 +238,6 @@ namespace nsb {
         }
         // Send the message.
         DLOG(INFO) << "Sending INIT message: " << nsbMsg.DebugString() << std::endl;
-        std::string serializedMessage;
         comms.sendMessage(nsb::Comms::Channel::CTRL, nsbMsg.SerializeAsString());
         // Wait for response.
         std::string response = comms.receiveMessage(nsb::Comms::Channel::CTRL, &DAEMON_RESPONSE_TIMEOUT);
@@ -271,6 +270,52 @@ namespace nsb {
             LOG(ERROR) << "\tUnexpected operation received: " << 
                 nsb::nsbm::Manifest::Operation_Name(nsbResponse.manifest().op()) << std::endl;
         }
+    }
+
+    bool NSBClient::ping() {
+        // Check to see if client is from a derived class (it should be).
+        if (originIndicator == nullptr) {
+            LOG(ERROR) << "NSBClient::initialize() called without setting originIndicator." << std::endl;
+            return false;
+        }
+        LOG(INFO) << "Pinging NSB Daemon from " << clientId << "..." << std::endl;
+        // Create and populate a PING message.
+        nsb::nsbm nsbMsg = nsb::nsbm();
+        nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
+        mutableManifest->set_op(nsb::nsbm::Manifest::PING);
+        mutableManifest->set_og(*originIndicator);
+        mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+        // Send the message.
+        DLOG(INFO) << "Sending PING message: " << nsbMsg.DebugString() << std::endl;
+        comms.sendMessage(nsb::Comms::Channel::CTRL, nsbMsg.SerializeAsString());
+        // Wait for response.
+        std::string response = comms.receiveMessage(nsb::Comms::Channel::CTRL, &DAEMON_RESPONSE_TIMEOUT);
+        // Check for empty string.
+        if (response.empty()) {
+            LOG(ERROR) << "No response received from daemon." << std::endl;
+            return false;
+        }
+        // Parse in message.
+        nsb::nsbm nsbResponse = nsb::nsbm();
+        nsbResponse.ParseFromString(response);
+        // Check for expected operation.
+        if (nsbResponse.manifest().op() == nsb::nsbm::Manifest::PING) {
+            // Get the configuration.
+            if (nsbResponse.manifest().code() == nsb::nsbm::Manifest::SUCCESS) {
+                LOG(INFO) << "Server has pinged back!" << std::endl;
+                return true;
+            } else if (nsbResponse.manifest().code() == nsb::nsbm::Manifest::FAILURE) {
+                LOG(ERROR) << "\tServer ping failed." << std::endl;
+                return false;
+            } else {
+                LOG(ERROR) << "\tUnexpected status code returned from ping." << std::endl;
+                return false;
+            }
+        } else {
+            LOG(ERROR) << "\tUnexpected operation received: " << 
+                nsb::nsbm::Manifest::Operation_Name(nsbResponse.manifest().op()) << std::endl;
+        }
+        return false;
     }
     
     NSBAppClient::NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort) : 
@@ -331,6 +376,7 @@ int testLifecycle() {
     std::string nsbDaemonAddr = "127.0.0.1";
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
+    app1.ping();
     return 0;
 }
 
