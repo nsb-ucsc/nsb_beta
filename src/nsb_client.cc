@@ -184,10 +184,10 @@ namespace nsb {
     void NSBClient::initialize() {
         // Check to see if client is from a derived class (it should be).
         if (originIndicator == nullptr) {
-            LOG(ERROR) << "NSBClient::initialize() called without setting originIndicator." << std::endl;
+            LOG(ERROR) << "INIT: initialize() called without setting originIndicator." << std::endl;
             return;
         }
-        LOG(INFO) << "Initializing " << clientId << " with NSB daemon..." << std::endl;
+        LOG(INFO) << "INIT: Initializing " << clientId << " with NSB daemon..." << std::endl;
         // Create and populate an INIT message.
         nsb::nsbm nsbMsg = nsb::nsbm();
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
@@ -196,54 +196,40 @@ namespace nsb {
         mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
         nsb::nsbm::IntroDetails* mutableIntro = nsbMsg.mutable_intro();
         mutableIntro->set_identifier(clientId);
-        // Set address and CTRL channel port.
-        struct sockaddr_storage addr;
-        socklen_t addrLen = sizeof(addr);
-        struct sockaddr_in* s;
-        if (getsockname(comms.conns.at(Comms::Channel::CTRL), (struct sockaddr*) &addr, &addrLen) == -1) {
-            LOG(ERROR) << "\tgetsockname() failed to get information for the CTRL channel." << std::endl;
-            return;
-        }
-        if (addr.ss_family == AF_INET) {
-            s = (struct sockaddr_in*) &addr;
-            mutableIntro->set_ch_ctrl(ntohs(s->sin_port));
-            mutableIntro->set_address(inet_ntoa(s->sin_addr));
-        } else {
-            LOG(ERROR) << "\tOnly IPv4 (AF_INET) is currently supported." << std::endl;
-            return;
-        }
-        // Set SEND channel port.
-        if (getsockname(comms.conns.at(Comms::Channel::SEND), (struct sockaddr*) &addr, &addrLen) == -1) {
-            LOG(ERROR) << "\tgetsockname() failed to get information for the SEND channel." << std::endl;
-            return;
-        }
-        if (addr.ss_family == AF_INET) {
-            s = (struct sockaddr_in*) &addr;
-            mutableIntro->set_ch_send(ntohs(s->sin_port));
-        } else {
-            LOG(ERROR) << "\tOnly IPv4 (AF_INET) is currently supported." << std::endl;
-            return;
-        }
-        // Set RECV channel port.
-        if (getsockname(comms.conns.at(Comms::Channel::RECV), (struct sockaddr*) &addr, &addrLen) == -1) {
-            LOG(ERROR) << "\tgetsockname() failed to get information for the SEND channel." << std::endl;
-            return;
-        }
-        if (addr.ss_family == AF_INET) {
-            s = (struct sockaddr_in*) &addr;
-            mutableIntro->set_ch_recv(ntohs(s->sin_port));
-        } else {
-            LOG(ERROR) << "\tOnly IPv4 (AF_INET) is currently supported." << std::endl;
-            return;
-        }
+        // Function to get and set address and channel port information.
+        auto getSetChannelAddrPort = [&](Comms::Channel channel, bool setAddress) {
+            struct sockaddr_storage addr;
+            socklen_t addrLen = sizeof(addr);
+            struct sockaddr_in* s;
+            if (getsockname(comms.conns.at(channel), (struct sockaddr*) &addr, &addrLen) == -1) {
+                LOG(ERROR) << "INIT: getsockname() failed to get information for the "
+                    << comms.getChannelName(channel) << " channel." << std::endl;
+                return 1;
+            }
+            if (addr.ss_family == AF_INET) {
+                s = (struct sockaddr_in*) &addr;
+                mutableIntro->set_ch_ctrl(ntohs(s->sin_port));
+                if (setAddress) {
+                    mutableIntro->set_address(inet_ntoa(s->sin_addr));
+                }
+                return 0;
+            } else {
+                LOG(ERROR) << "INIT: Only IPv4 (AF_INET) is currently supported." << std::endl;
+                return 1;
+            }
+        };
+        // Set channel information.
+        getSetChannelAddrPort(Comms::Channel::CTRL, true);
+        getSetChannelAddrPort(Comms::Channel::SEND, false);
+        getSetChannelAddrPort(Comms::Channel::RECV, false);
         // Send the message.
-        DLOG(INFO) << "Sending INIT message: " << nsbMsg.DebugString() << std::endl;
+        DLOG(INFO) << "INIT: Sending message:" << std::endl << nsbMsg.DebugString();
         comms.sendMessage(nsb::Comms::Channel::CTRL, nsbMsg.SerializeAsString());
         // Wait for response.
         std::string response = comms.receiveMessage(nsb::Comms::Channel::CTRL, &DAEMON_RESPONSE_TIMEOUT);
         // Check for empty string.
         if (response.empty()) {
-            LOG(ERROR) << "No response received from daemon." << std::endl;
+            LOG(ERROR) << "INIT: No response received from daemon." << std::endl;
             return;
         }
         // Parse in message.
@@ -254,20 +240,20 @@ namespace nsb {
             // Get the configuration.
             if (nsbResponse.has_config()) {
                 cfg = Config(nsbResponse);
-                LOG(INFO) << "\tConfiguration received: Mode " << (int) cfg.SYSTEM_MODE <<
+                LOG(INFO) << "INIT: Configuration received: Mode " << (int) cfg.SYSTEM_MODE <<
                     " | Use DB? " << cfg.USE_DB << std::endl;
                 // Set up database if necessary.
                 if (cfg.USE_DB) {
                     db = new RedisConnector(clientId, cfg.DB_ADDRESS, cfg.DB_PORT);
-                    LOG(INFO) << "\tConnected to RedisConnecter@" << cfg.DB_ADDRESS << ":" << cfg.DB_PORT;
+                    LOG(INFO) << "INIT: Connected to RedisConnecter@" << cfg.DB_ADDRESS << ":" << cfg.DB_PORT;
                 }
                 return;
             } else {
-                LOG(ERROR) << "\tNo configuration found." << std::endl;
+                LOG(ERROR) << "INIT: No configuration found." << std::endl;
                 return;
             }
         } else {
-            LOG(ERROR) << "\tUnexpected operation received: " << 
+            LOG(ERROR) << "INIT: Unexpected operation received: " << 
                 nsb::nsbm::Manifest::Operation_Name(nsbResponse.manifest().op()) << std::endl;
         }
     }
@@ -275,10 +261,10 @@ namespace nsb {
     bool NSBClient::ping() {
         // Check to see if client is from a derived class (it should be).
         if (originIndicator == nullptr) {
-            LOG(ERROR) << "NSBClient::initialize() called without setting originIndicator." << std::endl;
+            LOG(ERROR) << "PING: ping() called without setting originIndicator." << std::endl;
             return false;
         }
-        LOG(INFO) << "Pinging NSB Daemon from " << clientId << "..." << std::endl;
+        LOG(INFO) << "PING: Pinging NSB Daemon from " << clientId << "..." << std::endl;
         // Create and populate a PING message.
         nsb::nsbm nsbMsg = nsb::nsbm();
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
@@ -286,13 +272,13 @@ namespace nsb {
         mutableManifest->set_og(*originIndicator);
         mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
         // Send the message.
-        DLOG(INFO) << "Sending PING message: " << nsbMsg.DebugString() << std::endl;
+        DLOG(INFO) << "PING: Sending message:" << std::endl << nsbMsg.DebugString();
         comms.sendMessage(nsb::Comms::Channel::CTRL, nsbMsg.SerializeAsString());
         // Wait for response.
         std::string response = comms.receiveMessage(nsb::Comms::Channel::CTRL, &DAEMON_RESPONSE_TIMEOUT);
         // Check for empty string.
         if (response.empty()) {
-            LOG(ERROR) << "No response received from daemon." << std::endl;
+            LOG(ERROR) << "PING: No response received from daemon." << std::endl;
             return false;
         }
         // Parse in message.
@@ -302,20 +288,31 @@ namespace nsb {
         if (nsbResponse.manifest().op() == nsb::nsbm::Manifest::PING) {
             // Get the configuration.
             if (nsbResponse.manifest().code() == nsb::nsbm::Manifest::SUCCESS) {
-                LOG(INFO) << "Server has pinged back!" << std::endl;
+                LOG(INFO) << "PING: Server has pinged back!" << std::endl;
                 return true;
             } else if (nsbResponse.manifest().code() == nsb::nsbm::Manifest::FAILURE) {
-                LOG(ERROR) << "\tServer ping failed." << std::endl;
+                LOG(ERROR) << "PING: Server ping failed." << std::endl;
                 return false;
             } else {
-                LOG(ERROR) << "\tUnexpected status code returned from ping." << std::endl;
+                LOG(ERROR) << "PING: Unexpected status code returned from ping." << std::endl;
                 return false;
             }
         } else {
-            LOG(ERROR) << "\tUnexpected operation received: " << 
+            LOG(ERROR) << "PING: Unexpected operation received: " << 
                 nsb::nsbm::Manifest::Operation_Name(nsbResponse.manifest().op()) << std::endl;
         }
         return false;
+    }
+
+    void NSBClient::exit() {
+        // Create and populate a PING message.
+        nsb::nsbm nsbMsg = nsb::nsbm();
+        nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
+        mutableManifest->set_op(nsb::nsbm::Manifest::EXIT);
+        mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+        // Send the message.
+        DLOG(INFO) << "EXIT: Sending message:" << std::endl << nsbMsg.DebugString();
+        comms.sendMessage(nsb::Comms::Channel::CTRL, nsbMsg.SerializeAsString());
     }
     
     NSBAppClient::NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort) : 
@@ -377,6 +374,7 @@ int testLifecycle() {
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
     app1.ping();
+    app1.exit();
     return 0;
 }
 
