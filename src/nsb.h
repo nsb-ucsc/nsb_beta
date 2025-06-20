@@ -43,6 +43,11 @@
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 
+#define SERVER_CONNECTION_TIMEOUT 10
+#define DAEMON_RESPONSE_TIMEOUT 600
+#define RECEIVE_BUFFER_SIZE 4096
+#define SEND_BUFFER_SIZE 4096
+
 namespace nsb {
 
     class NsbLogSink : public absl::LogSink {
@@ -126,6 +131,40 @@ namespace nsb {
         MessageEntry(std::string src, std::string dest, std::string data, int size)
             : source(std::move(src)), destination(std::move(dest)),
               payload_obj(std::move(data)), payload_size(size){}
+    };
+
+    class Comms {
+    public:
+        enum class Channel {
+            CTRL = 0,
+            SEND = 1,
+            RECV = 2
+        };
+        const std::vector<Channel> Channels = {Channel::CTRL, Channel::SEND, Channel::RECV};
+        std::string getChannelName(Channel channel) {
+            return ChannelName.at(channel);
+        }
+    private:
+        const std::map<Channel, std::string> ChannelName = {
+            {Channel::CTRL, "CTRL"},
+            {Channel::SEND, "SEND"},
+            {Channel::RECV, "RECV"}
+        };
+    };
+
+    class SocketInterface : public Comms {
+    public:
+        SocketInterface(std::string server_address, int server_port);
+        ~SocketInterface();
+        int connectToServer(int timeout);
+        void closeConnection();
+        int sendMessage(Comms::Channel channel, const std::string& message);
+        std::string receiveMessage(Comms::Channel channel, int* timeout);
+        std::future<std::string> listenForMessage(Comms::Channel channel, int* timeout);
+        std::map<Channel, int> conns;
+    private:
+        std::string serverAddress;
+        int serverPort;
     };
 
     /**
