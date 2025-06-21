@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 """
 @file nsb_client.py
-@namespace nsb_client
+@module nsb_client
 @brief Application & Simulator Client Interfaces for NSB
 @details Interfaces to facilitate communication with the NSB Daemon to 
          facilitate independent applications' payloads being routed through 
@@ -118,7 +118,7 @@ class SocketInterface(Comms):
     """
     @brief Socket interface for client-server communication.
 
-    This class implements aocket interface network to facilitate network 
+    This class implements socket interfacing to facilitate network 
     communication between NSB clients and the server. This can be used as a 
     template to develop other interfaces for client communication, which must 
     define the same methods with the same arguments as done in this class.
@@ -224,8 +224,8 @@ class SocketInterface(Comms):
         """
         @brief Receives a message from the server.
         
-        This method uses selectors to wait for the the channel socket to be 
-        ready before receiving up to RECEIVE_BUFFER SIZE bytes at a time, making 
+        This method uses selectors to wait for the channel socket to be 
+        ready before receiving up to RECEIVE_BUFFER_SIZE bytes at a time, making 
         it non-blocking compliant.
 
         @param channel The channel to send the message on (CTRL, SEND, or RECV).
@@ -398,6 +398,7 @@ class RedisConnector(DBConnector):
         payload under that key.
 
         @param value The value (payload) to be stored.
+        @return The generated key the message was stored with.
         """
         key = self.generate_payload_id()
         self.r.set(key, value)
@@ -412,6 +413,7 @@ class RedisConnector(DBConnector):
         in the final retrieval in the lifecycle of a payload.
 
         @param key The key to retrieve the payload from the Redis server.
+        @return The retrieved payload.
 
         @see NSBAppClient.receive()
         """
@@ -429,6 +431,7 @@ class RedisConnector(DBConnector):
         accessible again later in the payload's lifetime.
 
         @param key The key to retrieve the payload from the Redis server.
+        @return The retrieved payload.
 
         @see NSBSimClient.fetch()
         """

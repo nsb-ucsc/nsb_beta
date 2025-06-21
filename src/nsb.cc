@@ -3,7 +3,7 @@
 #include "nsb.h"
 
 namespace nsb {
-    
+
     SocketInterface::SocketInterface(std::string serverAddress, int serverPort)
         : serverAddress(serverAddress), serverPort(serverPort) {
             connectToServer(SERVER_CONNECTION_TIMEOUT);
@@ -173,12 +173,12 @@ namespace nsb {
 
     RedisConnector::~RedisConnector() {
         // Close the connection if it is open.
-        if (is_connected()) {
+        if (isConnected()) {
             disconnect();
         }
         LOG(INFO) << "RedisConnected shut down." << std::endl;
     }
-    bool RedisConnector::is_connected() const {
+    bool RedisConnector::isConnected() const {
         // Check if the connection is open.
         return context != nullptr && context->err == REDIS_OK;
     }
