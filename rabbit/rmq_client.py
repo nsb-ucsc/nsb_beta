@@ -570,3 +570,87 @@ class NSBAppClientRMQ(NSBRabbitClient):
                     return None
         # If nothing, return None.
         return None
+    
+class NSBSimRabbitClient(NSBRabbitClient):
+    """
+    @brief NSB Simulator Client interface (RabbitMQ version).
+    
+    This client provides the NSB simulator interface for fetching and posting
+    messages via RabbitMQ by communicating with the broker.
+    """
+
+    def __init__(self, identifier: str, server_address: str, server_port: int):
+        self._id = identifier
+        self.logger = logging.getLogger(f"{self._id} (sim-rabbit)")
+        super().__init__(server_address, server_port)
+        self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
+        self.initialize()
+
+    def fetch(self, src_id: str | None = None, timeout: int | None = None, get_payload: bool = False):
+        if self.cfg.system_mode == Config.SystemMode.PULL:
+            nsb_msg = nsb_pb2.nsbm()
+            nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.FETCH
+            nsb_msg.manifest.og = self.og_indicator
+            nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
+            if src_id:
+                nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+                nsb_msg.metadata.src_id = src_id
+            self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
+            self.logger.info("FETCH: Sent fetch request to server.")
+
+        response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
+        if response and len(response):
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            op = nsb_resp.manifest.op
+            if op in [nsb_pb2.nsbm.Manifest.Operation.FETCH, nsb_pb2.nsbm.Manifest.Operation.FORWARD]:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        payload = self.db.peek(nsb_resp.msg_key)
+                        if get_payload:
+                            nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(
+                        f"FETCH: Got {nsb_resp.metadata.payload_size} bytes from {nsb_resp.metadata.src_id} to {nsb_resp.metadata.dest_id}: {payload}"
+                    )
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("FETCH: No message available.")
+        return None
+
+    async def listen(self):
+        response = await self.comms._listen_msg(Comms.Channels.RECV)
+        if response and len(response):
+            nsb_resp = nsb_pb2.nsbm()
+            nsb_resp.ParseFromString(response)
+            op = nsb_resp.manifest.op
+            if op in [nsb_pb2.nsbm.Manifest.Operation.FETCH, nsb_pb2.nsbm.Manifest.Operation.FORWARD]:
+                if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
+                    if self.cfg.use_db:
+                        payload = self.db.peek(nsb_resp.msg_key)
+                        nsb_resp.payload = payload
+                    else:
+                        payload = nsb_resp.payload
+                    self.logger.info(
+                        f"FETCH: Got {nsb_resp.metadata.payload_size} bytes from {nsb_resp.metadata.src_id} to {nsb_resp.metadata.dest_id}: {payload}"
+                    )
+                    return nsb_resp
+                elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
+                    self.logger.info("FETCH: No message received.")
+        return None
+
+    def post(self, src_id: str, dest_id: str, payload_obj: bytes, payload_size: int, success: bool = True):
+        nsb_msg = nsb_pb2.nsbm()
+        nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.POST
+        nsb_msg.manifest.og = self.og_indicator
+        nsb_msg.manifest.code = (
+            nsb_pb2.nsbm.Manifest.OpCode.MESSAGE if success else nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE
+        )
+        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
+        nsb_msg.metadata.src_id = src_id
+        nsb_msg.metadata.dest_id = dest_id
+        nsb_msg.metadata.payload_size = payload_size
+        self.msg_set_payload_obj(payload_obj, nsb_msg)
+        self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
+        self.logger.info("POST: Sent post message + payload to server.")
