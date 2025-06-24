@@ -16,7 +16,7 @@ namespace nsb {
         void exit();
     protected:
         std::string msgGetPayloadObj(nsb::nsbm msg);
-        void msgSetPayloadObj(std::string& payloadObj, nsb::nsbm msg);
+        void msgSetPayloadObj(std::string payloadObj, nsb::nsbm msg);
         const std::string clientId;
         SocketInterface comms;
         nsb::nsbm::Manifest::Originator* originIndicator;
@@ -29,7 +29,7 @@ namespace nsb {
         NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBAppClient();
         void send(const std::string& destId, std::string& payload, std::string* key);
-        nsb::nsbm* receive(int* destId, int timeout);
+        nsb::nsbm* receive(std::string* destId, int timeout);
         nsb::nsbm* listenReceive();
     };
 
@@ -37,9 +37,9 @@ namespace nsb {
     public:
         NSBSimClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBSimClient();
-        nsb::nsbm* fetch(int* srcId, int timeout, bool getPayload);
+        nsb::nsbm* fetch(std::string* srcId, int timeout, bool getPayload, std::string* payload);
         nsb::nsbm* listenFetch();
-        void post(std::string srcId, std::string destId, int payloadSize, bool success);
+        void post(std::string srcId, std::string destId, std::string payloadObj, int payloadSize, bool success);
     };
 }
 

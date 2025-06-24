@@ -100,10 +100,10 @@ namespace nsb {
         std::atomic<bool> running;
         /** @brief The server port accessible to client connections. */
         int server_port;
-        /** @brief Details of the simulator client. */
-        ClientDetails sim;
-        /** @brief A mapping of client identifiers to their details. */
-        std::map<std::string, ClientDetails> client_lookup;
+        /** @brief A mapping of simulator client identifiers to their details. */
+        std::map<std::string, ClientDetails> sim_client_lookup;
+        /** @brief A mapping of application client identifiers to their details. */
+        std::map<std::string, ClientDetails> app_client_lookup;
         /** @brief A mapping of "address:port" strings to their file descriptors. */
         std::map<std::string, int> fd_lookup;
         /**

@@ -631,7 +631,6 @@ class NSBAppClient(NSBClient):
         nsb_msg.manifest.og = self.og_indicator
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE
         # Metadata.
-        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
         nsb_msg.metadata.src_id = self._id
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = len(payload)
@@ -851,15 +850,14 @@ class NSBSimClient(NSBClient):
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
                         payload = self.db.peek(nsb_resp.msg_key)
-                        if get_payload:
-                            nsb_resp.payload = payload
                     else:
                         payload = nsb_resp.payload
                     self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{payload}")
-                    return nsb_resp
+                    # If payload is desired, return payload in addition to the message.
+                    return nsb_resp, payload if get_payload else nsb_resp
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("FETCH: Yikes, no message.")
                     return None
@@ -931,7 +929,7 @@ class NSBSimClient(NSBClient):
         @param success Whether the post was successful or not. If False, 
                        it will set the OpCode to NO_MESSAGE.
         """
-        # Create and populate a SEND message.
+        # Create and populate a POST message.
         nsb_msg = nsb_pb2.nsbm()
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.POST
@@ -939,7 +937,6 @@ class NSBSimClient(NSBClient):
         nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE if success else \
             nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE
         # Metadata.
-        nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
         nsb_msg.metadata.src_id = src_id
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = payload_size

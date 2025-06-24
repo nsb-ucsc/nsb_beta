@@ -385,7 +385,7 @@ namespace nsb {
          * @param key The key to retrieve the payload from the Redis server.
          * @return std::string The retrieved payload.
          */
-        std::string peek(const int key);
+        std::string peek(const std::string& key);
     private:
         std::string address;
         int port;

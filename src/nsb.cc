@@ -209,6 +209,18 @@ namespace nsb {
     }
 
     std::string RedisConnector::checkOut(const std::string& key) {
+        // Retrieve the payload.
+        DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
+        redisReply* reply = (redisReply*)redisCommand(context, "GETDEL %s", key.c_str());
+        // Check if found else return empty.
+        if (context->err) {
+            LOG(ERROR) << "(GETDEL Error) " << context->errstr << std::endl;
+            return "";
+        }
+        return reply->str;
+    }
+
+    std::string RedisConnector::peek(const std::string& key) {
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
         return reply->str;

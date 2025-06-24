@@ -19,11 +19,11 @@ namespace nsb {
         return cfg.USE_DB ? msg.msg_key() : msg.payload();
     }
 
-    void NSBClient::msgSetPayloadObj(std::string& payloadObj, nsb::nsbm msg) {
+    void NSBClient::msgSetPayloadObj(std::string payloadObj, nsb::nsbm msg) {
         if (cfg.USE_DB) {
-            msg.set_msg_key(std::move(payloadObj));
+            msg.set_msg_key(payloadObj);
         } else {
-            msg.set_payload(std::move(payloadObj));
+            msg.set_payload(payloadObj);
         }
     }
 
@@ -50,18 +50,23 @@ namespace nsb {
             if (getsockname(comms.conns.at(channel), (struct sockaddr*) &addr, &addrLen) == -1) {
                 LOG(ERROR) << "INIT: getsockname() failed to get information for the "
                     << comms.getChannelName(channel) << " channel." << std::endl;
-                return 1;
+                return -1;
             }
             if (addr.ss_family == AF_INET) {
                 s = (struct sockaddr_in*) &addr;
-                mutableIntro->set_ch_ctrl(ntohs(s->sin_port));
+                switch(channel) {
+                    case Comms::Channel::CTRL: mutableIntro->set_ch_ctrl(ntohs(s->sin_port)); break;
+                    case Comms::Channel::SEND: mutableIntro->set_ch_send(ntohs(s->sin_port)); break;
+                    case Comms::Channel::RECV: mutableIntro->set_ch_recv(ntohs(s->sin_port)); break;
+                    default: LOG(ERROR) << "INIT: Unexpected channel. Exiting initialization." << std::endl; return -1;
+                }
                 if (setAddress) {
                     mutableIntro->set_address(inet_ntoa(s->sin_addr));
                 }
                 return 0;
             } else {
                 LOG(ERROR) << "INIT: Only IPv4 (AF_INET) is currently supported." << std::endl;
-                return 1;
+                return -1;
             }
         };
         // Set channel information.
@@ -182,7 +187,11 @@ namespace nsb {
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
         mutableManifest->set_op(nsb::nsbm::Manifest::SEND);
         mutableManifest->set_og(*originIndicator);
-        mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+        mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
+        nsb::nsbm::Metadata* mutableMetadata = nsbMsg.mutable_metadata();
+        mutableMetadata->set_src_id(clientId);
+        mutableMetadata->set_dest_id(destId);
+        mutableMetadata->set_payload_size(static_cast<int>(payload.size()));
         if (cfg.USE_DB) {
             if (key == nullptr) {
                 LOG(ERROR) << "SEND: Key must be provided when using a database." << std::endl;
@@ -235,7 +244,7 @@ namespace nsb {
      * @see SocketInterface.receiveMessage()
      * 
      */
-    nsb::nsbm* NSBAppClient::receive(int* destId, int timeout) {
+    nsb::nsbm* NSBAppClient::receive(std::string* destId, int timeout) {
         nsb::nsbm* nsbMsg = new nsb::nsbm();
         if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
             // Create and populate a RECEIVE message.
@@ -243,32 +252,30 @@ namespace nsb {
             mutableManifest->set_op(nsb::nsbm::Manifest::RECEIVE);
             mutableManifest->set_og(*originIndicator);
             mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
-            nsbMsg->mutable_metadata()->set_dest_id(*destId);
+            if (destId != nullptr) {
+                nsbMsg->mutable_metadata()->set_dest_id(*destId);
+            }
             // Send the message.
             DLOG(INFO) << "RECV: Sending request:" << std::endl << nsbMsg->DebugString();
             comms.sendMessage(nsb::Comms::Channel::RECV, nsbMsg->SerializeAsString());
-            // Wait for response.
-            std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
-            if (response.empty()) {
-                LOG(ERROR) << "RECV: No response received from daemon." << std::endl;
-                return nullptr;
-            }
-        } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
-            // Listen for a message on the RECV channel.
-            std::string response = comms.listenForMessage(nsb::Comms::Channel::RECV, &timeout).get();
-            nsb::nsbm* nsbMsg = new nsb::nsbm();
-            nsbMsg->ParseFromString(response);
+        }
+        // Wait for response or incoming message.
+        std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
+        if (response.empty()) {
+            LOG(ERROR) << "RECV: No response received from daemon." << std::endl;
+            return nullptr;
         }
         // Parse in message.
+        nsbMsg->ParseFromString(response);
         nsb::nsbm::Manifest manifest = nsbMsg->manifest();
-        if (manifest.op() != nsb::nsbm::Manifest::RECEIVE) {
+        if (manifest.op() != nsb::nsbm::Manifest::RECEIVE && manifest.op() != nsb::nsbm::Manifest::FORWARD) {
             LOG(ERROR) << "RECV: Unexpected operation over RECV channel." << std::endl;
             delete nsbMsg;
             return nullptr;
         } else if (manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
             if (cfg.USE_DB) {
                 // Get the actual payload.
-                const std::string payload = db->checkOut(nsbMsg->msg_key());
+                std::string payload = db->checkOut(nsbMsg->msg_key());
                 nsbMsg->set_payload(payload);
             }
             return nsbMsg;
@@ -281,6 +288,91 @@ namespace nsb {
             delete nsbMsg;
             return nullptr;
         }
+    }
+
+    NSBSimClient::NSBSimClient(const std::string& identifier, std::string& serverAddress, int serverPort) : 
+        NSBClient(identifier, serverAddress, serverPort) {
+        originIndicator = new nsb::nsbm::Manifest::Originator(nsb::nsbm::Manifest::SIM_CLIENT);
+        initialize();
+    }
+
+    NSBSimClient::~NSBSimClient() {
+        if (originIndicator) {
+            delete originIndicator;
+        }
+    }
+
+    nsb::nsbm* NSBSimClient::fetch(std::string* srcId, int timeout, bool getPayload, std::string* payload=nullptr) {
+        nsb::nsbm* nsbMsg = new nsb::nsbm();
+        if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+            // Create and populate a FETCH message.
+            nsb::nsbm::Manifest* mutableManifest = nsbMsg->mutable_manifest();
+            mutableManifest->set_op(nsb::nsbm::Manifest::FETCH);
+            mutableManifest->set_og(*originIndicator);
+            mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+            if (srcId != nullptr) {
+                nsbMsg->mutable_metadata()->set_src_id(*srcId);
+            }
+            // Send the message.
+            DLOG(INFO) << "FETCH: Sending request:" << std::endl << nsbMsg->DebugString();
+            comms.sendMessage(nsb::Comms::Channel::RECV, nsbMsg->SerializeAsString());
+        }
+        // Wait for response or incoming message.
+        std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
+        if (response.empty()) {
+            LOG(ERROR) << "FETCH: No response received from daemon." << std::endl;
+            return nullptr;
+        }
+        // Parse in message.
+        nsbMsg->ParseFromString(response);
+        DLOG(INFO) << "FETCH: Response:" << std::endl << nsbMsg->DebugString();
+        nsb::nsbm::Manifest manifest = nsbMsg->manifest();
+        if (manifest.op() != nsb::nsbm::Manifest::FETCH && manifest.op() != nsb::nsbm::Manifest::FORWARD) {
+            LOG(ERROR) << "FETCH: Unexpected operation over RECV channel." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        } else if (manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
+            if (cfg.USE_DB && getPayload) {
+                // Get the actual payload.
+                const std::string peekedPayload = db->peek(nsbMsg->msg_key());
+                payload->assign(peekedPayload);
+            }
+            return nsbMsg;
+        } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
+            LOG(INFO) << "FETCH: No message found for source " << *srcId << "." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        } else {
+            LOG(ERROR) << "FETCH: Unexpected status code returned from receive." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        }
+    }
+
+    void NSBSimClient::post(std::string srcId, std::string destId, std::string payloadObj,
+        int payloadSize, bool success) {
+        // Create and populate a POST message.
+        nsb::nsbm nsbMsg = nsb::nsbm();
+        nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
+        mutableManifest->set_op(nsb::nsbm::Manifest::POST);
+        mutableManifest->set_og(*originIndicator);
+        if (success) {
+            mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
+        } else {
+            mutableManifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
+        }
+        nsb::nsbm::Metadata* mutableMetadata = nsbMsg.mutable_metadata();
+        mutableMetadata->set_src_id(srcId);
+        mutableMetadata->set_dest_id(destId);
+        mutableMetadata->set_payload_size(payloadSize);
+        if (cfg.USE_DB) {
+            nsbMsg.set_msg_key(payloadObj);
+        } else {
+            nsbMsg.set_payload(payloadObj);
+        }
+        // Send the message.
+        DLOG(INFO) << "POST: Posting message:" << std::endl << nsbMsg.DebugString();
+        comms.sendMessage(nsb::Comms::Channel::SEND, nsbMsg.SerializeAsString());
     }
 }
 
@@ -327,24 +419,37 @@ int testLifecycle() {
     // Create app client.
     const std::string idApp1 = "app1";
     const std::string idApp2 = "app2";
+    const std::string idSim1 = "sim1";
     std::string nsbDaemonAddr = "127.0.0.1";
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
     NSBAppClient app2 = NSBAppClient(idApp2, nsbDaemonAddr, nsbDaemonPort);
+    NSBSimClient sim1 = NSBSimClient(idSim1, nsbDaemonAddr, nsbDaemonPort);
     app1.ping();
     app2.ping();
+    sim1.ping();
     // Send a message.
     std::string payload = "Hello from app1";
-    std::string key = "";
-    app1.send(idApp2, payload, &key);
+    std::string *key = new std::string();
+    app1.send(idApp2, payload, key);
+    // Go through the simulator.
+    nsb::nsbm* fetchedMsg = sim1.fetch(nullptr, 5, false);
+    if (fetchedMsg == nullptr) {
+        LOG(ERROR) << "Failed to fetch message." << std::endl;
+        app1.exit();
+        return -1;
+    }
+    sim1.post(fetchedMsg->metadata().src_id(), fetchedMsg->metadata().dest_id(),
+              fetchedMsg->msg_key(), fetchedMsg->metadata().payload_size(), true);
     // Receive a message.
-    nsb::nsbm* received = app2.receive(nullptr, DAEMON_RESPONSE_TIMEOUT);
-    if (received == nullptr) {
+    nsb::nsbm* receivedMsg = app2.receive(nullptr, 5);
+    if (receivedMsg == nullptr) {
         LOG(ERROR) << "Failed to receive message." << std::endl;
         app1.exit();
         return -1;
     } else {
-
+        LOG(INFO) << "Received message: " << receivedMsg->payload() << std::endl;
+        delete receivedMsg;  // Clean up the received message.
     }
     // Exit.
     app1.exit();

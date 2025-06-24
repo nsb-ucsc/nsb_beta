@@ -241,9 +241,9 @@ namespace nsb {
         // Get client details.
         if (incoming_msg->has_intro()) {
             if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::APP_CLIENT) {
-                client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
+                app_client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
             } else if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::SIM_CLIENT) {
-                sim = ClientDetails(incoming_msg, fd_lookup);
+                sim_client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
             } else {
                 LOG(ERROR) << "\tUnknown/unexpected originator." << std::endl;
                 return;
@@ -312,17 +312,27 @@ namespace nsb {
             // Send to sim via RECV channel.
             fd_set write_fd;
             FD_ZERO(&write_fd);
-            FD_SET(sim.ch_RECV_fd, &write_fd);
+            // Select the target simulator if multiple simulator clients are used, else select the first and only one.
+            ClientDetails target_sim;
+            if (sim_client_lookup.size() == 1) {
+                target_sim = sim_client_lookup.begin()->second;
+            } else if (sim_client_lookup.size() > 1) {
+                target_sim = sim_client_lookup.at(incoming_msg->metadata().src_id());
+            } else {
+                LOG(ERROR) << "No simulator clients available to forward message." << std::endl;
+                return;
+            }
+            FD_SET(target_sim.ch_RECV_fd, &write_fd);
             // Check if the sim RECV channel is available.
             DLOG(INFO) << "Attempting to forward message to sim RECV channel (FD:" 
-                << sim.ch_RECV_fd << ")..." << std::endl;
-            if (select(sim.ch_RECV_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
-                if (FD_ISSET(sim.ch_RECV_fd, &write_fd)) {
+                << target_sim.ch_RECV_fd << ")..." << std::endl;
+            if (select(target_sim.ch_RECV_fd + 1, nullptr, &write_fd, nullptr, nullptr) > 0) {
+                if (FD_ISSET(target_sim.ch_RECV_fd, &write_fd)) {
                     // Serialize the message and send it to the sim RECV channel.
                     std::size_t size = outgoing_msg->ByteSizeLong();
                     void* buffer = malloc(size);
                     outgoing_msg->SerializeToArray(buffer, size);
-                    send(sim.ch_RECV_fd, buffer, size, 0);
+                    send(target_sim.ch_RECV_fd, buffer, size, 0);
                     DLOG(INFO) << "\tForwarded message to sim RECV channel (" << size << " B)" << std::endl;
                     free(buffer);
                 }
@@ -418,7 +428,7 @@ namespace nsb {
             out_manifest->set_op(nsb::nsbm::Manifest::FORWARD);
             // Get the destination to forward to.
             std::string dest_id = incoming_msg->metadata().dest_id();
-            int target_fd = (client_lookup.find(dest_id) != client_lookup.end()) ? client_lookup[dest_id].ch_RECV_fd : -1;
+            int target_fd = (app_client_lookup.find(dest_id) != app_client_lookup.end()) ? app_client_lookup[dest_id].ch_RECV_fd : -1;
             // Send to sim via RECV channel.
             if (target_fd != -1) {
                 fd_set write_fd;

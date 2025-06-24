@@ -163,7 +163,7 @@ class AppWithListener:
         """@brief Listener coroutine that listens and processes incoming payloads."""
         self.listening = True
         while self.listening:
-            received_msg = await self.nsb.listen(self.name)
+            received_msg = await self.nsb.listen()
             self.logger.info(f"RECV {received_msg.metadata.src_id}-->{received_msg.metadata.dest_id} " + \
                              f"({received_msg.metadata.payload_size} B) {received_msg.payload}")
     async def run(self):
