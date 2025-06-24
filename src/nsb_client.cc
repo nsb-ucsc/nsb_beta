@@ -175,6 +175,113 @@ namespace nsb {
             delete originIndicator;
         }
     }
+
+    void NSBAppClient::send(const std::string& destId, std::string& payload, std::string* key = nullptr) {
+        // Create and populate a SEND message.
+        nsb::nsbm nsbMsg = nsb::nsbm();
+        nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
+        mutableManifest->set_op(nsb::nsbm::Manifest::SEND);
+        mutableManifest->set_og(*originIndicator);
+        mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+        if (cfg.USE_DB) {
+            if (key == nullptr) {
+                LOG(ERROR) << "SEND: Key must be provided when using a database." << std::endl;
+                return;
+            }
+            // Store the payload in the database and get the key.
+            *key = db->store(payload);
+            nsbMsg.set_msg_key(*key);
+        } else {
+            nsbMsg.set_payload(payload);
+        }
+        // Send the message.
+        DLOG(INFO) << "SEND: Sending message:" << std::endl << nsbMsg.DebugString();
+        comms.sendMessage(nsb::Comms::Channel::SEND, nsbMsg.SerializeAsString());
+    }
+
+    /**
+     * @brief Receives a payload via NSB.
+     * 
+     * The implementations of this function differ based on the system mode.
+     *
+     * *In __PULL__ mode:*
+     * If the destination is specified, it will receive a payload for that 
+     * destination. This method creates an NSB RECEIVE message with the 
+     * appropriate information and payload and sends it to the daemon. It will
+     * then get a response that either contains a MESSAGE code and 
+     * carries the retrieved payload or contains a NO_MESSAGE code. If a 
+     * message is found, the entire NSB message is returned to provide access
+     * to the metadata.
+     * 
+     * *In __PUSH__ mode:*
+     * This method will await a message on the Comms.Channels.RECV channel 
+     * using _select_, with an optional timeout. If you want to achieve polling
+     * behavior, set _timeout_ to be 0. If this is being used to listen 
+     * indefinitely, set the timeout to be None. Listening indefinitely 
+     * will result in blocking behavior, but is recommended for asynchronous 
+     * listener implementations.
+     * 
+     * @param destId The identifier of the destination NSB client. The default
+     *               None value will automatically assume the destination is 
+     *               self.
+     * @param timeout The amount of time in seconds to wait to receive data. 
+     *                None denotes waiting indefinitely while 0 denotes polling
+     *                behavior.
+     * 
+     * @returns nsb.nsbm* The NSB message containing the received payload and 
+     *                    metadata if a message is found, otherwise None.
+     * 
+     * @see Config.SystemMode
+     * @see SocketInterface.receiveMessage()
+     * 
+     */
+    nsb::nsbm* NSBAppClient::receive(int* destId, int timeout) {
+        nsb::nsbm* nsbMsg = new nsb::nsbm();
+        if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+            // Create and populate a RECEIVE message.
+            nsb::nsbm::Manifest* mutableManifest = nsbMsg->mutable_manifest();
+            mutableManifest->set_op(nsb::nsbm::Manifest::RECEIVE);
+            mutableManifest->set_og(*originIndicator);
+            mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+            nsbMsg->mutable_metadata()->set_dest_id(*destId);
+            // Send the message.
+            DLOG(INFO) << "RECV: Sending request:" << std::endl << nsbMsg->DebugString();
+            comms.sendMessage(nsb::Comms::Channel::RECV, nsbMsg->SerializeAsString());
+            // Wait for response.
+            std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
+            if (response.empty()) {
+                LOG(ERROR) << "RECV: No response received from daemon." << std::endl;
+                return nullptr;
+            }
+        } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
+            // Listen for a message on the RECV channel.
+            std::string response = comms.listenForMessage(nsb::Comms::Channel::RECV, &timeout).get();
+            nsb::nsbm* nsbMsg = new nsb::nsbm();
+            nsbMsg->ParseFromString(response);
+        }
+        // Parse in message.
+        nsb::nsbm::Manifest manifest = nsbMsg->manifest();
+        if (manifest.op() != nsb::nsbm::Manifest::RECEIVE) {
+            LOG(ERROR) << "RECV: Unexpected operation over RECV channel." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        } else if (manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
+            if (cfg.USE_DB) {
+                // Get the actual payload.
+                const std::string payload = db->checkOut(nsbMsg->msg_key());
+                nsbMsg->set_payload(payload);
+            }
+            return nsbMsg;
+        } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
+            LOG(INFO) << "RECV: No message found for destination " << *destId << "." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        } else {
+            LOG(ERROR) << "RECV: Unexpected status code returned from receive." << std::endl;
+            delete nsbMsg;
+            return nullptr;
+        }
+    }
 }
 
 int testSocketInterface() {
@@ -219,10 +326,27 @@ int testLifecycle() {
     using namespace nsb;
     // Create app client.
     const std::string idApp1 = "app1";
+    const std::string idApp2 = "app2";
     std::string nsbDaemonAddr = "127.0.0.1";
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
+    NSBAppClient app2 = NSBAppClient(idApp2, nsbDaemonAddr, nsbDaemonPort);
     app1.ping();
+    app2.ping();
+    // Send a message.
+    std::string payload = "Hello from app1";
+    std::string key = "";
+    app1.send(idApp2, payload, &key);
+    // Receive a message.
+    nsb::nsbm* received = app2.receive(nullptr, DAEMON_RESPONSE_TIMEOUT);
+    if (received == nullptr) {
+        LOG(ERROR) << "Failed to receive message." << std::endl;
+        app1.exit();
+        return -1;
+    } else {
+
+    }
+    // Exit.
     app1.exit();
     return 0;
 }

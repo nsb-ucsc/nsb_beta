@@ -373,7 +373,7 @@ namespace nsb {
          * @param key The key to retrieve the payload from the Redis server.
          * @return std::string NSBAppClient::receive()
          */
-        std::string checkOut(std::string& key);
+        std::string checkOut(const std::string& key);
         /**
          * @brief Peeks at the payload at the given key.
          * 

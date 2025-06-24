@@ -28,7 +28,7 @@ namespace nsb {
     public:
         NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBAppClient();
-        void send(std::string& destId, std::string& payload);
+        void send(const std::string& destId, std::string& payload, std::string* key);
         nsb::nsbm* receive(int* destId, int timeout);
         nsb::nsbm* listenReceive();
     };

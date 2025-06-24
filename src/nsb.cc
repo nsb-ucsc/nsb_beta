@@ -208,7 +208,7 @@ namespace nsb {
         return key;
     }
 
-    std::string RedisConnector::checkOut(std::string& key) {
+    std::string RedisConnector::checkOut(const std::string& key) {
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
         return reply->str;
