@@ -616,10 +616,13 @@ class NSBAppClient(NSBClient):
         
         This method creates an NSB SEND message with the appropriate information 
         and payload and sends it to the daemon. It does not expect a response 
-        from the daemon.
+        from the daemon. If the system is using a database, it returns the key
+        to the stored message.
 
         @param dest_id The identifier of the destination NSB client.
         @param payload The payload to send to the destination.
+        @return str The key returned from storing the message, if database is
+                    used.
         """
         # Create and populate a SEND message.
         nsb_msg = nsb_pb2.nsbm()
@@ -632,15 +635,19 @@ class NSBAppClient(NSBClient):
         nsb_msg.metadata.src_id = self._id
         nsb_msg.metadata.dest_id = dest_id
         nsb_msg.metadata.payload_size = len(payload)
+        # Send message and retrieve key if necessary.
+        key = None
         if self.cfg.use_db:
             # If using databsae, store the payload and set the payload key.
-            nsb_msg.msg_key = self.db.store(payload)
+            key = self.db.store(payload)
+            nsb_msg.msg_key = key
         else:
             # If not using database, attach the payload.
             nsb_msg.payload = payload
         # Send NSB message to daemon.
         self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("SEND: Sent message + payload to server.")
+        return key
 
     def receive(self, dest_id:str|None=None, timeout:int|None=None):
         """
