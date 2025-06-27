@@ -3,7 +3,7 @@ system:
   daemon_address: 127.0.0.1
   daemon_port: 65432
   mode: 1 # PULL (0 - clients must request to fetch/receive payloads), PUSH (1 - payloads will be forwarded when sent/posted)
-  simulator_mode: 1
+  simulator_mode: 0 # System-wide (0) or Per-Node (1)
 
 database:
   use_db: true # Whether or not to use in-memory storage of payloads (via Redis)

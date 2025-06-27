@@ -103,18 +103,25 @@ namespace nsb {
             PULL = 0,
             PUSH = 1
         };
+        enum class SimulatorMode {
+            SYSTEM_WIDE = 0,
+            PER_NODE = 1
+        };
         SystemMode SYSTEM_MODE;
+        SimulatorMode SIMULATOR_MODE;
         bool USE_DB;
         std::string DB_ADDRESS;
         int DB_PORT;
         int DB_NUM;
 
         /**  @brief Blank constructor for a new Config object. */
-        Config() : SYSTEM_MODE(SystemMode::PULL), USE_DB(false), DB_ADDRESS(""), DB_PORT(0), DB_NUM(0) {}
+        Config() : SYSTEM_MODE(SystemMode::PULL), SIMULATOR_MODE(SimulatorMode::SYSTEM_WIDE),
+                   USE_DB(false), DB_ADDRESS(""), DB_PORT(0), DB_NUM(0) {}
         /** @brief Constructor for a new Config object using NSB message. */
         Config(nsb::nsbm msg) {
             nsb::nsbm::ConfigParams cfg = msg.config();
             SYSTEM_MODE = SystemMode(cfg.sys_mode());
+            SIMULATOR_MODE = SimulatorMode(cfg.sim_mode());
             USE_DB = cfg.use_db();
             if (USE_DB) {
                 DB_ADDRESS = cfg.db_address();

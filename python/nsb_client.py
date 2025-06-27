@@ -70,6 +70,10 @@ class Config:
         PULL = 0
         PUSH = 1
 
+    class SimulatorMode(IntEnum):
+        SYSTEM_WIDE = 0
+        PER_NODE = 1
+
     def __init__(self, nsb_msg: nsb_pb2.nsbm):
         """
         @brief Initializes configuration with a NSB message.
@@ -80,6 +84,7 @@ class Config:
         @see NSBClient.initialize()
         """
         self.system_mode = Config.SystemMode(nsb_msg.config.sys_mode)
+        self.SimulatorMode = Config.SimulatorMode(nsb_msg.config.sim_mode)
         self.use_db = nsb_msg.config.use_db
         if self.use_db:
             self.db_address = nsb_msg.config.db_address
