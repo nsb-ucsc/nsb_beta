@@ -197,6 +197,12 @@ namespace nsb {
     }
 
     std::string RedisConnector::store(const std::string& value) {
+        // Check connection before carrying out operation.
+        if (!isConnected()) {
+            LOG(ERROR) << "Redis connection is not online. Cannot store payload." << std::endl;
+            return "";
+        }
+        // Store payload.
         DLOG(INFO) << "Storing payload: " << value << std::endl;
         std::string key = generatePayloadId();
         redisReply* reply = (redisReply*)redisCommand(context, "SET %s %s", key.c_str(), value.c_str());
@@ -209,7 +215,12 @@ namespace nsb {
     }
 
     std::string RedisConnector::checkOut(const std::string& key) {
-        // Retrieve the payload.
+        // Check connection before carrying out operation.
+        if (!isConnected()) {
+            LOG(ERROR) << "Redis connection is not online. Cannot store payload." << std::endl;
+            return "";
+        }
+        // Retrieve and delete the payload.
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GETDEL %s", key.c_str());
         // Check if found else return empty.
@@ -221,6 +232,12 @@ namespace nsb {
     }
 
     std::string RedisConnector::peek(const std::string& key) {
+        // Check connection before carrying out operation.
+        if (!isConnected()) {
+            LOG(ERROR) << "Redis connection is not online. Cannot store payload." << std::endl;
+            return "";
+        }
+        // Get payload.
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
         return reply->str;

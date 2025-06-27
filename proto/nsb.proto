@@ -38,23 +38,9 @@ message nsbm {
     Manifest manifest = 1;
 
     message Metadata {
-        enum AddressType {
-            INT = 0;
-            STR = 1;
-        }
-        AddressType addr_type = 1;
-
-        oneof src {
-            string src_id = 2;
-            fixed32 src_addr = 3;
-        }
-
-        oneof dest {
-            string dest_id = 4;
-            fixed32 dest_addr = 5;
-        }
-
-        int32 payload_size = 6;
+        string src_id = 1;
+        string dest_id = 2;
+        int32 payload_size = 3;
     }
     Metadata metadata = 2;
 

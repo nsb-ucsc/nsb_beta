@@ -401,8 +401,12 @@ class RedisConnector(DBConnector):
         @return The generated key the message was stored with.
         """
         key = self.generate_payload_id()
-        self.r.set(key, value)
-        return key
+        try:
+            self.r.set(key, value)
+            return key
+        except ConnectionError as e:
+            logging.error("Ensure that Redis server is online.")
+            raise e
 
     def check_out(self, key:str):
         """
@@ -417,9 +421,12 @@ class RedisConnector(DBConnector):
 
         @see NSBAppClient.receive()
         """
-        value = self.r.get(key)
-        self.r.delete(key)
-        return value
+        try:
+            value = self.r.getdel(key)
+            return value
+        except ConnectionError as e:
+            logging.error("Ensure that Redis server is online.")
+            raise e
     
     def peek(self, key:str):
         """
@@ -435,7 +442,11 @@ class RedisConnector(DBConnector):
 
         @see NSBSimClient.fetch()
         """
-        return self.r.get(key)
+        try:
+            return self.r.get(key)
+        except ConnectionError as e:
+            logging.error("Ensure that Redis server is online.")
+            raise e
 
     def __del__(self):
         """
@@ -512,6 +523,10 @@ class NSBClient:
                         # If database is specified, start it up.
                         if self.cfg.use_db:
                             self.db = RedisConnector(client_id, self.cfg.db_address, self.cfg.db_port)
+                            # Check connection.
+                            if not self.db.is_connected():
+                                logging.error("Ensure that the Redis server is running.")
+                                raise RuntimeError("Failed to connect to Redis database.")
                         return
         raise RuntimeError("Failed to initialize NSB client. No response from server or invalid response.")
 

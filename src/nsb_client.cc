@@ -97,7 +97,12 @@ namespace nsb {
                 // Set up database if necessary.
                 if (cfg.USE_DB) {
                     db = new RedisConnector(clientId, cfg.DB_ADDRESS, cfg.DB_PORT);
-                    LOG(INFO) << "INIT: Connected to RedisConnecter@" << cfg.DB_ADDRESS << ":" << cfg.DB_PORT;
+                    if (db->isConnected()) {
+                        LOG(INFO) << "INIT: Connected to RedisConnecter@" << cfg.DB_ADDRESS << ":" << cfg.DB_PORT;
+                    } else {
+                        LOG(ERROR) << "INIT: Failed to connect to Redis server. Ensure that it is online." << std::endl;
+                        std::exit(EXIT_FAILURE);
+                    }
                 }
                 return;
             } else {
