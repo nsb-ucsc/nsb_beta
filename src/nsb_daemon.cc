@@ -236,14 +236,29 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+        bool success = false;
         LOG(INFO) << "Handling INIT message from client " 
                 << incoming_msg->intro().identifier() << "..." << std::endl;
         // Get client details.
         if (incoming_msg->has_intro()) {
             if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::APP_CLIENT) {
                 app_client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
+                success = true;
             } else if (incoming_msg->manifest().og() == nsb::nsbm::Manifest::SIM_CLIENT) {
-                sim_client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
+                if (cfg.SIMULATOR_MODE == Config::SimulatorMode::PER_NODE) {
+                    // If per-node simulator mode, use the identifier as the key.
+                    sim_client_lookup.emplace(incoming_msg->intro().identifier(), ClientDetails(incoming_msg, fd_lookup));
+                    success = true;
+                } else if (cfg.SIMULATOR_MODE == Config::SimulatorMode::SYSTEM_WIDE) {
+                    // If system-wide simulator mode, check that there isn't already one.
+                    if (sim_client_lookup.size() > 0) {
+                        LOG(ERROR) << "\tSystem-wide simulator mode only allows for one simulator client." << std::endl;
+                    } else {
+                        // Use a generic key as it's not important.
+                        sim_client_lookup.emplace("simulator", ClientDetails(incoming_msg, fd_lookup));
+                        success = true;
+                    }
+                }
             } else {
                 LOG(ERROR) << "\tUnknown/unexpected originator." << std::endl;
                 return;
@@ -257,7 +272,7 @@ namespace nsb {
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
         out_manifest->set_op(nsb::nsbm::Manifest::INIT);
         out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
-        out_manifest->set_code(nsb::nsbm::Manifest::SUCCESS);
+        out_manifest->set_code(success ? nsb::nsbm::Manifest::SUCCESS : nsb::nsbm::Manifest::FAILURE);
         nsb::nsbm::ConfigParams* out_config = outgoing_msg->mutable_config();
         out_config->set_sys_mode(static_cast<nsb::nsbm::ConfigParams::SystemMode>(cfg.SYSTEM_MODE));
         out_config->set_use_db(cfg.USE_DB);

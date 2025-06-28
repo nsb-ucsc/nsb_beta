@@ -89,6 +89,10 @@ namespace nsb {
         nsbResponse.ParseFromString(response);
         // Check for expected operation.
         if (nsbResponse.manifest().op() == nsb::nsbm::Manifest::INIT) {
+            if (nsbResponse.manifest().code() != nsb::nsbm::Manifest::SUCCESS) {
+                LOG(ERROR) << "INIT: Initialization failed." << std::endl;
+                std::exit(EXIT_FAILURE);
+            }
             // Get the configuration.
             if (nsbResponse.has_config()) {
                 cfg = Config(nsbResponse);
@@ -386,17 +390,20 @@ int testRedisConnector() {
 int testLifecycle() {
     using namespace nsb;
     // Create app client.
-    const std::string idApp1 = "app1";
-    const std::string idApp2 = "app2";
-    const std::string idSim1 = "sim1";
+    const std::string idApp1 = "node1";
+    const std::string idApp2 = "node2";
+    const std::string idSim1 = "node1";
+    const std::string idSim2 = "node2";
     std::string nsbDaemonAddr = "127.0.0.1";
     int nsbDaemonPort = 65432;
     NSBAppClient app1 = NSBAppClient(idApp1, nsbDaemonAddr, nsbDaemonPort);
     NSBAppClient app2 = NSBAppClient(idApp2, nsbDaemonAddr, nsbDaemonPort);
     NSBSimClient sim1 = NSBSimClient(idSim1, nsbDaemonAddr, nsbDaemonPort);
+    NSBSimClient sim2 = NSBSimClient(idSim1, nsbDaemonAddr, nsbDaemonPort);
     app1.ping();
     app2.ping();
     sim1.ping();
+    sim2.ping();
     // Send a message.
     std::string payload = "Hello from app1";
     std::string *key = new std::string();
