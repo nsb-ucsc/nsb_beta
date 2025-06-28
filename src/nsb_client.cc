@@ -283,8 +283,18 @@ namespace nsb {
             mutableManifest->set_op(nsb::nsbm::Manifest::FETCH);
             mutableManifest->set_og(*originIndicator);
             mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
-            if (srcId != nullptr) {
-                nsbMsg->mutable_metadata()->set_src_id(*srcId);
+            if (cfg.SIMULATOR_MODE == Config::SimulatorMode::SYSTEM_WIDE) {
+                if (srcId != nullptr) {
+                    // If target source ID has been set, specify that. 
+                    nsbMsg->mutable_metadata()->set_src_id(*srcId);
+                } // Otherwise, we can leave it unspecified.
+            } else if (cfg.SIMULATOR_MODE == Config::SimulatorMode::PER_NODE) {
+                if (srcId != nullptr) {
+                    LOG(WARNING)
+                        << "Simulation mode is set to PER_NODE, so specified target source will be overwritten."
+                        << std::endl;
+                }
+                nsbMsg->mutable_metadata()->set_src_id(clientId);
             }
             // Send the message.
             DLOG(INFO) << "FETCH: Sending request:" << std::endl << nsbMsg->DebugString();
@@ -415,16 +425,16 @@ int testLifecycle() {
         app1.exit();
         return -1;
     }
-    sim1.post(fetchedMsg->metadata().src_id(), fetchedMsg->metadata().dest_id(),
+    sim2.post(fetchedMsg->metadata().src_id(), fetchedMsg->metadata().dest_id(),
               fetchedMsg->msg_key(), fetchedMsg->metadata().payload_size(), true);
     // Receive a message.
     nsb::nsbm* receivedMsg = app2.receive(nullptr, 5);
     if (receivedMsg == nullptr) {
-        LOG(ERROR) << "Failed to receive message." << std::endl;
+        LOG(ERROR) << "Failed to receive payload." << std::endl;
         app1.exit();
         return -1;
     } else {
-        LOG(INFO) << "Received message: " << receivedMsg->payload() << std::endl;
+        LOG(INFO) << "Received payload: " << receivedMsg->payload() << std::endl;
         delete receivedMsg;  // Clean up the received message.
     }
     // Exit.

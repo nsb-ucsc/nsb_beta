@@ -222,7 +222,7 @@ class SimWithListener:
         """@brief Class deconstructor."""
         self.running = False
         
-async def test_async_push(agent_roster: list):
+async def test_async_push(agent_roster: list, sim_mode=0):
     """
     @brief A test with multiple agents asynchronously sending and receiving 
     messages through a dummy simulator via NSB.
@@ -233,14 +233,23 @@ async def test_async_push(agent_roster: list):
 
     @param agent_roster A list of application identifiers.
     """
-    # Start sim.
-    sim = SimWithListener("ghost", "127.0.0.1", 65432)
-    # sim.nsb.initialize()
-    sim_runtime = asyncio.create_task(sim.listen())
+    # Start system-wide simulator if necessary, else per-node.
+    if sim_mode == 0:
+        sim = SimWithListener("ghost", "127.0.0.1", 65432)
+        sim_runtime = asyncio.create_task(sim.listen())
+    elif sim_mode == 1:
+        sims = []
+        sim_runtimes = []
+        for sim_name in agent_roster:
+            sim = SimWithListener(sim_name, "127.0.0.1", 65432)
+            sims.append(sim)
+            sim_runtime = asyncio.create_task(sim.listen())
+            sim_runtimes.append(sim_runtime)
+    # Create agents and start runtimes.
     agents = []
     agent_listen_runtimes = []
     agent_send_runtimes = []
-    for i, agent_name in enumerate(agent_roster):
+    for agent_name in agent_roster:
         agent = AppWithListener(agent_name, "127.0.0.1", 65432, agent_roster)
         agents.append(agent)
         listen_runtime = asyncio.create_task(agent.listen())
@@ -250,16 +259,25 @@ async def test_async_push(agent_roster: list):
 
     # Catch kill signal.
     try:
-        await asyncio.gather(*agent_listen_runtimes, *agent_send_runtimes, sim_runtime)
+        if sim_mode == 0:
+            await asyncio.gather(*agent_listen_runtimes, *agent_send_runtimes, sim_runtime)
+        elif sim_mode == 1:
+            await asyncio.gather(*agent_listen_runtimes, *agent_send_runtimes, *sim_runtimes)
     except asyncio.CancelledError:
         pass
     finally:
         # Kill all tasks.
-        sim_runtime.cancel()
         for runtime in agent_listen_runtimes:
             runtime.cancel()
         for runtime in agent_send_runtimes:
             runtime.cancel()
+        if sim_mode == 0:
+            sim_runtime.cancel()
+            sim.__del__()
+        elif sim_mode == 1:
+            for sim, runtime in zip(sims, sim_runtimes):
+                runtime.cancel()
+                sim.__del__()
         # Cleanup.
         sim.__del__()
         for agent in agents:
@@ -274,4 +292,4 @@ if __name__ == "__main__":
     # test_pull_mode()
     # test_push_mode()
     # test_db()
-    asyncio.run(test_async_push(["agent1", "agent2", "agent3"]))
+    asyncio.run(test_async_push(["agent1", "agent2", "agent3"], sim_mode=1))

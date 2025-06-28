@@ -84,7 +84,7 @@ class Config:
         @see NSBClient.initialize()
         """
         self.system_mode = Config.SystemMode(nsb_msg.config.sys_mode)
-        self.SimulatorMode = Config.SimulatorMode(nsb_msg.config.sim_mode)
+        self.simulator_mode = Config.SimulatorMode(nsb_msg.config.sim_mode)
         self.use_db = nsb_msg.config.use_db
         if self.use_db:
             self.db_address = nsb_msg.config.db_address
@@ -521,6 +521,9 @@ class NSBClient:
                 nsb_resp.ParseFromString(response)
                 # Check to see that message is of expected operation.
                 if nsb_resp.manifest.op == nsb_pb2.nsbm.Manifest.Operation.INIT:
+                    # Ensure initialization has succeeded, else raise error.
+                    if nsb_resp.manifest.code != nsb_pb2.nsbm.Manifest.OpCode.SUCCESS:
+                        raise RuntimeError(f"INIT: Initialization failed.")
                     # Get the configuration.
                     if nsb_resp.HasField('config'):
                         self.cfg = Config(nsb_resp)
@@ -852,9 +855,16 @@ class NSBSimClient(NSBClient):
             nsb_msg.manifest.og = self.og_indicator
             nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
             # Metadata.
-            if src_id:
-                nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
-                nsb_msg.metadata.src_id = src_id
+            if self.cfg.simulator_mode == Config.SimulatorMode.SYSTEM_WIDE:
+                # If a target source was specified, specify it, else leave unspecified.
+                if src_id:
+                    nsb_msg.metadata.src_id = src_id
+            elif self.cfg.simulator_mode == Config.SimulatorMode.PER_NODE:
+                # Override or set source to local.
+                if not src_id:
+                    logging.warning("Simulation mode is set to PER_NODE, so specified target source" + \
+                                    "will be overwritten.")
+                nsb_msg.metadata.src_id = self._id
             # Send the NSB message + payload.
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
             self.logger.info("FETCH: Sent fetch request to server.")

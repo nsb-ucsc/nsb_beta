@@ -35,8 +35,10 @@ namespace nsb {
             return;
         }
         // Parse the configuration file.
-        int mode = config["system"]["mode"].as<int>();
-        cfg.SYSTEM_MODE = static_cast<Config::SystemMode>(mode);
+        int sys_mode = config["system"]["mode"].as<int>();
+        cfg.SYSTEM_MODE = static_cast<Config::SystemMode>(sys_mode);
+        int sim_mode = config["system"]["simulator_mode"].as<int>();
+        cfg.SIMULATOR_MODE = static_cast<Config::SimulatorMode>(sim_mode);
         cfg.USE_DB = config["database"]["use_db"].as<bool>();
         if (cfg.USE_DB) {
             cfg.DB_ADDRESS = config["database"]["db_address"].as<std::string>();
@@ -329,9 +331,11 @@ namespace nsb {
             FD_ZERO(&write_fd);
             // Select the target simulator if multiple simulator clients are used, else select the first and only one.
             ClientDetails target_sim;
-            if (sim_client_lookup.size() == 1) {
+            if (cfg.SIMULATOR_MODE == Config::SimulatorMode::SYSTEM_WIDE) {
+                // If system-wide simulator client, just get the only client in the lookup.
                 target_sim = sim_client_lookup.begin()->second;
-            } else if (sim_client_lookup.size() > 1) {
+            } else if (cfg.SIMULATOR_MODE == Config::SimulatorMode::PER_NODE) {
+                // If per-node simulator client, use the source ID to specify the target sim.
                 target_sim = sim_client_lookup.at(incoming_msg->metadata().src_id());
             } else {
                 LOG(ERROR) << "No simulator clients available to forward message." << std::endl;
