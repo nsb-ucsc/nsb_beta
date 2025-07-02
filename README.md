@@ -10,8 +10,12 @@ Paper.
 ### Prerequisites
 
 The following software packages are required to be installed:
-* abseil
-* ...
+* gRPC – ```grpc```
+* Abseil _(typically included with gRPC)_ – ```abseil```
+* YAML for C++ – ```yaml-cpp```
+* hiredis – ```hiredis```
+* Pkg-Config _(required for hiredis on MacOS)_ – ```hiredis```
+
 
 ### Build
 __Cmake__ is used to build this project. In order to build the NSB components (
@@ -53,6 +57,9 @@ Within the _CMake_ build process output, you should see something like this:
 The checkmarks indicate that the required software has been found successfully.
 
 ## Usage
+
+1. **Start the NSB Daemon.** If you followed the build instructions in above, 
+then you can start the NSB Daemon from the _build_ directory --- ```./build/nsb_daemon```
 
 ### C++ API
 
