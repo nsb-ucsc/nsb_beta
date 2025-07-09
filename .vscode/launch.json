@@ -39,7 +39,7 @@
             "name": "NSB: Debug C++ Client",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/nsb_client",
+            "program": "${workspaceFolder}/build/nsb_test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
