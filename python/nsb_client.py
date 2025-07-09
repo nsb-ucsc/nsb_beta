@@ -71,6 +71,9 @@ class Config:
         PUSH = 1
 
     class SimulatorMode(IntEnum):
+        """
+        
+        """
         SYSTEM_WIDE = 0
         PER_NODE = 1
 

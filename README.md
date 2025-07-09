@@ -16,7 +16,8 @@ For more information, or to cite NSB, you can access our
 
 The following software packages are required to be installed:
 * **CMake**, used to configure and build the project
-* **Protobuf**, used for message definitions
+* **Redis Server**, used as a database to store payloads
+* **Protobuf Compiler**, used to compile message definitions
 * **gRPC**, used with Protobuf and Abseil
 * **Abseil** _(typically included with gRPC)_, used for logging
 * **YAML parsing**, to parse configuration files
@@ -42,7 +43,7 @@ vcpkg install protobuf yaml-cpp grpc abseil hiredis
 #### Linux Distributions
 For Ubuntu:
 ```
-sudo apt install cmake protobuf-compiler libprotobuf-dev libyaml-cpp-dev libgrpc++-dev libabsl-dev libhiredis-dev pkg-config
+sudo apt install cmake protobuf-compiler libyaml-cpp-dev libgrpc++-dev libabsl-dev libhiredis-dev pkg-config
 ```
 
 For Fedora (also for CentOS using _yum_):
@@ -50,6 +51,8 @@ For Fedora (also for CentOS using _yum_):
 sudo dnf install cmake protobuf-devel protobuf-compiler yaml-cpp-devel grpc-devel abseil-cpp-devel hiredis-devel pkgconfig
 ```
 
+With Linux, you will have to install gRPC with Protocol Buffers from source
+using CMake; that process is detailed [here](https://grpc.io/docs/languages/cpp/quickstart/).
 
 ### Build
 __Cmake__ is used to build this project. In order to build the NSB components (
