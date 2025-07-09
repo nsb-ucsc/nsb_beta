@@ -1,8 +1,10 @@
 *.o
 *.dSYM
+*.DS_Store
 build/*
 */docs/
 __pycache__
 nsb_pb2.py
 */proto
 .vscode/settings.json
+protobuf-31.0/*
