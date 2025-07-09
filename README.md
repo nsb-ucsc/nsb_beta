@@ -36,23 +36,10 @@ brew install cmake yaml-cpp grpc abseil hiredis pkg-config
 ```
 
 #### Windows via vcpkg
-```
-vcpkg install protobuf yaml-cpp grpc abseil hiredis
-```
+_Coming soon._
 
 #### Linux Distributions
-For Ubuntu:
-```
-sudo apt install cmake protobuf-compiler libyaml-cpp-dev libgrpc++-dev libabsl-dev libhiredis-dev pkg-config
-```
-
-For Fedora (also for CentOS using _yum_):
-```
-sudo dnf install cmake protobuf-devel protobuf-compiler yaml-cpp-devel grpc-devel abseil-cpp-devel hiredis-devel pkgconfig
-```
-
-With Linux, you will have to install gRPC with Protocol Buffers from source
-using CMake; that process is detailed [here](https://grpc.io/docs/languages/cpp/quickstart/).
+_Coming soon._
 
 ### Build
 __Cmake__ is used to build this project. In order to build the NSB components (
