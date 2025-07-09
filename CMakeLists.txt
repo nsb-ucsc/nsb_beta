@@ -49,7 +49,7 @@ message(STATUS "▸ Protobuf: ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 
 # Set up library.
-add_library(nsb SHARED
+add_library(nsb STATIC
     src/nsb.cc
     src/nsb.h
     src/nsb_client.cc
