@@ -42,6 +42,7 @@ foreach(link_target ${link_targets})
         message(STATUS "✗ Target not found: ${link_target}")
     endif()
 endforeach()
+message(STATUS "Protobuf Libraries: ${Protobuf_LIBRARIES}")
 # Verify that directories are found.
 message(STATUS "Directories to be included:")
 message(STATUS "▸ Source: ${CMAKE_SOURCE_DIR}")
@@ -58,6 +59,7 @@ add_library(nsb SHARED
 # Link libraries.
 target_link_libraries(nsb PUBLIC
     ${link_targets}
+    ${Protobuf_LIBRARIES}
 )
 # Include directories.
 target_include_directories(nsb PUBLIC
