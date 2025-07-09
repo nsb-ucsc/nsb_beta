@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(NSBDaemon)
 
 # Set directories as necessary.
-message(STATUS "Current source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "Binary directory: ${CMAKE_CURRENT_BINARY_DIR}")
-set(CPP_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(PYTHON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/python")
-set(PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/proto")
+message(STATUS "Source directory: ${CMAKE_SOURCE_DIR}")
+message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
+set(CPP_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+set(PYTHON_DIR "${CMAKE_SOURCE_DIR}/python")
+set(PROTO_DIR "${CMAKE_SOURCE_DIR}/proto")
 message(STATUS "C++ source directory: ${CPP_SRC_DIR}")
 message(STATUS "Python source directory: ${PYTHON_DIR}")
 message(STATUS "Protobuf directory: ${PROTO_DIR}")
@@ -44,12 +44,12 @@ foreach(link_target ${link_targets})
 endforeach()
 # Verify that directories are found.
 message(STATUS "Directories to be included:")
-message(STATUS "▸ Binary: ${CMAKE_CURRENT_BINARY_DIR}")
+message(STATUS "▸ Source: ${CMAKE_SOURCE_DIR}")
 message(STATUS "▸ Protobuf: ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 
 # Set up library.
-add_library(nsb STATIC
+add_library(nsb SHARED
     src/nsb.cc
     src/nsb.h
     src/nsb_client.cc
@@ -60,8 +60,8 @@ target_link_libraries(nsb PUBLIC
     ${link_targets}
 )
 # Include directories.
-target_include_directories(nsb PUBLIC 
-    ${CMAKE_CURRENT_BINARY_DIR}
+target_include_directories(nsb PUBLIC
+    ${CPP_SRC_DIR}
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
 )
@@ -69,7 +69,7 @@ target_include_directories(nsb PUBLIC
 protobuf_generate(
     TARGET nsb
     LANGUAGE cpp
-    PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    PROTOC_OUT_DIR ${CPP_SRC_DIR}
     PROTOS ${PROTO_DIR}/nsb.proto
 )
 # Generate Python protobuf file.
@@ -80,9 +80,9 @@ protobuf_generate(
     PROTOS ${PROTO_DIR}/nsb.proto
 )
 # Cleaning up.
-set_target_properties(${exec_target} PROPERTIES
+set_target_properties(nsb PROPERTIES
     ADDITIONAL_CLEAN_FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
+    "${CPP_SRC_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
 )
 
 set(EXEC_TARGETS
@@ -103,7 +103,7 @@ foreach(exec_target ${EXEC_TARGETS})
     )
     # Include directories.
     target_include_directories(${exec_target} PUBLIC 
-        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CPP_SRC_DIR}
         ${Protobuf_INCLUDE_DIRS}
         ${YAML_CPP_INCLUDE_DIR}
     )
