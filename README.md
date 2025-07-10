@@ -16,23 +16,24 @@ For more information, or to cite NSB, you can access our
 
 The following software packages are required to be installed:
 * **CMake**, used to configure and build the project
+* _**Pkg-Config**_, necessary in MacOS for package configuration
 * **Redis Server**, used as a database to store payloads
-* **Protobuf Compiler**, used to compile message definitions
-* **gRPC**, used with Protobuf and Abseil
-* **Abseil** _(typically included with gRPC)_, used for logging
+* **Abseil**, necessary for Protobuf support and logging
+* **Protobuf**, used to define and compile
 * **YAML parsing**, to parse configuration files
 * **hiredis**, to connect to the Redis server
-* _**Pkg-Config**_, necessary in MacOS for package configuration
 
 Python API support involves additional package installation through its
 [_requirements.txt_](python/requirements.txt) file and is detailed in the 
 [Python README](python/README.md).
 
-Platform-specific package install commands are provided below.
+Platform-specific package install commands are provided below. Also, note that
+previous installations of tools like _gRPC_ that include _protobuf_ may result
+in conflicting versions for _protobuf_.
 
 #### MacOS via Homebrew
 ```
-brew install cmake yaml-cpp grpc abseil hiredis pkg-config
+brew install cmake pkg-config abseil protobuf yaml-cpp redis hiredis
 ```
 
 #### Windows via vcpkg
@@ -69,13 +70,15 @@ If all the prerequisite software was installed, this should work without issue.
 Within the _CMake_ build process output, you should see something like this:
 
 ```
--- Checking target libraries:
--- ✓ Found target: yaml-cpp::yaml-cpp
--- ✓ Found target: gRPC::grpc++
--- ✓ Found target: absl::base
--- ✓ Found target: absl::log
--- ✓ Found target: absl::time
--- ✓ Found target: PkgConfig::hiredis
+[cmake] -- Checking target libraries:
+[cmake] -- ✓ Found target: yaml-cpp::yaml-cpp
+[cmake] -- ✓ Found target: protobuf::libprotobuf
+[cmake] -- ✓ Found target: absl::base
+[cmake] -- ✓ Found target: absl::log
+[cmake] -- ✓ Found target: absl::time
+[cmake] -- ✓ Found target: absl::log_internal_check_op
+[cmake] -- ✓ Found target: absl::log_initialize
+[cmake] -- ✓ Found target: PkgConfig::hiredis
 ```
 
 The checkmarks indicate that the required software has been found successfully.
@@ -106,6 +109,23 @@ Once the Redis server and NSB Daemon are running in the background, you can
 ### Application Programming Interfaces
 Currently, we support and provide interfaces for [Python](python/README.md) and 
 [C++](src/README.md).
+
+## C++
+To compile your C++ program on the command line, we recommend ```pkg-config``` 
+macro expansion to ensure that all necessary libraries are linked and 
+directories are included.
+```
+clang++ -Wall -std=c++17 $(pkg-config --cflags --libs protobuf absl_base
+absl_log absl_time absl_log_internal_check_op absl_log_initialize yaml-cpp hiredis)
+-L[path/to/your/nsb/build] -lnsb -I[path/to/your/nsb/headers] [YOUR_SOURCE].cc
+-lnsb -I[path/to/your/nsb/headers] -o [YOUR_EXECUTABLE]
+```
+On some platforms, notably MacOS, you may need to specify the _rpath_. This should
+also point to the location of your NSB library, usually in the ```build``` directory.
+```
+-rpath [path/to/your/nsb/build]
+```
+We are working on _pkg-config_ support for NSB itself, which will be coming soon.
 
 ## Extensibility
 _Coming soon._

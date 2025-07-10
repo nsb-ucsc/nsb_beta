@@ -13,10 +13,9 @@ set(PYTHON_DIR "${CMAKE_SOURCE_DIR}/python")
 set(PROTO_DIR "${CMAKE_SOURCE_DIR}/proto")
 message(STATUS "C++ source directory: ${CPP_SRC_DIR}")
 message(STATUS "Python source directory: ${PYTHON_DIR}")
-message(STATUS "Protobuf directory: ${PROTO_DIR}")
+message(STATUS "Proto File directory: ${PROTO_DIR}")
 
 # Get necessary packages.
-find_package(gRPC CONFIG REQUIRED)
 find_package(absl REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -28,12 +27,15 @@ pkg_check_modules(hiredis REQUIRED IMPORTED_TARGET hiredis)
 # Verify that libraries have been found.
 set(link_targets
     yaml-cpp::yaml-cpp
-    gRPC::grpc++
+    protobuf::libprotobuf
     absl::base
     absl::log
     absl::time
+    absl::log_internal_check_op
+    absl::log_initialize
     PkgConfig::hiredis
 )
+
 message(STATUS "Checking target libraries:")
 foreach(link_target ${link_targets})
     if(TARGET ${link_target})
@@ -59,7 +61,7 @@ add_library(nsb SHARED
 # Link libraries.
 target_link_libraries(nsb PUBLIC
     ${link_targets}
-    ${Protobuf_LIBRARIES}
+    # ${Protobuf_LIBRARIES}
 )
 # Include directories.
 target_include_directories(nsb PUBLIC
@@ -67,6 +69,8 @@ target_include_directories(nsb PUBLIC
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
 )
+
+message(STATUS "Protoc Executable: ${Protobuf_PROTOC_EXECUTABLE}")
 # Generate C++ protobuf files.
 protobuf_generate(
     TARGET nsb
