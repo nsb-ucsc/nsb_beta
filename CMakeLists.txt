@@ -8,11 +8,17 @@ project(NSBDaemon)
 # Set directories as necessary.
 message(STATUS "Source directory: ${CMAKE_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
-set(CPP_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+set(CPP_DIR "${CMAKE_SOURCE_DIR}/cpp")
+set(CPP_SRC_DIR "${CPP_DIR}/src")
+set(CPP_INCLUDE_DIR "${CPP_DIR}/include")
+set(CPP_PROTO_DIR "${CPP_DIR}/proto")
 set(PYTHON_DIR "${CMAKE_SOURCE_DIR}/python")
 set(PROTO_DIR "${CMAKE_SOURCE_DIR}/proto")
-message(STATUS "C++ source directory: ${CPP_SRC_DIR}")
-message(STATUS "Python source directory: ${PYTHON_DIR}")
+message(STATUS "C++ directory: ${CPP_DIR}")
+message(STATUS "▸ Source: ${CPP_SRC_DIR}")
+message(STATUS "▸ Headers: ${CPP_INCLUDE_DIR}")
+message(STATUS "▸ Proto: ${CPP_PROTO_DIR}")
+message(STATUS "Python directory: ${PYTHON_DIR}")
 message(STATUS "Proto File directory: ${PROTO_DIR}")
 
 # Get necessary packages.
@@ -53,19 +59,17 @@ message(STATUS "▸ YAML: ${YAML_CPP_INCLUDE_DIR}")
 
 # Set up library.
 add_library(nsb SHARED
-    src/nsb.cc
-    src/nsb.h
-    src/nsb_client.cc
-    src/nsb_client.h
+    ${CPP_SRC_DIR}/nsb.cc
+    ${CPP_SRC_DIR}/nsb_client.cc
 )
 # Link libraries.
 target_link_libraries(nsb PUBLIC
     ${link_targets}
-    # ${Protobuf_LIBRARIES}
 )
 # Include directories.
 target_include_directories(nsb PUBLIC
-    ${CPP_SRC_DIR}
+    ${CPP_INCLUDE_DIR}
+    ${CPP_PROTO_DIR}
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
 )
@@ -75,42 +79,39 @@ message(STATUS "Protoc Executable: ${Protobuf_PROTOC_EXECUTABLE}")
 protobuf_generate(
     TARGET nsb
     LANGUAGE cpp
-    PROTOC_OUT_DIR ${CPP_SRC_DIR}
+    IMPORT_DIRS ${PROTO_DIR}
+    PROTOC_OUT_DIR ${CPP_DIR}/proto
     PROTOS ${PROTO_DIR}/nsb.proto
 )
 # Generate Python protobuf file.
 protobuf_generate(
     TARGET nsb
     LANGUAGE python
-    PROTOC_OUT_DIR ${PYTHON_DIR}
+    IMPORT_DIRS ${PROTO_DIR}
+    PROTOC_OUT_DIR ${PYTHON_DIR}/proto
     PROTOS ${PROTO_DIR}/nsb.proto
 )
 # Cleaning up.
-set_target_properties(nsb PROPERTIES
-    ADDITIONAL_CLEAN_FILES
-    "${CPP_SRC_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
+set_target_properties(nsb PROPERTIES ADDITIONAL_CLEAN_FILES
+    "${CPP_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
 )
 
-set(EXEC_TARGETS
-    nsb_daemon
-    nsb_test
+# Compile daemon executable.
+add_executable(nsb_daemon ${CPP_SRC_DIR}/nsb_daemon.cc)
+# Link NSB library.
+target_link_libraries(nsb_daemon PUBLIC nsb)
+# Include directories.
+target_include_directories(nsb_daemon PUBLIC 
+    ${CPP_INCLUDE_DIR}
+    ${Protobuf_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIR}
 )
 
-foreach(exec_target ${EXEC_TARGETS})
-    # Set up executable.
-    add_executable(${exec_target}
-        src/${exec_target}.cc
-        # src/nsb.cc
-    )
-
-    # Link libraries.
-    target_link_libraries(${exec_target} PUBLIC
-        nsb
-    )
-    # Include directories.
-    target_include_directories(${exec_target} PUBLIC 
-        ${CPP_SRC_DIR}
-        ${Protobuf_INCLUDE_DIRS}
-        ${YAML_CPP_INCLUDE_DIR}
-    )
-endforeach(exec_target ${EXEC_TARGETS})
+# Compile nsb_test.
+add_executable(nsb_test ${CPP_DIR}/nsb_test.cc)
+target_link_libraries(nsb_test PUBLIC nsb)
+target_include_directories(nsb_test PUBLIC 
+    ${CPP_INCLUDE_DIR}
+    ${Protobuf_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIR}
+)

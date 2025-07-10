@@ -28,7 +28,7 @@
 #include <fcntl.h>
 // Data, configuration, and logging.
 #include <sqlite3.h>
-#include "proto/nsb.pb.h"
+#include "nsb.pb.h"
 #include <yaml-cpp/yaml.h>
 #include <absl/log/globals.h>
 #include <absl/log/initialize.h>
