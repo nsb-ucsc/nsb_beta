@@ -11,7 +11,12 @@ project(nsb
     LANGUAGES CXX
 )
 
-# Set install directories.
+# Set standard install directories.
+include(GNUInstallDirs)
+
+# Make cpp/proto and python/proto directories.
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/cpp/proto)
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/python/proto)
 
 # Set directories as necessary.
 message(STATUS "Source directory: ${CMAKE_SOURCE_DIR}")
@@ -114,6 +119,38 @@ target_include_directories(nsb_daemon PUBLIC
     ${Protobuf_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
 )
+
+# Generate pkg-config file.
+configure_file(
+    ${CMAKE_SOURCE_DIR}/nsb.pc.in
+    ${CMAKE_BINARY_DIR}/nsb.pc
+    @ONLY
+)
+
+# Install the pkg-config file.
+install(FILES ${CMAKE_BINARY_DIR}/nsb.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+    COMPONENT development
+)
+
+# Install libraries and headers.
+install(TARGETS nsb
+    EXPORT nsbTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT runtime
+)
+
+# Install your headers.
+install(DIRECTORY ${CPP_INCLUDE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nsb
+    COMPONENT development
+    FILES_MATCHING PATTERN "*.h"
+)
+
+### FOR TESTING ###
 
 # Compile nsb_test.
 add_executable(nsb_test ${CPP_DIR}/nsb_test.cc)

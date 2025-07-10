@@ -719,7 +719,6 @@ class NSBAppClient(NSBClient):
             nsb_msg.manifest.og = self.og_indicator
             nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.SUCCESS
             # Metadata.
-            nsb_msg.metadata.addr_type = nsb_pb2.nsbm.Metadata.AddressType.STR
             if dest_id:
                 nsb_msg.metadata.dest_id = dest_id
             else:
