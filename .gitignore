@@ -7,4 +7,7 @@ __pycache__
 nsb_pb2.py
 */proto
 .vscode/settings.json
-protobuf-31.0/*
+protobuf*
+abseil-cpp
+yaml-cpp
+install
