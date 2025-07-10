@@ -3,7 +3,15 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(NSBDaemon)
+# Project information.
+project(nsb
+    VERSION 0.1.0
+    DESCRIPTION "NSB – Network Simulation Bridge"
+    HOMEPAGE_URL "https://github.com/nsb-ucsc/nsb_beta"
+    LANGUAGES CXX
+)
+
+# Set install directories.
 
 # Set directories as necessary.
 message(STATUS "Source directory: ${CMAKE_SOURCE_DIR}")
@@ -93,7 +101,7 @@ protobuf_generate(
 )
 # Cleaning up.
 set_target_properties(nsb PROPERTIES ADDITIONAL_CLEAN_FILES
-    "${CPP_DIR}/proto;${PYTHON_DIR}/proto;${PYTHON_DIR}/__pycache__"
+    "${CPP_DIR}/proto/*;${PYTHON_DIR}/proto/*;${PYTHON_DIR}/__pycache__/*"
 )
 
 # Compile daemon executable.

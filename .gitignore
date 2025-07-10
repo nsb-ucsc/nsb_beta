@@ -4,10 +4,12 @@
 build/*
 */docs/
 __pycache__
-nsb_pb2.py
-*/proto
+*_pb2.py
+*.pb.cc
+*.pb.h
 .vscode/settings.json
 protobuf*
 abseil-cpp
 yaml-cpp
 install
+test
