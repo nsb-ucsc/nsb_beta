@@ -147,7 +147,7 @@ install(FILES ${CMAKE_BINARY_DIR}/nsb.pc
 )
 
 # Install libraries and headers.
-install(TARGETS nsb
+install(TARGETS nsb nsb_daemon
     EXPORT nsbTargets
     LIBRARY DESTINATION ${NSB_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${NSB_INSTALL_LIBDIR}
