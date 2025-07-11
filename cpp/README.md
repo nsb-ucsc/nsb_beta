@@ -3,9 +3,11 @@
 C++ 17 is required to use the client API.
 
 ## Setting Up the Library
-When you build NSB with CMake, the client library is automatically compiled and can be found in the _build_ directory as **libnsb.\***.
-Upon installation, the library, binaries, and include directories can also be found in 
-```[your/install/path]/nsb``` in the ```lib```, ```include```, and ```bin``` subdirectories respectively.
+When you build NSB with CMake, the client library is automatically compiled and 
+can be found in the _build_ directory as **libnsb.\***. Upon installation, the 
+library, binaries, and include directories can also be found in 
+```[your/install/path]/nsb``` in the ```lib```, ```include```, and ```bin``` 
+subdirectories respectively.
 
 The library contains two headers, **_nsb.h_** and **_nsb_client.h_**, under the same namespace **_nsb_**. The base header **_nsb.h_** provides common code for the NSB system and is used by **nsb_daemon**.
 The client header **_nsb_client.h_** provides the API for implementing clients in the application and network simulator.

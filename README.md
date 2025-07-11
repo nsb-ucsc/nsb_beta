@@ -17,7 +17,7 @@ For more information, or to cite NSB, you can access our
 The following software packages are required to be installed:
 * **CMake**, used to configure and build the project
 * _**Pkg-Config**_, necessary in MacOS for package configuration
-* **Redis Server**, used as a database to store payloads
+* **Redis**, whose server is used as a database to store payloads
 * **Abseil**, necessary for Protobuf support and logging
 * **Protobuf**, used to define and compile
 * **YAML parsing**, to parse configuration files
@@ -43,8 +43,8 @@ _Coming soon._
 _Coming soon._
 
 ### Build
-__Cmake__ is used to build this project. In order to build the NSB components (
-the NSB Daemon executable and the C++ and Python client libraries), create a 
+__Cmake__ is used to build this project. In order to build the NSB components
+(the NSB Daemon executable and the C++ and Python client libraries), create a 
 _build_ (```mkdir build```) directory at the top level of this project 
 directory, such that your directory now looks like this:
 
@@ -84,9 +84,10 @@ cmake --build . --clean-first
 cmake --install .
 ```
 The library, includes, and binary directories should now be available under
-```[your/install/path]/nsb```; this also means they can be removed by deleting
-this folder. The install command will also make NSB available on _pkg-config_ 
-as ```nsb```, which may be of use when compiling projects with NSB.
+```[your/install/path]/nsb```. The install command will also make NSB available 
+on _pkg-config_ as ```nsb```, which may be of use when compiling projects with 
+NSB. The **NSB Daemon** executable used to run NSB can be found at 
+```[your/install/path]/nsb/bin/nsb_daemon```.
 
 ### Uninstallation
 
@@ -99,7 +100,24 @@ the project ```build``` directory (```xargs rm < install_manifest.txt```).
 
 Then, you may delete the ```build``` directory to remove the built project.
 
-## Usage
+## Basic Usage
+
+### Programming Interface
+
+Currently, we support and provide interfaces for [Python](python/README.md) and 
+[C++](src/README.md). These interfaces have a high level of feature parity, and
+we aim to keep it that way. The language-specific READMEs contain more detail 
+and the documents contain detailed API manuals.
+
+The **NSB Daemon** serves as the bridge between the application space and the 
+network simulator space and runs from its compiled binary. NSB provides two main
+interfaces – the **NSB Application Client** (```NsbAppClient```) and the 
+**NSB Simulator Client** (```NsbSimClient```) – two connect the bridge between 
+the application and simulator, respectively.
+
+The **NSB
+
+### Running Your System
 
 These instructions assume you have already implemented the client-side APIs in
 your code. Once this is complete, we recommend taking these steps in order:
@@ -124,13 +142,9 @@ modified using the _NSBSimClient_ API, should be started before the application
 in order to be ready and listening for messages from the application space.
 
 4. **Run your modified application.** Using the _NSBAppClient_ API, your 
-application(s) should now send messages via NSB over the simulated network.
+application(s) should now be able to send messages via NSB over the simulated 
+network.
 
-Once the Redis server and NSB Daemon are running in the background, you can
-
-### Application Programming Interfaces
-Currently, we support and provide interfaces for [Python](python/README.md) and 
-[C++](src/README.md).
 
 ## Extensibility
 _Coming soon._

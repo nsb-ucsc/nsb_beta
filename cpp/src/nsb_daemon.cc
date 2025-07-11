@@ -28,7 +28,7 @@ namespace nsb {
 
     void NSBDaemon::configure(std::string filename) {
         // Open YAML file.
-        YAML::Node config = YAML::LoadFile("config.yaml");
+        YAML::Node config = YAML::LoadFile(filename);
         // Check if the file is valid.
         if (config.IsNull()) {
             std::cerr << "Failed to load configuration file: " << filename << std::endl;
@@ -549,15 +549,25 @@ namespace nsb {
  * 
  * @return int 
  */
-int main() {
+int main(int argc, char *argv[]) {
     using namespace nsb;
     // Set up logging.
     NsbLogSink log_output = NsbLogSink();
     absl::InitializeLog();
     absl::log_internal::AddLogSink(&log_output);
+    // Check argument.
+    if (argc != 2) {
+        LOG(ERROR) << "Usage: " << argv[0] << " <config_file>" << std::endl;
+        return 1;
+    }
+    // Check if the provided config file exists.
+    if (access(argv[1], F_OK) == -1) {
+        LOG(ERROR) << "Configuration file does not exist: " << argv[1] << std::endl;
+        return 1;
+    }
     // Start daemon.
     LOG(INFO) << "Starting daemon...\n";
-    NSBDaemon daemon = NSBDaemon(65432, "config.yaml");
+    NSBDaemon daemon = NSBDaemon(65432, argv[1]);
     daemon.start();
     daemon.stop();
     LOG(INFO) << "Exit.";

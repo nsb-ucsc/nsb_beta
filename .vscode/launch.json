@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/nsb_daemon",
-            "args": [],
+            "args": ["config.yaml"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -60,19 +60,19 @@
             "name": "Run Daemon & Python Clients",
             "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
             "stopAll": true,
-            "preLaunchTask": "CMake: Build NSB Daemon"
+            "preLaunchTask": "Clean & Build NSB"
         },
         {
             "name": "Run Daemon & C++ Clients",
             "configurations": ["NSB: Debug C++ Client", "NSB: Debug NSB Daemon"],
             "stopAll": true,
-            "preLaunchTask": "CMake: Build NSB Daemon"
+            "preLaunchTask": "Clean & Build NSB"
         },
         {
             "name": "Run Daemon Only",
-            "configurations": ["NSB: Debug Python Client", "NSB: Debug NSB Daemon"],
+            "configurations": ["NSB: Debug NSB Daemon"],
             "stopAll": true,
-            "preLaunchTask": "CMake: Build NSB Daemon"
+            "preLaunchTask": "Clean & Build NSB"
         },
     ]
 }
