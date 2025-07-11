@@ -735,7 +735,7 @@ class NSBAppClient(NSBClient):
             self.logger.info("RECEIVE: Polling the server.")
         # Get response from request or just wait for message to come in.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
-        if len(response):
+        if response:
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
@@ -780,7 +780,7 @@ class NSBAppClient(NSBClient):
         """
         # Get response from request or just wait for message to come in.
         response = await self.comms._listen_msg(Comms.Channels.RECV)
-        if len(response):
+        if response:
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
@@ -884,7 +884,7 @@ class NSBSimClient(NSBClient):
             self.logger.info("FETCH: Sent fetch request to server.")
         # Get response from request or await forwarded message.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
-        if len(response):
+        if response:
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)
@@ -934,7 +934,7 @@ class NSBSimClient(NSBClient):
         """
         # Get response from request or await forwarded message.
         response = await self.comms._listen_msg(Comms.Channels.RECV)
-        if len(response):
+        if response:
             # Parse in message.
             nsb_resp = nsb_pb2.nsbm()
             nsb_resp.ParseFromString(response)

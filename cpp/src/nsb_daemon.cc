@@ -498,26 +498,19 @@ namespace nsb {
                 }
             }
         }
-        // Pop the next message in the queue.
-        if (!fetched) {
-            if (!rx_buffer.empty()) {
-                received_message = tx_buffer.front();
-                rx_buffer.pop_front();
-                fetched = true;
-            }
-        }
-        DLOG(INFO) << "RX entry retrieved | " 
+        if (received_message.exists()) {
+            DLOG(INFO) << "RX entry retrieved | " 
                 << received_message.payload_size << " B | src: " 
                 << received_message.source << " | dest: " 
                 << received_message.destination << "\n\tPayload: " 
                 << received_message.payload_obj << std::endl;
-
+        }
         // Prepare response.
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
         out_manifest->set_op(nsb::nsbm::Manifest::RECEIVE);
         out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
         // If message was found (MessageEntry populated), reply with message.
-        if (received_message.source != "") {
+        if (received_message.exists()) {
             out_manifest->set_code(nsb::nsbm::Manifest::MESSAGE);
             nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
             out_metadata->set_src_id(received_message.source);
