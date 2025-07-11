@@ -117,14 +117,6 @@ Once the Redis server and NSB Daemon are running in the background, you can
 Currently, we support and provide interfaces for [Python](python/README.md) and 
 [C++](src/README.md).
 
-## C++
-To compile your C++ program on the command line, we recommend _pkg-config_
-macro expansion to ensure that all necessary libraries are linked and 
-directories are included.
-```
-clang++ -Wall -std=c++17 $(pkg-config --cflags --libs nsb) [SOURCE(S)] -o [EXECUTABLE]
-```
-
 ## Extensibility
 _Coming soon._
 
