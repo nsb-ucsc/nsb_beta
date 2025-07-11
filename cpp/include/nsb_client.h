@@ -28,7 +28,7 @@ namespace nsb {
     public:
         NSBAppClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBAppClient();
-        void send(const std::string& destId, std::string& payload, std::string* key);
+        std::string send(const std::string destId, std::string payload);
         /**
          * @brief Receives a payload via NSB.
          * 
@@ -65,17 +65,17 @@ namespace nsb {
          * @see SocketInterface.receiveMessage()
          * 
          */
-        nsb::nsbm* receive(std::string* destId, int timeout);
-        nsb::nsbm* listenReceive();
+        MessageEntry receive(std::string* destId, int timeout);
+        MessageEntry listenReceive();
     };
 
     class NSBSimClient : public NSBClient {
     public:
         NSBSimClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBSimClient();
-        nsb::nsbm* fetch(std::string* srcId, int timeout, bool getPayload, std::string* payload);
-        nsb::nsbm* listenFetch();
-        void post(std::string srcId, std::string destId, std::string payloadObj, int payloadSize, bool success);
+        MessageEntry fetch(std::string* srcId, int timeout);
+        MessageEntry listenFetch();
+        std::string post(std::string srcId, std::string destId, std::string &payload);
     };
 }
 

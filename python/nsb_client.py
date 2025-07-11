@@ -102,6 +102,13 @@ class Config:
         if self.use_db:
             s += f" | DB Address: {self.db_address} | DB Port: {self.db_port}"
         return s
+    
+class MessageEntry:
+    def __init__(self, src_id, dest_id, payload):
+        self.src_id = src_id
+        self.dest_id = dest_id
+        self.payload = payload
+        self.payload_size = len(payload)
 
 ### COMMUNICATION INTERFACES ###
 
@@ -746,7 +753,10 @@ class NSBAppClient(NSBClient):
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{payload}")
-                    return nsb_resp
+                    # Pack the payload into a MessageEntry.
+                    return MessageEntry(src_id=nsb_resp.metadata.src_id,
+                                        dest_id=nsb_resp.metadata.dest_id,
+                                        payload=self.msg_get_payload_obj(nsb_resp))
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     self.logger.info("RECEIVE: Yikes, no message.")
                     return None
@@ -781,16 +791,18 @@ class NSBAppClient(NSBClient):
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
                         payload = self.db.check_out(nsb_resp.msg_key)
-                        nsb_resp.payload = payload
                     else:
                         payload = nsb_resp.payload
-                    self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
+                    self.logger.info(f"LISTEN: Received {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{payload}")
-                    return nsb_resp
+                    # Pack the payload into a MessageEntry.
+                    return MessageEntry(src_id=nsb_resp.metadata.src_id,
+                                        dest_id=nsb_resp.metadata.dest_id,
+                                        payload=self.msg_get_payload_obj(nsb_resp))
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
-                    self.logger.info("RECEIVE: Yikes, no message.")
+                    self.logger.info("LISTEN: Yikes, no message.")
                     return None
         # If nothing, return None.
         return None
@@ -822,7 +834,7 @@ class NSBSimClient(NSBClient):
         self.og_indicator = nsb_pb2.nsbm.Manifest.Originator.SIM_CLIENT
         self.initialize()
 
-    def fetch(self, src_id:str|None=None, timeout=None, get_payload=False):
+    def fetch(self, src_id:str|None=None, timeout=None):
         """
         @brief Fetches a payload that needs to be sent over the simulated 
                network.
@@ -888,8 +900,10 @@ class NSBSimClient(NSBClient):
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{payload}")
-                    # If payload is desired, return payload in addition to the message.
-                    return nsb_resp, payload if get_payload else nsb_resp
+                    # Pack the payload into a MessageEntry.
+                    return MessageEntry(src_id=nsb_resp.metadata.src_id,
+                                        dest_id=nsb_resp.metadata.dest_id,
+                                        payload=self.msg_get_payload_obj(nsb_resp))
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("FETCH: Yikes, no message.")
                     return None
@@ -929,23 +943,26 @@ class NSBSimClient(NSBClient):
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
-                        payload = self.db.peek(nsb_resp.msg_key)
+                        payload = self.db.check_out(nsb_resp.msg_key)
                     else:
                         payload = nsb_resp.payload
-                    self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
+                    self.logger.info(f"LISTEN: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
                                         f"{payload}")
-                    return nsb_resp
+                    # Pack the payload into a MessageEntry.
+                    return MessageEntry(src_id=nsb_resp.metadata.src_id,
+                                        dest_id=nsb_resp.metadata.dest_id,
+                                        payload=self.msg_get_payload_obj(nsb_resp))
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
-                    print("FETCH: Yikes, no message.")
+                    print("LISTEN: Yikes, no message.")
                     return None
             else:
                 return None
         else:
             return None
         
-    def post(self, src_id:str, dest_id:str, payload_obj:bytes, payload_size:int, success:bool=True):
+    def post(self, src_id:str, dest_id:str, payload:bytes):
         """
         @brief Posts a payload to the specified destination via NSB.
         
@@ -966,13 +983,12 @@ class NSBSimClient(NSBClient):
         # Manifest.
         nsb_msg.manifest.op = nsb_pb2.nsbm.Manifest.Operation.POST
         nsb_msg.manifest.og = self.og_indicator
-        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE if success else \
-            nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE
+        nsb_msg.manifest.code = nsb_pb2.nsbm.Manifest.OpCode.MESSAGE
         # Metadata.
         nsb_msg.metadata.src_id = src_id
         nsb_msg.metadata.dest_id = dest_id
-        nsb_msg.metadata.payload_size = payload_size
-        self.msg_set_payload_obj(payload_obj, nsb_msg)
+        nsb_msg.metadata.payload_size = len(payload)
+        self.msg_set_payload_obj(payload, nsb_msg)
         # Send the NSB message + payload.
         self.comms._send_msg(Comms.Channels.SEND, nsb_msg.SerializeToString())
         self.logger.info("POST: Posted message + payload to server.")

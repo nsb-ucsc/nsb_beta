@@ -16,116 +16,116 @@ implementation examples.
 
 ### TEST FUNCTIONS ###
 
-def test_pull_mode():
-    """
-    @brief Simple test for NSB in _PULL_ mode.
+# def test_pull_mode():
+#     """
+#     @brief Simple test for NSB in _PULL_ mode.
 
-    This is a simple run of two Application Clients, one sending a message to 
-    another, through a dummy Simulator Client via NSB. This test run is intended 
-    for NSB in _PULL_ mode and will not work for NSB in _PUSH_ mode. Ensure that
-    the system configuration reflects this.
-    """
-    # Create app and sim clients.
-    app1 = NSBAppClient("billy", "127.0.0.1", 65432)
-    app2 = NSBAppClient("bob", "127.0.0.1", 65432)
-    sim = NSBSimClient("sim", "127.0.0.1", 65432)
-    # Send a message.
-    app1.send("bob", b"hello world")
-    # Fetch a message at the sim client.
-    fetched_msg = sim.fetch(0)
-    # Post the message from the sim client.
-    if fetched_msg:
-        if fetched_msg.HasField('metadata'):
-            sim.logger.info(f"Fetched payload@{fetched_msg.msg_key} " + \
-                            f"from {fetched_msg.metadata.src_id} to {fetched_msg.metadata.dest_id}")
-            sim.post(fetched_msg.metadata.src_id,
-                     fetched_msg.metadata.dest_id,
-                     fetched_msg.msg_key,
-                     fetched_msg.metadata.payload_size,
-                     success=True)
-    else:
-        print("No message fetched.")
-    # Receive message.
-    received_msg = app2.receive(0)
-    if not received_msg:
-        print("No message received.")
-    app2.exit()
+#     This is a simple run of two Application Clients, one sending a message to 
+#     another, through a dummy Simulator Client via NSB. This test run is intended 
+#     for NSB in _PULL_ mode and will not work for NSB in _PUSH_ mode. Ensure that
+#     the system configuration reflects this.
+#     """
+#     # Create app and sim clients.
+#     app1 = NSBAppClient("billy", "127.0.0.1", 65432)
+#     app2 = NSBAppClient("bob", "127.0.0.1", 65432)
+#     sim = NSBSimClient("sim", "127.0.0.1", 65432)
+#     # Send a message.
+#     app1.send("bob", b"hello world")
+#     # Fetch a message at the sim client.
+#     fetched_msg = sim.fetch(0)
+#     # Post the message from the sim client.
+#     if fetched_msg:
+#         if fetched_msg.HasField('metadata'):
+#             sim.logger.info(f"Fetched payload@{fetched_msg.msg_key} " + \
+#                             f"from {fetched_msg.metadata.src_id} to {fetched_msg.metadata.dest_id}")
+#             sim.post(fetched_msg.metadata.src_id,
+#                      fetched_msg.metadata.dest_id,
+#                      fetched_msg.msg_key,
+#                      fetched_msg.metadata.payload_size,
+#                      success=True)
+#     else:
+#         print("No message fetched.")
+#     # Receive message.
+#     received_msg = app2.receive(0)
+#     if not received_msg:
+#         print("No message received.")
+#     app2.exit()
 
-def test_push_mode():
-    """
-    @brief Simple test for NSB in _PUSH_ mode.
+# def test_push_mode():
+#     """
+#     @brief Simple test for NSB in _PUSH_ mode.
 
-    This is a simple, threaded run of two Application Clients, one sending a 
-    message to another, through a dummy Simulator Client via NSB. This test run 
-    is intended for NSB in _PUSH_ mode and will not work for NSB in _PULL_ mode. 
-    Ensure that the system configuration reflects this.
+#     This is a simple, threaded run of two Application Clients, one sending a 
+#     message to another, through a dummy Simulator Client via NSB. This test run 
+#     is intended for NSB in _PUSH_ mode and will not work for NSB in _PULL_ mode. 
+#     Ensure that the system configuration reflects this.
 
-    The sending application client will run on the main thread, and the 
-    simulator client and receiving application client each run on different 
-    threads.
-    """
-    # Create app and sim clients.
-    sim = NSBSimClient("sim", "127.0.0.1", 65432)
-    app1 = NSBAppClient("app1", "127.0.0.1", 65432)
-    app2 = NSBAppClient("app2", "127.0.0.1", 65432)
-    # Define the simulator task function.
-    def sim_fetch():
-        fetched_msg = sim.fetch()
-        if fetched_msg:
-            payload_obj = fetched_msg.payload if fetched_msg.HasField("payload") else fetched_msg.msg_key
-            sim.logger.info(f"Sim received message: {payload_obj}")
-            sim.post(fetched_msg.metadata.src_id,
-                     fetched_msg.metadata.dest_id,
-                     payload_obj,
-                     fetched_msg.metadata.payload_size,
-                     success=True)
-        else:
-            sim.logger.info("Sim received no message.")
-    # Start the simulator's fetch thread.
-    sim_thread = threading.Thread(target=sim_fetch)
-    sim_thread.start()
-    # Define receiving app task function.
-    def app2_receive():
-        received_msg = app2.receive()
-        if received_msg:
-            payload_obj = received_msg.payload if received_msg.HasField("payload") else received_msg.msg_key
-            app2.logger.info(f"App2 received message: {payload_obj}")
-        else:
-            app2.logger.info("Nada.")
-    # Start the receiving app's receive thread.
-    app2_thread = threading.Thread(target=app2_receive)
-    app2_thread.start()
-    # Give the simulator and receiving app some time to start listening.
-    time.sleep(1)
-    # Send a message from the app.
-    app1.send("app2", b"Hello from app!")
-    # Wait for the simulator to process the message.
-    sim_thread.join()
-    app2_thread.join()
-    print("\nTest completed.\n")
-    # Clean up.
-    app1.exit()
+#     The sending application client will run on the main thread, and the 
+#     simulator client and receiving application client each run on different 
+#     threads.
+#     """
+#     # Create app and sim clients.
+#     sim = NSBSimClient("sim", "127.0.0.1", 65432)
+#     app1 = NSBAppClient("app1", "127.0.0.1", 65432)
+#     app2 = NSBAppClient("app2", "127.0.0.1", 65432)
+#     # Define the simulator task function.
+#     def sim_fetch():
+#         fetched_msg = sim.fetch()
+#         if fetched_msg:
+#             payload_obj = fetched_msg.payload if fetched_msg.HasField("payload") else fetched_msg.msg_key
+#             sim.logger.info(f"Sim received message: {payload_obj}")
+#             sim.post(fetched_msg.metadata.src_id,
+#                      fetched_msg.metadata.dest_id,
+#                      payload_obj,
+#                      fetched_msg.metadata.payload_size,
+#                      success=True)
+#         else:
+#             sim.logger.info("Sim received no message.")
+#     # Start the simulator's fetch thread.
+#     sim_thread = threading.Thread(target=sim_fetch)
+#     sim_thread.start()
+#     # Define receiving app task function.
+#     def app2_receive():
+#         received_msg = app2.receive()
+#         if received_msg:
+#             payload_obj = received_msg.payload if received_msg.HasField("payload") else received_msg.msg_key
+#             app2.logger.info(f"App2 received message: {payload_obj}")
+#         else:
+#             app2.logger.info("Nada.")
+#     # Start the receiving app's receive thread.
+#     app2_thread = threading.Thread(target=app2_receive)
+#     app2_thread.start()
+#     # Give the simulator and receiving app some time to start listening.
+#     time.sleep(1)
+#     # Send a message from the app.
+#     app1.send("app2", b"Hello from app!")
+#     # Wait for the simulator to process the message.
+#     sim_thread.join()
+#     app2_thread.join()
+#     print("\nTest completed.\n")
+#     # Clean up.
+#     app1.exit()
 
-def test_db():
-    """
-    @brief Simple test for database usage with the RedisConnector.
+# def test_db():
+#     """
+#     @brief Simple test for database usage with the RedisConnector.
 
-    This test creates two connection endpoints that store, peek, and checkout 
-    values from a Redis server. The server must be started separately.
+#     This test creates two connection endpoints that store, peek, and checkout 
+#     values from a Redis server. The server must be started separately.
 
-    @see RedisConnector
-    """
-    conn1 = RedisConnector("billy", "127.0.0.1", 5050)
-    conn2 = RedisConnector("bob", "127.0.0.1", 5050)
-    key1 = conn1.store(b"hello world")
-    key2 = conn2.store(b"hola mundo")
-    key3 = conn1.store(b"bonjour le monde")
-    print(key1 ,conn2.peek(key1))
-    print(key1 ,conn1.check_out(key1))
-    print(key2 ,conn1.peek(key2))
-    print(key2 ,conn2.check_out(key2))
-    print(key3 ,conn2.peek(key3))
-    print(key3 ,conn1.check_out(key3))
+#     @see RedisConnector
+#     """
+#     conn1 = RedisConnector("billy", "127.0.0.1", 5050)
+#     conn2 = RedisConnector("bob", "127.0.0.1", 5050)
+#     key1 = conn1.store(b"hello world")
+#     key2 = conn2.store(b"hola mundo")
+#     key3 = conn1.store(b"bonjour le monde")
+#     print(key1 ,conn2.peek(key1))
+#     print(key1 ,conn1.check_out(key1))
+#     print(key2 ,conn1.peek(key2))
+#     print(key2 ,conn2.check_out(key2))
+#     print(key3 ,conn2.peek(key3))
+#     print(key3 ,conn1.check_out(key3))
 
 class AppWithListener:
     """
@@ -164,8 +164,9 @@ class AppWithListener:
         self.listening = True
         while self.listening:
             received_msg = await self.nsb.listen()
-            self.logger.info(f"RECV {received_msg.metadata.src_id}-->{received_msg.metadata.dest_id} " + \
-                             f"({received_msg.metadata.payload_size} B) {received_msg.payload}")
+            if received_msg:
+                self.logger.info(f"RECV {received_msg.src_id}-->{received_msg.dest_id} " + \
+                                 f"({received_msg.payload_size} B) {received_msg.payload}")
     async def run(self):
         """@brief Sending coroutine that sends messages until this app is killed."""
         self.running = True
@@ -213,11 +214,7 @@ class SimWithListener:
             self.logger.info("Listening...")
             msg = await self.nsb.listen()
             if msg:
-                self.nsb.post(msg.metadata.src_id,
-                                msg.metadata.dest_id,
-                                msg.msg_key if self.nsb.cfg.use_db else msg.payload,
-                                msg.metadata.payload_size,
-                                success=True)
+                self.nsb.post(msg.src_id, msg.dest_id, msg.payload)
     def __del__(self):
         """@brief Class deconstructor."""
         self.running = False

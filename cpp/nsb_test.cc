@@ -57,27 +57,27 @@ int testLifecycle() {
     sim1.ping();
     sim2.ping();
     // Send a message.
-    std::string payload = "Hello from app1";
-    std::string *key = new std::string();
-    app1.send(idApp2, payload, key);
+    std::string payload1 = "Hello from app1";
+    std::string payload2 = "Hola del app1";
+    app1.send(idApp2, payload1);
+    app1.send(idApp2, payload2);
     // Go through the simulator.
-    nsb::nsbm* fetchedMsg = sim1.fetch(nullptr, 5, false, nullptr);
-    if (fetchedMsg == nullptr) {
-        LOG(ERROR) << "Failed to fetch message." << std::endl;
-        app1.exit();
-        return -1;
+    for (int i=0; i<3; i++) {
+        MessageEntry fetchedMsg = sim1.fetch(nullptr, 0);
+        if (fetchedMsg.exists()) {
+            sim2.post(idSim1, idApp2, fetchedMsg.payload_obj);
+        } else {
+            LOG(ERROR) << "No message to fetch." << std::endl;
+        }
     }
-    sim2.post(fetchedMsg->metadata().src_id(), fetchedMsg->metadata().dest_id(),
-              fetchedMsg->msg_key(), fetchedMsg->metadata().payload_size(), true);
     // Receive a message.
-    nsb::nsbm* receivedMsg = app2.receive(nullptr, 5);
-    if (receivedMsg == nullptr) {
-        LOG(ERROR) << "Failed to receive payload." << std::endl;
-        app1.exit();
-        return -1;
-    } else {
-        LOG(INFO) << "Received payload: " << receivedMsg->payload() << std::endl;
-        delete receivedMsg;  // Clean up the received message.
+    for (int i=0; i<3; i++) {
+        MessageEntry receivedMsg = app2.receive(nullptr, 0);
+        if (receivedMsg.exists()) {
+            LOG(INFO) << "Received payload: " << receivedMsg.payload_obj << std::endl;
+        } else {
+            LOG(ERROR) << "Didn't receive payload." << std::endl;
+        }
     }
     // Exit.
     app1.exit();
