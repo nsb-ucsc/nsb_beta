@@ -77,11 +77,17 @@ Within the output, you should see something like this:
 ```
 If all the prerequisite software was installed, you may continue with building 
 and installing NSB.
-```cmake --build . --clean-first```
-```cmake --install .```
+```
+cmake --build . --clean-first
+```
+```
+cmake --install .
+```
 The library, includes, and binary directories should now be available under
 ```[your/install/path]/nsb```; this also means they can be removed by deleting
-this folder. The install command will also make NSB available on _pkg-config_ 
+this folder.
+
+The install command will also make NSB available on _pkg-config_ 
 as ```nsb```, which may be of use when compiling projects with NSB.
 
 ## Usage
@@ -112,7 +118,7 @@ Currently, we support and provide interfaces for [Python](python/README.md) and
 [C++](src/README.md).
 
 ## C++
-To compile your C++ program on the command line, we recommend ```pkg-config``` 
+To compile your C++ program on the command line, we recommend _pkg-config_
 macro expansion to ensure that all necessary libraries are linked and 
 directories are included.
 ```
