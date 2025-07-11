@@ -53,22 +53,17 @@ nsb/
 ├── build/
 ├── proto/
 ├── python/
-├── src/
+├── cpp/
 ├── CMakeLists.txt
 ├── config.yaml
 └── README.md
 ```
 
-Then, enter the new _build_ directory (```cd build```) and run the following 
-_CMake_ commands:
+Then, enter the new _build_ directory (```cd build```) and start by configuring 
+the _CMake_ build:
+```cmake ..```
 
-```cmake -DCMAKE_BUILD_TYPE=Debug ..```
-
-```cmake --build . --clean-first```
-
-If all the prerequisite software was installed, this should work without issue.
-Within the _CMake_ build process output, you should see something like this:
-
+Within the output, you should see something like this:
 ```
 [cmake] -- Checking target libraries:
 [cmake] -- ✓ Found target: yaml-cpp::yaml-cpp
@@ -80,8 +75,14 @@ Within the _CMake_ build process output, you should see something like this:
 [cmake] -- ✓ Found target: absl::log_initialize
 [cmake] -- ✓ Found target: PkgConfig::hiredis
 ```
-
-The checkmarks indicate that the required software has been found successfully.
+If all the prerequisite software was installed, you may continue with building 
+and installing NSB.
+```cmake --build . --clean-first```
+```cmake --install .```
+The library, includes, and binary directories should now be available under
+```[your/install/path]/nsb```; this also means they can be removed by deleting
+this folder. The install command will also make NSB available on _pkg-config_ 
+as ```nsb```, which may be of use when compiling projects with NSB.
 
 ## Usage
 
@@ -115,17 +116,8 @@ To compile your C++ program on the command line, we recommend ```pkg-config```
 macro expansion to ensure that all necessary libraries are linked and 
 directories are included.
 ```
-clang++ -Wall -std=c++17 $(pkg-config --cflags --libs protobuf absl_base
-absl_log absl_time absl_log_internal_check_op absl_log_initialize yaml-cpp hiredis)
--L[path/to/your/nsb/build] -lnsb -I[path/to/your/nsb/headers] [YOUR_SOURCE].cc
--lnsb -I[path/to/your/nsb/headers] -o [YOUR_EXECUTABLE]
+clang++ -Wall -std=c++17 $(pkg-config --cflags --libs nsb) [SOURCE(S)] -o [EXECUTABLE]
 ```
-On some platforms, notably MacOS, you may need to specify the _rpath_. This should
-also point to the location of your NSB library, usually in the ```build``` directory.
-```
--rpath [path/to/your/nsb/build]
-```
-We are working on _pkg-config_ support for NSB itself, which will be coming soon.
 
 ## Extensibility
 _Coming soon._
