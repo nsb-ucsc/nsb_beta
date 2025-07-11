@@ -85,10 +85,19 @@ cmake --install .
 ```
 The library, includes, and binary directories should now be available under
 ```[your/install/path]/nsb```; this also means they can be removed by deleting
-this folder.
-
-The install command will also make NSB available on _pkg-config_ 
+this folder. The install command will also make NSB available on _pkg-config_ 
 as ```nsb```, which may be of use when compiling projects with NSB.
+
+### Uninstallation
+
+Uninstallation of packages from your install path is simple. You can either:
+* Delete the ```nsb``` directory from your install path to remove installed files
+and delete ```lib/pkgconfig/nsb.pc``` from your install path to remove the 
+_pkg-config_ index; or
+* Delete all files listed in the install manifest within
+the project ```build``` directory (```xargs rm < install_manifest.txt```).
+
+Then, you may delete the ```build``` directory to remove the built project.
 
 ## Usage
 
@@ -97,12 +106,18 @@ your code. Once this is complete, we recommend taking these steps in order:
 
 1. **Start the Redis server.** Specify or take note of the port number that the
 server is running on and make sure your configuration file points to the address
-and port:
+and port.
 ```redis-server -p 5050```
 
 2. **Start the NSB Daemon.** If you followed the build instructions in above, 
-then you can start the NSB Daemon executable from the _build_ directory: 
-```./build/nsb_daemon```
+then you can start the NSB Daemon executable from either the _build_ directory
+or via install path: 
+```
+./build/nsb_daemon
+```
+```
+/[your/install/path]/nsb/bin/nsb_daemon
+```
 
 3. **Start the modified network simulator.** In most cases, the simulator, 
 modified using the _NSBSimClient_ API, should be started before the application
