@@ -11,13 +11,27 @@
             }
         },
         {
-            "label": "CMake: Build NSB Daemon",
+            "label": "Build NSB",
             "type": "shell",
             "command": "mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --clean-first && sudo cmake --install .",
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Clean NSB",
+            "type": "shell",
+            "command": "rm -fr cpp/proto python/proto build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Clean & Build NSB",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Clean NSB", "Build NSB"]
         }
     ]
 }
