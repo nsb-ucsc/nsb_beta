@@ -190,7 +190,7 @@ namespace nsb {
         }
     }
 
-    void NSBAppClient::send(const std::string& destId, std::string& payload, std::string* key = nullptr) {
+    std::string NSBAppClient::send(const std::string destId, std::string payload) {
         // Create and populate a SEND message.
         nsb::nsbm nsbMsg = nsb::nsbm();
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
@@ -201,23 +201,23 @@ namespace nsb {
         mutableMetadata->set_src_id(clientId);
         mutableMetadata->set_dest_id(destId);
         mutableMetadata->set_payload_size(static_cast<int>(payload.size()));
+        // Set return to "" by default.
+        std::string key = "";
         if (cfg.USE_DB) {
-            if (key == nullptr) {
-                LOG(ERROR) << "SEND: Key must be provided when using a database." << std::endl;
-                return;
-            }
             // Store the payload in the database and get the key.
-            *key = db->store(payload);
-            nsbMsg.set_msg_key(*key);
+            key = db->store(payload);
+            nsbMsg.set_msg_key(key);
         } else {
             nsbMsg.set_payload(payload);
         }
         // Send the message.
         DLOG(INFO) << "SEND: Sending message:" << std::endl << nsbMsg.DebugString();
         comms.sendMessage(nsb::Comms::Channel::SEND, nsbMsg.SerializeAsString());
+        // Return key in case it's useful.
+        return key;
     }
 
-    nsb::nsbm* NSBAppClient::receive(std::string* destId, int timeout) {
+    MessageEntry NSBAppClient::receive(std::string* destId, int timeout) {
         nsb::nsbm* nsbMsg = new nsb::nsbm();
         if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
             // Create and populate a RECEIVE message.
@@ -236,30 +236,31 @@ namespace nsb {
         std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
         if (response.empty()) {
             LOG(ERROR) << "RECV: No response received from daemon." << std::endl;
-            return nullptr;
+            return MessageEntry();
         }
         // Parse in message.
         nsbMsg->ParseFromString(response);
         nsb::nsbm::Manifest manifest = nsbMsg->manifest();
         if (manifest.op() != nsb::nsbm::Manifest::RECEIVE && manifest.op() != nsb::nsbm::Manifest::FORWARD) {
             LOG(ERROR) << "RECV: Unexpected operation over RECV channel." << std::endl;
-            delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         } else if (manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
-            if (cfg.USE_DB) {
-                // Get the actual payload.
-                std::string payload = db->checkOut(nsbMsg->msg_key());
-                nsbMsg->set_payload(payload);
-            }
-            return nsbMsg;
+            // Repack it in MessageEntry format with the full payload.
+            std::string payload = cfg.USE_DB ? db->checkOut(nsbMsg->msg_key())
+                                             : nsbMsg->payload();
+            MessageEntry receivedPayload = MessageEntry(
+                nsbMsg->metadata().src_id(),
+                nsbMsg->metadata().dest_id(),
+                payload,
+                nsbMsg->metadata().payload_size()
+            );
+            return receivedPayload;
         } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
             LOG(INFO) << "RECV: No message found for destination " << *destId << "." << std::endl;
-            delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         } else {
             LOG(ERROR) << "RECV: Unexpected status code returned from receive." << std::endl;
-            delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         }
     }
 
@@ -275,7 +276,7 @@ namespace nsb {
         }
     }
 
-    nsb::nsbm* NSBSimClient::fetch(std::string* srcId, int timeout, bool getPayload, std::string* payload=nullptr) {
+    MessageEntry NSBSimClient::fetch(std::string* srcId, int timeout) {
         nsb::nsbm* nsbMsg = new nsb::nsbm();
         if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
             // Create and populate a FETCH message.
@@ -304,7 +305,7 @@ namespace nsb {
         std::string response = comms.receiveMessage(nsb::Comms::Channel::RECV, &timeout);
         if (response.empty()) {
             LOG(ERROR) << "FETCH: No response received from daemon." << std::endl;
-            return nullptr;
+            return MessageEntry();
         }
         // Parse in message.
         nsbMsg->ParseFromString(response);
@@ -313,48 +314,74 @@ namespace nsb {
         if (manifest.op() != nsb::nsbm::Manifest::FETCH && manifest.op() != nsb::nsbm::Manifest::FORWARD) {
             LOG(ERROR) << "FETCH: Unexpected operation over RECV channel." << std::endl;
             delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         } else if (manifest.code() == nsb::nsbm::Manifest::MESSAGE) {
-            if (cfg.USE_DB && getPayload) {
-                // Get the actual payload.
-                const std::string peekedPayload = db->peek(nsbMsg->msg_key());
-                payload->assign(peekedPayload);
-            }
-            return nsbMsg;
+            // Repack it in MessageEntry format with the full payload.
+            std::string payload = cfg.USE_DB ? db->checkOut(nsbMsg->msg_key())
+                                             : nsbMsg->payload();
+            MessageEntry fetchedMessage = MessageEntry(
+                nsbMsg->metadata().src_id(),
+                nsbMsg->metadata().dest_id(),
+                payload,
+                nsbMsg->metadata().payload_size()
+            );
+            return fetchedMessage;
         } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
             LOG(INFO) << "FETCH: No message found for source " << *srcId << "." << std::endl;
-            delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         } else {
             LOG(ERROR) << "FETCH: Unexpected status code returned from receive." << std::endl;
-            delete nsbMsg;
-            return nullptr;
+            return MessageEntry();
         }
     }
 
-    void NSBSimClient::post(std::string srcId, std::string destId, std::string payloadObj,
-        int payloadSize, bool success) {
-        // Create and populate a POST message.
+    std::string NSBSimClient::post(std::string srcId, std::string destId, std::string &payload) {
+        // // Create and populate a POST message.
+        // nsb::nsbm nsbMsg = nsb::nsbm();
+        // nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
+        // mutableManifest->set_op(nsb::nsbm::Manifest::POST);
+        // mutableManifest->set_og(*originIndicator);
+        // if (success) {
+        //     mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
+        // } else {
+        //     mutableManifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
+        // }
+        // nsb::nsbm::Metadata* mutableMetadata = nsbMsg.mutable_metadata();
+        // mutableMetadata->set_src_id(srcId);
+        // mutableMetadata->set_dest_id(destId);
+        // mutableMetadata->set_payload_size(payloadSize);
+        // if (cfg.USE_DB) {
+        //     nsbMsg.set_msg_key(payloadObj);
+        // } else {
+        //     nsbMsg.set_payload(payloadObj);
+        // }
+        // // Send the message.
+        // DLOG(INFO) << "POST: Posting message:" << std::endl << nsbMsg.DebugString();
+        // comms.sendMessage(nsb::Comms::Channel::SEND, nsbMsg.SerializeAsString());
+
+        // Create and populate a SEND message.
         nsb::nsbm nsbMsg = nsb::nsbm();
         nsb::nsbm::Manifest* mutableManifest = nsbMsg.mutable_manifest();
         mutableManifest->set_op(nsb::nsbm::Manifest::POST);
         mutableManifest->set_og(*originIndicator);
-        if (success) {
-            mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
-        } else {
-            mutableManifest->set_code(nsb::nsbm::Manifest::NO_MESSAGE);
-        }
+        mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
         nsb::nsbm::Metadata* mutableMetadata = nsbMsg.mutable_metadata();
-        mutableMetadata->set_src_id(srcId);
+        mutableMetadata->set_src_id(clientId);
         mutableMetadata->set_dest_id(destId);
-        mutableMetadata->set_payload_size(payloadSize);
+        mutableMetadata->set_payload_size(static_cast<int>(payload.size()));
+        // Set return to "" by default.
+        std::string key = "";
         if (cfg.USE_DB) {
-            nsbMsg.set_msg_key(payloadObj);
+            // Store the payload in the database and get the key.
+            key = db->store(payload);
+            nsbMsg.set_msg_key(key);
         } else {
-            nsbMsg.set_payload(payloadObj);
+            nsbMsg.set_payload(payload);
         }
-        // Send the message.
+        // Post the message.
         DLOG(INFO) << "POST: Posting message:" << std::endl << nsbMsg.DebugString();
         comms.sendMessage(nsb::Comms::Channel::SEND, nsbMsg.SerializeAsString());
+        // Return key in case it's useful.
+        return key;
     }
 }

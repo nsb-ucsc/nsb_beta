@@ -154,6 +154,17 @@ namespace nsb {
         MessageEntry(std::string src, std::string dest, std::string data, int size)
             : source(std::move(src)), destination(std::move(dest)),
               payload_obj(std::move(data)), payload_size(size){}
+        /**
+         * @brief Checks if the message entry is populated.
+         * 
+         * This method determines whether the message entry contains valid data
+         * by checking if the source, destination, and payload are non-empty.
+         * 
+         * @return bool True if the message entry is populated, false otherwise.
+         */
+        bool exists() const {
+            return !source.empty() && !destination.empty() && !payload_obj.empty();
+        }
     };
 
     /**
