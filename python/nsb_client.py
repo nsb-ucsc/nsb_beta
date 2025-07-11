@@ -264,12 +264,12 @@ class SocketInterface(Comms):
                     data += chunk
                     # If chunk is less than the buffer size, we're done.
                     if len(chunk) < RECEIVE_BUFFER_SIZE:
-                        return data
+                        return data if len(data) else None
                     # Otherwise, poll to see if there's more waiting.
                     else:
                         _fd, _, _ = select.select([self.conns[channel]], [], [], 0)
                         if not len(_fd):
-                            return data
+                            return data if len(data) else None
                 except socket.error as e:
                     print(f"Socket error: {e}")
                     return None
@@ -294,12 +294,12 @@ class SocketInterface(Comms):
                 data += chunk
                 # If chunk is less than the buffer size, we're done.
                 if len(chunk) < RECEIVE_BUFFER_SIZE:
-                    return data
+                    return data if len(data) else None
                 # Otherwise, poll to see if there's more waiting.
                 else:
                     _fd, _, _ = select.select([self.conns[channel]], [], [], 0)
                     if not len(_fd):
-                        return data
+                        return data if len(data) else None
             except socket.error as e:
                 print(f"Socket error: {e}")
                 return None
