@@ -72,6 +72,15 @@ int testLifecycle() {
     }
     // Receive a message.
     for (int i=0; i<3; i++) {
+        MessageEntry receivedMsg = app1.receive(nullptr, 0);
+        if (receivedMsg.exists()) {
+            LOG(INFO) << "Received payload: " << receivedMsg.payload_obj << std::endl;
+        } else {
+            LOG(ERROR) << "Didn't receive payload." << std::endl;
+        }
+    }
+    // Receive a message.
+    for (int i=0; i<3; i++) {
         MessageEntry receivedMsg = app2.receive(nullptr, 0);
         if (receivedMsg.exists()) {
             LOG(INFO) << "Received payload: " << receivedMsg.payload_obj << std::endl;

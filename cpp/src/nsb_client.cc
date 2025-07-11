@@ -225,9 +225,11 @@ namespace nsb {
             mutableManifest->set_op(nsb::nsbm::Manifest::RECEIVE);
             mutableManifest->set_og(*originIndicator);
             mutableManifest->set_code(nsb::nsbm::Manifest::SUCCESS);
-            if (destId != nullptr) {
-                nsbMsg->mutable_metadata()->set_dest_id(*destId);
+            // If destId is not specified, set it to its own ID.
+            if (destId == nullptr) {
+                destId = new std::string(clientId);
             }
+            nsbMsg->mutable_metadata()->set_dest_id(*destId);
             // Send the message.
             DLOG(INFO) << "RECV: Sending request:" << std::endl << nsbMsg->DebugString();
             comms.sendMessage(nsb::Comms::Channel::RECV, nsbMsg->SerializeAsString());
