@@ -362,9 +362,10 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
-        LOG(INFO) << "Handling FETCH message from client " << incoming_msg->intro().identifier() << std::endl;
+        LOG(INFO) << "Handling FETCH message on behalf of " << incoming_msg->metadata().src_id() << std::endl;
         MessageEntry fetched_message;
         bool tried_to_fetch = false;
+        LOG(INFO) << incoming_msg->DebugString();
         // Check to see if source has been specified.
         if (incoming_msg->has_metadata()) {
             nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
