@@ -278,6 +278,7 @@ namespace nsb {
         nsb::nsbm::ConfigParams* out_config = outgoing_msg->mutable_config();
         out_config->set_sys_mode(static_cast<nsb::nsbm::ConfigParams::SystemMode>(cfg.SYSTEM_MODE));
         out_config->set_use_db(cfg.USE_DB);
+        out_config->set_sim_mode(static_cast<nsb::nsbm::ConfigParams::SimulatorMode>(cfg.SIMULATOR_MODE));
         DLOG(INFO) << "\tReturning configuration: Mode " << nsb::nsbm::ConfigParams::SystemMode(out_config->sys_mode())
                 << " | Use DB? " << out_config->use_db() << std::endl;
         if (cfg.USE_DB) {
@@ -362,43 +363,41 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
-        LOG(INFO) << "Handling FETCH message from client " << incoming_msg->intro().identifier() << std::endl;
+        LOG(INFO) << "Handling FETCH message on behalf of " << incoming_msg->metadata().src_id() << std::endl;
         MessageEntry fetched_message;
-        bool tried_to_fetch = false;
         // Check to see if source has been specified.
         if (incoming_msg->has_metadata()) {
             nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
             if (in_metadata.has_src_id()) {
-                // Indicate that fetch has been attempted.
-                tried_to_fetch = true;
                 // Search for the message in the buffer.
-                for (const auto& msg : tx_buffer) {
-                    if (msg.source == in_metadata.src_id()) {
-                        fetched_message = msg;
-                        break;
-                    }
+                auto it = std::find_if(tx_buffer.begin(), tx_buffer.end(),
+                          [&](const auto& msg) { return msg.source == in_metadata.src_id(); });
+                if (it != tx_buffer.end()) {
+                    fetched_message = *it;
+                    tx_buffer.erase(it);
+                }
+            } else {
+                // If source not specified, pop the next message in the queue.
+                if (!tx_buffer.empty()) {
+                    fetched_message = tx_buffer.front();
+                    tx_buffer.pop_front();
                 }
             }
         }
-        // If source not specified, pop the next message in the queue.
-        if (!tried_to_fetch) {
-            if (!tx_buffer.empty()) {
-                tried_to_fetch = true;
-                fetched_message = tx_buffer.front();
-                tx_buffer.pop_front();
-            }
+        if (fetched_message.exists()) {
+            DLOG(INFO) << "TX entry retrieved | " 
+                       << fetched_message.payload_size << " B | src: " 
+                       << fetched_message.source << " | dest: " 
+                       << fetched_message.destination << std::endl;
+            DLOG(INFO) << "\tPayload: " << fetched_message.payload_obj << std::endl;
         }
-        DLOG(INFO) << "TX entry retrieved | " 
-                << fetched_message.payload_size << " B | src: " 
-                << fetched_message.source << " | dest: " 
-                << fetched_message.destination << std::endl;
-        DLOG(INFO) << "\tPayload: " << fetched_message.payload_obj << std::endl;
+        
         // Prepare response.
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
         out_manifest->set_op(nsb::nsbm::Manifest::FETCH);
         out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
         // If message was found (MessageEntry populated), reply with message.
-        if (fetched_message.source != "") {
+        if (fetched_message.exists()) {
             out_manifest->set_code(nsb::nsbm::Manifest::MESSAGE);
             nsb::nsbm::Metadata* out_metadata = outgoing_msg->mutable_metadata();
             out_metadata->set_src_id(fetched_message.source);
@@ -487,14 +486,19 @@ namespace nsb {
         // Check for destination.
         if (incoming_msg->has_metadata()) {
             nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
-            if (in_metadata.has_dest_id()) {
-                fetched = true;
+            if (in_metadata.has_src_id()) {
                 // Search for the message in the buffer.
-                for (const auto& msg : rx_buffer) {
-                    if (msg.destination == in_metadata.dest_id()) {
-                        received_message = msg;
-                        break;
-                    }
+                auto it = std::find_if(rx_buffer.begin(), rx_buffer.end(),
+                          [&](const auto& msg) { return msg.destination == in_metadata.dest_id(); });
+                if (it != rx_buffer.end()) {
+                    received_message = *it;
+                    rx_buffer.erase(it);
+                }
+            } else {
+                // If destination not specified, pop the next message in the queue.
+                if (!rx_buffer.empty()) {
+                    received_message = rx_buffer.front();
+                    rx_buffer.pop_front();
                 }
             }
         }
@@ -504,6 +508,8 @@ namespace nsb {
                 << received_message.source << " | dest: " 
                 << received_message.destination << "\n\tPayload: " 
                 << received_message.payload_obj << std::endl;
+        } else {
+            DLOG(INFO) << "No (matching) entries found." << std::endl;
         }
         // Prepare response.
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
