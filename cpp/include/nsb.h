@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <array>
+#include <algorithm>
 // Thread libraries.
 #include <atomic>
 #include <thread>
