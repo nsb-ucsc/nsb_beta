@@ -96,8 +96,9 @@ namespace nsb {
             // Get the configuration.
             if (nsbResponse.has_config()) {
                 cfg = Config(nsbResponse);
-                LOG(INFO) << "INIT: Configuration received: Mode " << (int) cfg.SYSTEM_MODE <<
-                    " | Use DB? " << cfg.USE_DB << std::endl;
+                LOG(INFO) << "INIT: Configuration received: Mode " << (int) cfg.SYSTEM_MODE
+                          << " | Sim " << (int) cfg.SIMULATOR_MODE
+                          << " | Use DB? " << cfg.USE_DB << std::endl;
                 // Set up database if necessary.
                 if (cfg.USE_DB) {
                     db = new RedisConnector(clientId, cfg.DB_ADDRESS, cfg.DB_PORT);
