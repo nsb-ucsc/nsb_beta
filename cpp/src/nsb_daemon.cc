@@ -75,7 +75,7 @@ namespace nsb {
         // Create address.
         sockaddr_in server_addr{};
         server_addr.sin_family = AF_INET;
-        server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        server_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
         server_addr.sin_port = htons(port);
         // Bind and listen on port.
         if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
