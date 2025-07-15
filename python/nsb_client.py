@@ -718,6 +718,7 @@ class NSBAppClient(NSBClient):
         @see Config.SystemMode
         @see SocketInterface._recv_msg()
         """
+        # Send a fetch message if system is in pull mode.
         if self.cfg.system_mode == Config.SystemMode.PULL:
             # Create and populate a FETCH message.
             nsb_msg = nsb_pb2.nsbm()
@@ -733,6 +734,11 @@ class NSBAppClient(NSBClient):
             # Send the NSB message + payload.
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
             self.logger.info("RECEIVE: Polling the server.")
+        # If in PUSH mode, overwrite timeout to 0.
+        elif self.cfg.system_mode == Config.SystemMode.PUSH:
+            if timeout is not None and timeout != 0:
+                self.logger.debug("RECEIVE: System is in PUSH mode, timeout will be overwritten to 0.")
+            timeout = 0
         # Get response from request or just wait for message to come in.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
         if response:
@@ -882,6 +888,11 @@ class NSBSimClient(NSBClient):
             # Send the NSB message + payload.
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
             self.logger.info("FETCH: Sent fetch request to server.")
+        # If in PUSH mode, overwrite timeout to 0.
+        elif self.cfg.system_mode == Config.SystemMode.PUSH:
+            if timeout is not None and timeout != 0:
+                self.logger.warning("FETCH: System is in PUSH mode, timeout will be overwritten to 0.")
+            timeout = 0
         # Get response from request or await forwarded message.
         response = self.comms._recv_msg(Comms.Channels.RECV, timeout=timeout)
         if response:

@@ -11,6 +11,7 @@ namespace nsb {
     public:
         NSBClient(const std::string& identifier, std::string serverAddress, int serverPort);
         ~NSBClient();
+        const std::string getId() const { return clientId; }
         void initialize();
         bool ping();
         void exit();
