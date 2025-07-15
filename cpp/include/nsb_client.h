@@ -65,7 +65,17 @@ namespace nsb {
          * @see SocketInterface.receiveMessage()
          * 
          */
-        MessageEntry receive(std::string* destId, int timeout);
+        MessageEntry receive(std::string* destId, int timeout=DAEMON_RESPONSE_TIMEOUT);
+        MessageEntry receive(int timeout=DAEMON_RESPONSE_TIMEOUT) {
+            if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+                return receive(nullptr, timeout);
+            } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
+                return receive(nullptr, 0);
+            } else {
+                LOG(ERROR) << "Unknown system mode. Cannot receive message." << std::endl; return MessageEntry();
+                return MessageEntry();
+            }
+        }
         MessageEntry listenReceive();
     };
 
@@ -74,6 +84,15 @@ namespace nsb {
         NSBSimClient(const std::string& identifier, std::string& serverAddress, int serverPort);
         ~NSBSimClient();
         MessageEntry fetch(std::string* srcId, int timeout);
+        MessageEntry fetch(int timeout=DAEMON_RESPONSE_TIMEOUT) {
+            if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
+                return fetch(nullptr, timeout);
+            } else if (cfg.SYSTEM_MODE == Config::SystemMode::PUSH) {
+                return fetch(nullptr, 0);
+            } else { LOG(ERROR) << "FETCH: Unknown system mode. Cannot fetch." << std::endl; return MessageEntry();
+                return MessageEntry();
+            }
+        }
         MessageEntry listenFetch();
         std::string post(std::string srcId, std::string destId, std::string &payload);
     };

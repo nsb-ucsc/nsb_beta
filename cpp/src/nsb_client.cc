@@ -9,9 +9,6 @@ namespace nsb {
         originIndicator(nullptr), db(nullptr), clientId(std::move(identifier)) {}
     
     NSBClient::~NSBClient() {
-        if (db) {
-            delete db;
-        }
         comms.closeConnection();
     }
 
@@ -278,11 +275,7 @@ namespace nsb {
         initialize();
     }
 
-    NSBSimClient::~NSBSimClient() {
-        if (originIndicator) {
-            delete originIndicator;
-        }
-    }
+    NSBSimClient::~NSBSimClient() {}
 
     MessageEntry NSBSimClient::fetch(std::string* srcId, int timeout) {
         nsb::nsbm* nsbMsg = new nsb::nsbm();

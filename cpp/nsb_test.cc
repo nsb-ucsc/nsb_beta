@@ -63,7 +63,7 @@ int testLifecycle() {
     app1.send(idApp2, payload2);
     // Go through the simulator.
     for (int i=0; i<3; i++) {
-        MessageEntry fetchedMsg = sim1.fetch(nullptr, 500);
+        MessageEntry fetchedMsg = sim1.fetch();
         if (fetchedMsg.exists()) {
             sim2.post(idSim1, idApp2, fetchedMsg.payload_obj);
         } else {
@@ -72,7 +72,7 @@ int testLifecycle() {
     }
     // Receive a message.
     for (int i=0; i<3; i++) {
-        MessageEntry receivedMsg = app1.receive(nullptr, 500);
+        MessageEntry receivedMsg = app1.receive();
         if (receivedMsg.exists()) {
             LOG(INFO) << "Received payload: " << receivedMsg.payload_obj << std::endl;
         } else {
@@ -81,7 +81,7 @@ int testLifecycle() {
     }
     // Receive a message.
     for (int i=0; i<3; i++) {
-        MessageEntry receivedMsg = app2.receive(nullptr, 500);
+        MessageEntry receivedMsg = app2.receive();
         if (receivedMsg.exists()) {
             LOG(INFO) << "Received payload: " << receivedMsg.payload_obj << std::endl;
         } else {
