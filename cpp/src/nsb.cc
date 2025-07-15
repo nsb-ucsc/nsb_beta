@@ -6,7 +6,9 @@ namespace nsb {
 
     SocketInterface::SocketInterface(std::string serverAddress, int serverPort)
         : serverAddress(serverAddress), serverPort(serverPort) {
-            connectToServer(SERVER_CONNECTION_TIMEOUT);
+            if (connectToServer(SERVER_CONNECTION_TIMEOUT) != 0) {
+                exit(EXIT_FAILURE);
+            }
         }
 
     SocketInterface::~SocketInterface() {
@@ -176,7 +178,7 @@ namespace nsb {
         if (isConnected()) {
             disconnect();
         }
-        LOG(INFO) << "RedisConnected shut down." << std::endl;
+        LOG(INFO) << "RedisConnector shut down." << std::endl;
     }
     bool RedisConnector::isConnected() const {
         // Check if the connection is open.
