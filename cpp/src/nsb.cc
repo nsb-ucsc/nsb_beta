@@ -228,7 +228,12 @@ namespace nsb {
             LOG(ERROR) << "(GETDEL Error) " << context->errstr << std::endl;
             return "";
         }
-        return reply->str;
+        if (reply->type != REDIS_REPLY_NIL) {
+            return reply->str;
+        } else {
+            LOG(ERROR) << "(GETDEL Error) Returned nil.";
+            return "";
+        }
     }
 
     std::string RedisConnector::peek(const std::string& key) {
@@ -240,6 +245,11 @@ namespace nsb {
         // Get payload.
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
-        return reply->str;
+        if (reply->type != REDIS_REPLY_NIL) {
+            return reply->str;
+        } else {
+            LOG(ERROR) << "(GET Error) Returned nil.";
+            return "";
+        }
     }
 }
