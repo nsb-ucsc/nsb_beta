@@ -6,7 +6,9 @@ namespace nsb {
 
     SocketInterface::SocketInterface(std::string serverAddress, int serverPort)
         : serverAddress(serverAddress), serverPort(serverPort) {
-            connectToServer(SERVER_CONNECTION_TIMEOUT);
+            if (connectToServer(SERVER_CONNECTION_TIMEOUT) != 0) {
+                exit(EXIT_FAILURE);
+            }
         }
 
     SocketInterface::~SocketInterface() {
@@ -176,7 +178,7 @@ namespace nsb {
         if (isConnected()) {
             disconnect();
         }
-        LOG(INFO) << "RedisConnected shut down." << std::endl;
+        LOG(INFO) << "RedisConnector shut down." << std::endl;
     }
     bool RedisConnector::isConnected() const {
         // Check if the connection is open.
@@ -228,7 +230,12 @@ namespace nsb {
             LOG(ERROR) << "(GETDEL Error) " << context->errstr << std::endl;
             return "";
         }
-        return reply->str;
+        if (reply->type != REDIS_REPLY_NIL) {
+            return reply->str;
+        } else {
+            LOG(ERROR) << "(GETDEL Error) Returned nil.";
+            return "";
+        }
     }
 
     std::string RedisConnector::peek(const std::string& key) {
@@ -240,6 +247,11 @@ namespace nsb {
         // Get payload.
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
-        return reply->str;
+        if (reply->type != REDIS_REPLY_NIL) {
+            return reply->str;
+        } else {
+            LOG(ERROR) << "(GET Error) Returned nil.";
+            return "";
+        }
     }
 }
