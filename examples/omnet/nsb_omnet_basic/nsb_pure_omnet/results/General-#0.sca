@@ -1,0 +1,36 @@
+version 3
+run General-0-20250715-15:30:57-31334
+attr configname General
+attr datetime 20250715-15:30:57
+attr datetimef 20250715-153057
+attr experiment General
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsd ""
+attr iterationvarsf ""
+attr measurement ""
+attr network NSBHostNetwork
+attr processid 31334
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+config network NSBHostNetwork
+config **.sendInterval 2s
+config **.verbosity true
+
+par NSBHostNetwork.host0 typename "\"NSBHost\""
+par NSBHostNetwork.host0 hostId "\"host0\""
+par NSBHostNetwork.host0 serverAddress "\"127.0.0.1\""
+par NSBHostNetwork.host0 serverPort 65432
+par NSBHostNetwork.host0 sendInterval 2s
+attr unit s
+par NSBHostNetwork.host1 typename "\"NSBHost\""
+par NSBHostNetwork.host1 hostId "\"host1\""
+par NSBHostNetwork.host1 serverAddress "\"127.0.0.1\""
+par NSBHostNetwork.host1 serverPort 65432
+par NSBHostNetwork.host1 sendInterval 2s
+attr unit s
+par NSBHostNetwork typename "\"NSBHostNetwork\""
+
