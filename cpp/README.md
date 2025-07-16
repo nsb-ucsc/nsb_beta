@@ -22,8 +22,11 @@ To use other NSB code, include the base header:
 ```
 #include "nsb.h"
 ```
+_Full integration guide coming soon. Please refer to the Doxygen-generated 
+documentation in the meantime._
 
-## C++
+## Compiling Your Project with NSB
+
 To compile your C++ program on the command line, we recommend _pkg-config_
 macro expansion to ensure that all necessary libraries are linked and 
 directories are included.

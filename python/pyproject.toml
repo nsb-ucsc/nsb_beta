@@ -1,0 +1,8 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools", "protobuf", "redis[hiredis]"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsb_client"
+version = "0.1.0"
