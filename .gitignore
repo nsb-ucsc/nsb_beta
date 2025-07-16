@@ -13,3 +13,5 @@ abseil-cpp
 yaml-cpp
 install
 test
+python/nsb_test_client_multipleHosts.py
+python/nsb_test_client.py
