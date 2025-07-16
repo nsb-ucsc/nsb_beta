@@ -1,2 +1,0 @@
-INCLUDE_PATH += -I/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/src
-LIBS += -L/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/build -lnsb
