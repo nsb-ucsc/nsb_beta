@@ -279,14 +279,14 @@ namespace nsb {
         out_config->set_sys_mode(static_cast<nsb::nsbm::ConfigParams::SystemMode>(cfg.SYSTEM_MODE));
         out_config->set_use_db(cfg.USE_DB);
         out_config->set_sim_mode(static_cast<nsb::nsbm::ConfigParams::SimulatorMode>(cfg.SIMULATOR_MODE));
-        DLOG(INFO) << "\tReturning configuration: Mode " << nsb::nsbm::ConfigParams::SystemMode(out_config->sys_mode())
+        LOG(INFO) << "\tReturning configuration: Mode " << nsb::nsbm::ConfigParams::SystemMode(out_config->sys_mode())
                 << " | Use DB? " << out_config->use_db() << std::endl;
         if (cfg.USE_DB) {
             out_config->set_db_address(cfg.DB_ADDRESS);
             out_config->set_db_port(cfg.DB_PORT);
             out_config->set_db_num(cfg.DB_NUM);
         }
-        DLOG(INFO) << "\tDatabase Address: " << cfg.DB_ADDRESS << " | Database Port: " << cfg.DB_PORT << std::endl;
+        LOG(INFO) << "\tDatabase Address: " << cfg.DB_ADDRESS << " | Database Port: " << cfg.DB_PORT << std::endl;
     }
 
     void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
@@ -363,7 +363,7 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
-        LOG(INFO) << "Handling FETCH message on behalf of " << incoming_msg->metadata().src_id() << std::endl;
+        DLOG(INFO) << "Handling FETCH message on behalf of " << incoming_msg->metadata().src_id() << std::endl;
         MessageEntry fetched_message;
         // Check to see if source has been specified.
         if (incoming_msg->has_metadata()) {
