@@ -13,3 +13,4 @@ abseil-cpp
 yaml-cpp
 install
 test
+python/nsb_client.egg-info/*
