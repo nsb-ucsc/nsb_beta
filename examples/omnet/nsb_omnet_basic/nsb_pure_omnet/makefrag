@@ -1,0 +1,5 @@
+INCLUDE_PATH += -I<path_to_nsb_beta/src> $(shell pkg-config --cflags-only-I yaml-cpp grpc protobuf absl_base absl_log absl_time hiredis)
+
+LIBS += -L<path_to_nsb_beta/build> -lnsb $(shell pkg-config --libs yaml-cpp grpc protobuf absl_base absl_log absl_time hiredis)
+
+LDFLAGS += -Wl,-rpath,<path_to_nsb_beta/build>
