@@ -14,7 +14,7 @@ import redis
 import random
 
 ## @cond
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s.%(msecs)03d\t%(name)s\t%(levelname)s\t%(message)s',
                     datefmt='%H:%M:%S',
                     handlers=[logging.StreamHandler(),])
@@ -59,10 +59,13 @@ class Config:
         """
         @brief Denotes whether the NSB system is in *PUSH* or *PULL* mode.
 
-        *PULL* mode requires clients to request -- or pull -- to fetch or 
-        receive incoming payloads via the daemon server's response. *PUSH* mode 
-        denotes that when clients send or post outgoing payloads, they are 
-        immediately forwarded to the appropriate client.
+        In PULL mode, the NSB clients will poll the daemon server to fetch or 
+        receive messages. This is recommended for most configurations. In PUSH
+        mode, the NSB daemon server will automatically forward sent and posted 
+        messages to the receiving clients, such that they can be readily 
+        received or fetched without making a request to the server. This 
+        achieves better latency but may not work with all user device, program, 
+        and network configurations.
 
         @see NSBAppClient.receive()
         @see NSBSimClient.fetch()
@@ -72,7 +75,20 @@ class Config:
 
     class SimulatorMode(IntEnum):
         """
-        
+        @brief Denotes whether a system-wide (SYSTEM_WIDE) simulator client will
+        be used or multiple clients will be created, one per node (PER_NODE).
+
+        In SYSTEM_WIDE mode, it is assumed that there will only be one simulator 
+        client and creating multiple simulator clients will not be allowed. The 
+        simulator client will fetch all payloads to be transmitted. This is good
+        for top-down network simulator implementations like __ns-3__. In 
+        PER_NODE mode, it is assumed that each node in your network will have a
+        respective simulator client. These simulator clients must have the same 
+        identifier as their co-related application client, so that when an 
+        NSBAppClient with identifier "node0" sends a payload, it will be 
+        fetched by its corresponding NSBSimClient with identifier "node0", 
+        and vice-versa with posting and receiving payloads. This is good for 
+        bottom-up network simulator implementations like __OMNeT++__.
         """
         SYSTEM_WIDE = 0
         PER_NODE = 1
@@ -438,6 +454,8 @@ class RedisConnector(DBConnector):
         """
         try:
             value = self.r.getdel(key)
+            if isinstance(value, str):
+                value = value.encode('latin1')
             return value
         except ConnectionError as e:
             logging.error("Ensure that Redis server is online.")
@@ -733,7 +751,7 @@ class NSBAppClient(NSBClient):
                 nsb_msg.metadata.dest_id = self._id
             # Send the NSB message + payload.
             self.comms._send_msg(Comms.Channels.RECV, nsb_msg.SerializeToString())
-            self.logger.info("RECEIVE: Polling the server.")
+            self.logger.debug("RECEIVE: Polling the server.")
         # If in PUSH mode, overwrite timeout to 0.
         elif self.cfg.system_mode == Config.SystemMode.PUSH:
             if timeout is not None and timeout != 0:
@@ -752,7 +770,6 @@ class NSBAppClient(NSBClient):
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
                         payload = self.db.check_out(nsb_resp.msg_key)
-                        nsb_resp.payload = payload
                     else:
                         payload = nsb_resp.payload
                     self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
@@ -762,9 +779,9 @@ class NSBAppClient(NSBClient):
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
-                                        payload=self.msg_get_payload_obj(nsb_resp))
+                                        payload=payload)
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
-                    self.logger.info("RECEIVE: Yikes, no message.")
+                    self.logger.debug("RECEIVE: Yikes, no message.")
                     return None
         # If nothing, return None.
         return None
@@ -904,7 +921,7 @@ class NSBSimClient(NSBClient):
                 if nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.MESSAGE:
                     if self.cfg.use_db:
                         # If using a database, retrieve the payload.
-                        payload = self.db.peek(nsb_resp.msg_key)
+                        payload = self.db.check_out(nsb_resp.msg_key)
                     else:
                         payload = nsb_resp.payload
                     self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
@@ -914,7 +931,7 @@ class NSBSimClient(NSBClient):
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
-                                        payload=self.msg_get_payload_obj(nsb_resp))
+                                        payload=payload)
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("FETCH: Yikes, no message.")
                     return None

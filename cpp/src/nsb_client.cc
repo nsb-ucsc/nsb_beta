@@ -257,11 +257,10 @@ namespace nsb {
             return receivedPayload;
         } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
             if (destId != nullptr) {
-                LOG(INFO) << "RECV: No message found for destination " << *destId << "." << std::endl;
+                DLOG(INFO) << "RECV: No message found for destination " << *destId << "." << std::endl;
             } else {
-                LOG(INFO) << "RECV: No messages found for any destination." << std::endl;
+                DLOG(INFO) << "RECV: No messages found for any destination." << std::endl;
             }
-            LOG(INFO) << "RECV: No message found for destination " << *destId << "." << std::endl;
             return MessageEntry();
         } else {
             LOG(ERROR) << "RECV: Unexpected status code returned from receive." << std::endl;
@@ -329,11 +328,10 @@ namespace nsb {
             return fetchedMessage;
         } else if (manifest.code() == nsb::nsbm::Manifest::NO_MESSAGE) {
             if (srcId != nullptr) {
-                LOG(INFO) << "FETCH: No message found for source " << *srcId << "." << std::endl;
+                DLOG(INFO) << "FETCH: No message found for source " << *srcId << "." << std::endl;
             } else {
-                LOG(INFO) << "FETCH: No messages found for any source." << std::endl;
+                DLOG(INFO) << "FETCH: No messages found for any source." << std::endl;
             }
-            
             return MessageEntry();
         } else {
             LOG(ERROR) << "FETCH: Unexpected status code returned from receive." << std::endl;
