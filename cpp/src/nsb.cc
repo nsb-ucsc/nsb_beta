@@ -228,13 +228,13 @@ namespace nsb {
         // Check if found else return empty.
         if (context->err) {
             LOG(ERROR) << "(GETDEL Error) " << context->errstr << std::endl;
-            return "";
+            return std::string();
         }
         if (reply->type != REDIS_REPLY_NIL) {
-            return reply->str;
+            return std::string(reply->str, reply->len);
         } else {
             LOG(ERROR) << "(GETDEL Error) Returned nil.";
-            return "";
+            return std::string();
         }
     }
 
@@ -242,16 +242,16 @@ namespace nsb {
         // Check connection before carrying out operation.
         if (!isConnected()) {
             LOG(ERROR) << "Redis connection is not online. Cannot store payload." << std::endl;
-            return "";
+            return std::string();
         }
         // Get payload.
         DLOG(INFO) << "Retrieving payload with key:" << key << std::endl;
         redisReply* reply = (redisReply*)redisCommand(context, "GET %s", key.c_str());
         if (reply->type != REDIS_REPLY_NIL) {
-            return reply->str;
+            return std::string(reply->str, reply->len);
         } else {
             LOG(ERROR) << "(GET Error) Returned nil.";
-            return "";
+            return std::string();
         }
     }
 }
