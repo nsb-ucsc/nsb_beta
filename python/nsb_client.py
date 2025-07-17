@@ -775,7 +775,7 @@ class NSBAppClient(NSBClient):
                     self.logger.info(f"RECEIVE: Received {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{payload}")
+                                        f"({len(payload)}B)")
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
@@ -927,7 +927,7 @@ class NSBSimClient(NSBClient):
                     self.logger.info(f"FETCH: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{payload}")
+                                        f"({len(payload)})")
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
