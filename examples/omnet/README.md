@@ -124,9 +124,8 @@ the omnetpp.ini file
     this code snippet :
 
 ```bash
-INCLUDE_PATH += \$(shell pkg-config \--cflags-only-I nsb)
-
-LIBS += \$(shell pkg-config \--libs nsb)
+INCLUDE_PATH +=  $(shell pkg-config --cflags-only-I nsb)
+LIBS +=  $(shell pkg-config --libs nsb)
 ```
 
 
