@@ -1,0 +1,3 @@
+INCLUDE_PATH += -I/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/cpp/include -I/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/cpp/proto $(shell pkg-config --cflags-only-I yaml-cpp protobuf absl_base absl_log absl_time absl_log_internal_check_op absl_log_initialize hiredis)
+LIBS += -L/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/build -lnsb $(shell pkg-config --libs yaml-cpp protobuf absl_base absl_log absl_time absl_log_internal_check_op absl_log_initialize hiredis)
+LDFLAGS += -Wl,-rpath,/Users/lakshmikrish/projects/NSBSocket_omnetpp6.1/omnetpp-6.1/socket_workspace/nsb_beta/build
