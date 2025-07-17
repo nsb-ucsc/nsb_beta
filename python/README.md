@@ -26,3 +26,25 @@ import nsb_client as nsb
 ```
 _Full integration guide coming soon. Please refer to the Python-generated 
 documentation in the meantime._
+
+### NSB Application Client (`NSBAppClient`)
+
+You can initialize a `NSBAppClient` using its constructor:
+```
+nsb_conn = nsb.NSBAppClient(identifier, server_address, server_port)
+```
+*Parameters:*
+- `identifier` (`str`): A unique identifier for this NSB application client 
+instance. This identifier must match the corresponding identifier used within 
+the NSB system and simulator for proper coordination.
+- `server_address` (`str`): The network address (IP address or hostname) where 
+the NSB daemon is running.
+- `server_port` (`int`): The port number on which the NSB daemon is listening 
+for client connections.
+
+Upon constructing the application client, this method will initialize with the 
+NSB Daemon (which must be running at time of execution), connect to the database
+if configured to do so, and identify itself within the NSB system. We recommend 
+having clients persist throughout the duration of a simulation.
+
+#### Sending Payloads: (`send`)
