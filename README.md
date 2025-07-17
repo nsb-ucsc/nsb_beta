@@ -136,6 +136,7 @@ sudo apt install -y \
   python3 \
   redis-server \
   git
+   python3-pip
 ```
 ## 2. Build & Install Abseil (LTS 20240116.0)
 
@@ -183,7 +184,7 @@ sudo ldconfig
 #### santiy check
 ```bash
 which protoc
-protoc --version      # Expect libprotoc 3.27.x
+protoc --version      # Expect libprotoc 27.5
 ls /usr/local/lib/libprotobuf.so*
 ```
 
@@ -217,10 +218,17 @@ Python: /usr/local/nsb/bin/python_proto/
 ```bash
 export PYTHONPATH=/users/nbhatia3/nsb_beta/build/generated/python:$PYTHONPATH
 ```
+or ```bash
+ cp -r build/generated/python/proto python/
+
 #### To persist
 ```bash
 echo 'export PYTHONPATH=/users/nbhatia3/nsb_beta/build/generated/python:$PYTHONPATH' >> ~/.bashrc
 source ~/.bashrc
+```
+or
+```bash
+cp -r build/generated/python/proto python/
 ```
 #### Test:
 ```bash
