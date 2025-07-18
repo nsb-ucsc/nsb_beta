@@ -20,18 +20,23 @@ network NSBHostNetwork
         host0: NSBHost {
             parameters:
                 hostId = "host0";
-                serverAddress = "127.0.0.1";
-                serverPort = 65432;
+                inGateSize = 2;
+                outGateSize = 2;
+                @display("p=186,194");
         }
         host1: NSBHost {
             parameters:
                 hostId = "host1";
-                serverAddress = "127.0.0.1";
-                serverPort = 65432;
+                inGateSize = 2;
+                outGateSize = 2;
                 @display("p=265,74");
         }
 
     connections allowunconnected:
-        host0.out[0] --> host1.in[0];
-        host1.out[0] --> host0.in[0];
+        //host0.out[0] --> host1.in[0];
+        //host1.out[0] --> host0.in[0];
+        host0.out[0] --> host0.in[0];
+        host0.out[1] --> host1.in[0];
+        host1.out[0] --> host0.in[1];
+        host1.out[1] --> host1.in[1];
 }
