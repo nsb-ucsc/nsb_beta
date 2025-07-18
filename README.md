@@ -255,7 +255,7 @@ cd ~/nsb_beta/build
 ### Programming Interface
 
 Currently, we support and provide interfaces for [Python](python/README.md) and 
-[C++](src/README.md). These interfaces have a high level of feature parity, and
+[C++](cpp/README.md). These interfaces have a high level of feature parity, and
 we aim to keep it that way. The language-specific READMEs contain more detail 
 and the documents contain detailed API manuals.
 

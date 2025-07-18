@@ -729,7 +729,7 @@ class NSBAppClient(NSBClient):
                        None denotes waiting indefinitely while 0 denotes polling
                        behavior.
 
-        @returns nsb_pb2.nsbm|None The NSB message containing the received 
+        @returns MessageEntry|None The MessageEntry struct containing the received 
                                    payload and metadata if a message is found, 
                                    otherwise None.
 
@@ -866,8 +866,8 @@ class NSBSimClient(NSBClient):
         source. This method creates an NSB FETCH message with the appropriate 
         information and payload and sends it to the daemon. It will then get a 
         response that either contains a MESSAGE code and carries the fetched 
-        payload or contains a NO_MESSAGE code. If a message is found, the entire 
-        NSB message is returned to provide access to the metadata.
+        payload or contains a NO_MESSAGE code. If a message is found, the MessageEntry struct
+        is returned to provide access to both the payload and the metadata.
 
         @param src_id The identifier of the targe source. The default None value 
                will result in fetching the most recent message, regardless
@@ -875,12 +875,8 @@ class NSBSimClient(NSBClient):
         @param timeout The amount of time in seconds to wait to receive data. 
                None denotes waiting indefinitely while 0 denotes polling 
                behavior.
-        @param get_payload Whether or not to retrieve the payload. Setting this 
-                           to True enables passing the actual payload through 
-                           the simulated network. Setting this to False may 
-                           result in lower latency for the system.
 
-        @returns nsb_pb2.nsbm|None The NSB message containing the fetched 
+        @returns MessageEntry|None The MessageEntry struct containing the fetched 
                                    payload and metadata if a message is found, 
                                    otherwise None.
         """
