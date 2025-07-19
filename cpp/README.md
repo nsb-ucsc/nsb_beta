@@ -52,14 +52,14 @@ feedback.
 When receiving or fetching payloads, NSB methods will return an empty `MessageEntry` when no payload is available for the operation or return a populated `MessageEntry` object when a payload is available. This object holds metadata about the payload and includes the following attributes:
 * `source` (`std::string`): the identifier for the original source of this payload
 * `destination` (`std::string`): the identifier for the final destination of this payload  
-* `payload` (`std::string`): the actual payload that is being retrieved
+* `payload_obj` (`std::string`): the actual payload that is being retrieved
 * `payload_size` (`int`): the original size of the payload
 The `MessageEntry` struct also includes a method – `exists()` – to tell you 
 whether a payload exists (the object is populated) or doesn't (the object is empty).
 ```cpp
 MessageEntry received = nsb_Conn.receive();
 if (received.exists()) {
-    std::string payload = received.payload;
+    std::string payload = received.payload_obj;
     // Process payload.
     ...
 }
@@ -107,7 +107,7 @@ You can receive a payload through the `NSBAppClient`'s `receive` method:
 ```cpp
 MessageEntry received = nsb_conn.receive();
 if (!received.payload.empty()) {
-    std::string payload = received.payload;
+    std::string payload = received.payload_obj;
     // Process payload.
     ...
 }
@@ -150,7 +150,7 @@ To fetch messages to transmit over the simulated network, you can use the `fetch
 ```cpp
 MessageEntry fetched = nsb_conn.fetch()
 if (fetched.exists()) {
-    std::string payload = fetched.payload;
+    std::string payload = fetched.payload_obj;
     std::string src_id = fetched.source;
     std::string dest_id = fetched.destination;
     // Transmit over the simulated network.
