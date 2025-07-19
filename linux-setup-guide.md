@@ -54,7 +54,7 @@ cmake --build . --parallel
 sudo cmake --install .
 sudo ldconfig
 ```
-#### santiy check
+#### Sanity Check
 ```bash
 ls /usr/local/lib/libabsl_log* /usr/local/lib/libabsl_base* 2>/dev/null
 ```
@@ -80,7 +80,7 @@ sudo cmake --install .
 sudo ldconfig
 ```
 
-#### santiy check
+#### Sanity Check
 ```bash
 which protoc
 protoc --version      # Expect libprotoc 27.5
@@ -120,7 +120,7 @@ export PYTHONPATH=/users/nbhatia3/nsb_beta/build/generated/python:$PYTHONPATH
 or ```bash
  cp -r build/generated/python/proto python/
 
-#### To persist
+#### To Persist
 ```bash
 echo 'export PYTHONPATH=/users/nbhatia3/nsb_beta/build/generated/python:$PYTHONPATH' >> ~/.bashrc
 source ~/.bashrc
@@ -136,14 +136,14 @@ import proto.nsb_pb2 as nsb_pb2
 print("NSB Python proto loaded from:", nsb_pb2.__file__)
 EOF
 ```
-## 8 Start Redis on Port 5050
+## 8. Start Redis on Port 5050
 ```bash
 redis-server --port 5050 --daemonize yes
 ```
 #### Verify: 
 redis-cli -p 5050 ping  # Should return: PONG
 
-## 9 Run NSB Daemon
+## 9. Run NSB Daemon
 ```bash
 cd ~/nsb_beta/build
 ./nsb_daemon ../config.yaml

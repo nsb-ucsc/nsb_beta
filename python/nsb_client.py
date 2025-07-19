@@ -819,11 +819,11 @@ class NSBAppClient(NSBClient):
                     self.logger.info(f"LISTEN: Received {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{payload}")
+                                        f"({len(payload)} B)")
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
-                                        payload=self.msg_get_payload_obj(nsb_resp))
+                                        payload=payload)
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     self.logger.info("LISTEN: Yikes, no message.")
                     return None
@@ -973,11 +973,11 @@ class NSBSimClient(NSBClient):
                     self.logger.info(f"LISTEN: Got {nsb_resp.metadata.payload_size} " + \
                                         f"bytes from {nsb_resp.metadata.src_id} to " + \
                                         f"{nsb_resp.metadata.dest_id}: " + \
-                                        f"{payload}")
+                                        f"({len(payload)}B)")
                     # Pack the payload into a MessageEntry.
                     return MessageEntry(src_id=nsb_resp.metadata.src_id,
                                         dest_id=nsb_resp.metadata.dest_id,
-                                        payload=self.msg_get_payload_obj(nsb_resp))
+                                        payload=payload)
                 elif nsb_resp.manifest.code == nsb_pb2.nsbm.Manifest.OpCode.NO_MESSAGE:
                     print("LISTEN: Yikes, no message.")
                     return None
