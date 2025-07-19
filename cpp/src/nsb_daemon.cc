@@ -225,7 +225,7 @@ namespace nsb {
                 r_manifest->set_op(nsb::nsbm::Manifest::PING);
                 r_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
                 r_manifest->set_code(nsb::nsbm::Manifest::FAILURE);
-                response_required = true;
+                // response_required = true;
         }
         // Send response if required.
         if (response_required) {
@@ -239,6 +239,7 @@ namespace nsb {
 
     void NSBDaemon::handle_init(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
         bool success = false;
+        *response_required = false;
         LOG(INFO) << "Handling INIT message from client " 
                 << incoming_msg->intro().identifier() << "..." << std::endl;
         // Get client details.
@@ -290,6 +291,7 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_ping(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+        LOG(INFO) << "Received PING from " << incoming_msg->metadata().src_id() << "." << std::endl;
         nsb::nsbm::Manifest* out_manifest = outgoing_msg->mutable_manifest();
         out_manifest->set_op(nsb::nsbm::Manifest::PING);
         out_manifest->set_og(nsb::nsbm::Manifest::DAEMON);
@@ -298,6 +300,7 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_send(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+        *response_required = false;
         LOG(INFO) << "Handling SEND message from client " 
                 << incoming_msg->intro().identifier() << " in ";
         if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
@@ -363,6 +366,7 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_fetch(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+        *response_required = false;
         DLOG(INFO) << "Handling FETCH message on behalf of " << incoming_msg->metadata().src_id() << std::endl;
         MessageEntry fetched_message;
         // Check to see if source has been specified.
@@ -412,6 +416,7 @@ namespace nsb {
     }
 
     void NSBDaemon::handle_post(nsb::nsbm* incoming_msg, nsb::nsbm* outgoing_msg, bool* response_required) {
+        *response_required = false;
         LOG(INFO) << "Handling POST message from client " 
                 << incoming_msg->intro().identifier() << " in ";
         if (cfg.SYSTEM_MODE == Config::SystemMode::PULL) {
@@ -482,11 +487,10 @@ namespace nsb {
         LOG(INFO) << "Handling RECEIVE message from client " 
                 << incoming_msg->intro().identifier() << "." << std::endl;
         MessageEntry received_message;
-        bool fetched = false;
         // Check for destination.
         if (incoming_msg->has_metadata()) {
             nsb::nsbm::Metadata in_metadata = incoming_msg->metadata();
-            if (in_metadata.has_src_id()) {
+            if (in_metadata.has_dest_id()) {
                 // Search for the message in the buffer.
                 auto it = std::find_if(rx_buffer.begin(), rx_buffer.end(),
                           [&](const auto& msg) { return msg.destination == in_metadata.dest_id(); });

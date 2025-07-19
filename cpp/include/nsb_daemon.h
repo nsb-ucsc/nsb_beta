@@ -7,7 +7,7 @@
 
 namespace nsb {
     /** @brief The maximum buffer size for sending and receiving messages. */
-    int MAX_BUFFER_SIZE = 4096;
+    const int MAX_BUFFER_SIZE = 4096;
 
     class NSBDaemon {
     public:

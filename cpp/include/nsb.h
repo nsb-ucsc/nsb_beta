@@ -408,7 +408,6 @@ namespace nsb {
     private:
         std::string address;
         int port;
-        int num;
         redisContext* context;
         bool connect();
         void disconnect();

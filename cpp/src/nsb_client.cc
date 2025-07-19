@@ -5,8 +5,8 @@
 namespace nsb {
 
     NSBClient::NSBClient(const std::string& identifier, std::string serverAddress, int serverPort) : 
-        comms(SocketInterface(serverAddress, serverPort)),
-        originIndicator(nullptr), db(nullptr), clientId(std::move(identifier)) {}
+        clientId(std::move(identifier)), comms(SocketInterface(serverAddress, serverPort)),
+        originIndicator(nullptr), db(nullptr) {}
     
     NSBClient::~NSBClient() {
         comms.closeConnection();
@@ -370,7 +370,7 @@ namespace nsb {
         mutableManifest->set_og(*originIndicator);
         mutableManifest->set_code(nsb::nsbm::Manifest::MESSAGE);
         nsb::nsbm::Metadata* mutableMetadata = nsbMsg.mutable_metadata();
-        mutableMetadata->set_src_id(clientId);
+        mutableMetadata->set_src_id(srcId);
         mutableMetadata->set_dest_id(destId);
         mutableMetadata->set_payload_size(static_cast<int>(payload.size()));
         // Set return to "" by default.
